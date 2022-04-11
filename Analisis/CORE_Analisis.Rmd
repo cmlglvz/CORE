@@ -398,12 +398,12 @@ ppe.aup <- read.csv("auspres_ppe_core.csv",
                      sep = ";", 
                      dec = ".", 
                      skip = 0)
-tiff("UpSetR_PPE_CORE_3.tiff", width = 70, height = 20, units = 'in', res = 300)
+tiff("UpSetR_PPE_CORE.tiff", width = 20, height = 11, units = 'in', res = 600)
 upset(ppe.aup, 
       nsets = 9, 
       nintersects = NA,
       sets = c("ZZ", "Qc", "Qin", "LC", "Ho", "Pc", "Hu", "Fla", "Cha"), 
-      intersections = list(
+      intersections = list("ZZ", "Qc", "Qin", "LC", "Ho", "Pc", "Hu", "Fla", "Cha", 
         list("Fla", "ZZ"), 
         list("Cha", "ZZ"), 
         list("Cha", "Fla"), 
@@ -411,6 +411,7 @@ upset(ppe.aup,
         list("Hu", "LC"), 
         list("Hu", "ZZ"), 
         list("Cha", "Fla", "Hu", "ZZ"),
+        list("Cha", "Fla", "Hu", "Pc"),
         list("Cha", "Fla", "Hu", "Pc", "LC", "Qin", "ZZ"),
         list("Cha", "Fla", "Hu", "Pc", "Ho", "LC", "Qin", "ZZ"), 
         list("Cha", "Fla", "Hu", "Pc", "Ho", "LC", "Qin", "Qc", "ZZ")
@@ -425,7 +426,9 @@ upset(ppe.aup,
                      list(query = intersects, params = "Ho", color = "#3A0CA3", active = TRUE, query.name = "Unique Hornos ASV"),
                      list(query = intersects, params = "LC", color = "#3F37C9", active = TRUE, query.name = "Unique Las Cruces ASV"),
                      list(query = intersects, params = "Qin", color = "#4361EE", active = TRUE, query.name = "Unique Quintero ASV"),
-                     list(query = intersects, params = "Qc", color = "#4895EF", active = TRUE, query.name = "Unique Quintero costa ASV")
+                     list(query = intersects, params = "Qc", color = "#4895EF", active = TRUE, query.name = "Unique Quintero costa ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Poluted Axis ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "Ho", "LC", "Qin", "Qc", "ZZ"), color = "#FF0000", active = TRUE, query.name = "Shared ASV")
                      ), 
       point.size = 3.2, 
       line.size = 1.5, 
@@ -435,6 +438,7 @@ upset(ppe.aup,
 dev.off()
 ```
 
+##########HASTA ACA##############
 Vemos que al analizar los datos pertenecientes a Febrero de 2018 existen más ASVs únicas en Punta de Choros (172) que en otros sitios, incluso superando el número de ASVs únicas (101) al juntar todos los periodos de muestreo. Esto se puede atribuir, a una disminución de OTUs en otros sitios o efectivamente a un aumento de estas en Punta de Choros. Debido a la naturaleza de nuestros datos y trabajos encontramos en la literatura podríamos atribuir esta diferencia a la estacionalidad, sin embargo, debemos considerar que altas concentraciones de metales pesados como el Cu y el Fe pueden inducir cambios en la respuesta de estos microoranismos respecto a factores abioticos estacionales (desacople de patrones bióticos y abióticos estacionales; Glasner et al., 2021).
 
 Podemos hablar de cambios en la capacidad de irritabilidad de estos microorganismos? [**Kilgour, 1987**](https://link.springer.com/chapter/10.1007/978-1-349-09692-3_13)
