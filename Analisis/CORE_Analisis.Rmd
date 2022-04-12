@@ -24,7 +24,6 @@ library(ggvegan)
 library(ggpubr)
 library(plotly)
 library(heatmaply)
-library(gtools)
 ```
 
 ##Map Sites PENDIENTE
@@ -326,11 +325,6 @@ legend("center", legend = colnames(relative.ppe), cex = 1.1, ncol = 2, fill = pp
 dev.off()
 ```
 
-Fijarse que la primera columna de la tabla resultante corresponde a los valores NA del df de taxa que fueron tratados como "0" al obtener TSEj. Al realizar analisis posteriores dichos datos obtienen un valor correspondiente por lo que no se suelen considerar dentro de algunas funciones pero estadisticamente si ejercen un efecto apreciable en el análisis de los datos. Esto se puede apreciar claramente cuando vemos que la ausencia de datos dentro de una variable se debe precisamente a dicha variable, por ejemplo, podemos seguir la ASV1, ASV38, ASV45 a lo largo de las clasificaciones taxonómicas. Al igual que el resto de ASVs en la matriz, estas se pueden asignar al rino eukaryota, pero si subimos de nivel, vemos claramente que solo ASV38 y ASV45 pueden asignarse a la clasificación de supergrupo, y no así ASV1, lo cual además condiciona sus clasificaciones consecuentes. Posteriormente vemos como las 2 ASVs restantes se pueden asignar sólo hasta el nivel de división taxonómica mientras que otras ASVs se pueden asignar hasta el nivel de especie.
-
-Si fuesemos siguiendo las ASVs a lo largo de las asignaciones por niveles esto se vería claramente, además esta idea se refuerza también por el hecho que no existen (por lo menos en este set de datos) asignaciones que se produzcan despues de un valor NA, lo que a su vez nos puede hablar de la robustes de la técnica de asignación. No obstante, no podemos aseverar que la asignación producida haya sido erronea, para lo cual es necesario otro set de datos que tengan un origen similar a nuestras muestras actuales y que se hayan sometidos a procesamientos similares donde la misma secuencia de ASV1 genere la misma clasificación.
-
-Estos datos ausentes se pueden clasificar como valores "Missing not at random" (MNAR) y estadisticamente no deben ser considerados como faltantes ni atribuirles un valor "0".
 
 ## Data preparation for UpSetR
 ```{r, echo=TRUE, message=TRUE, warning=TRUE}
@@ -438,134 +432,210 @@ upset(ppe.aup,
 dev.off()
 ```
 
-##########HASTA ACA##############
-Vemos que al analizar los datos pertenecientes a Febrero de 2018 existen más ASVs únicas en Punta de Choros (172) que en otros sitios, incluso superando el número de ASVs únicas (101) al juntar todos los periodos de muestreo. Esto se puede atribuir, a una disminución de OTUs en otros sitios o efectivamente a un aumento de estas en Punta de Choros. Debido a la naturaleza de nuestros datos y trabajos encontramos en la literatura podríamos atribuir esta diferencia a la estacionalidad, sin embargo, debemos considerar que altas concentraciones de metales pesados como el Cu y el Fe pueden inducir cambios en la respuesta de estos microoranismos respecto a factores abioticos estacionales (desacople de patrones bióticos y abióticos estacionales; Glasner et al., 2021).
-
-Podemos hablar de cambios en la capacidad de irritabilidad de estos microorganismos? [**Kilgour, 1987**](https://link.springer.com/chapter/10.1007/978-1-349-09692-3_13)
-
-Revisemos (tratemos) de ver cuales son las ASVs que se pueden apreciar en Febrero de 2018 que no se aprecian al considerar todas las muestras. Para esto tomaremos como referencia Punta de Choros.
-
-##Compartidas
-```{r, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
-APATs <- read.csv("E:/R/Proyecto_Doctorado/Press/eTodas/APATs.csv", header = TRUE, sep = ";", dec = ".", skip = 0)
-uSha <- APATs %>% filter(Cha == 1 & Fla == 1 & Hu == 1 & Pc ==1)
-uShaSeq <- uSha$Seq
-ATs <- read.csv2("E:/R/Proyecto_Doctorado/Press/eTodas/ATs.csv", header = T, sep = ";", dec = ".", skip = 0)
-ATsPPE <- ATs %>% filter(Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
-uShaATs <- filter(ATs, Seq %in% all_of(uShaSeq))
-uShaATs <- uShaATs %>% filter(Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
-all_of(uShaATs$Seq) %in% all_of(uSha$Seq)
-woNASha <- uShaATs[complete.cases(uShaATs), ]
+##Sequence identification
+```{r Shared, echo=TRUE, message=TRUE, warning=TRUE}
+ppe.asv <- select(naCORE, all_of(ppe.at$Seq))
+Sha <- ppe.APATs
+Sha <- Sha %>% filter(Cha == 1 & Fla == 1 & Hu == 1 & Pc == 1 & Ho == 1 & LC == 1 & Qin == 1 & Qc == 1 & ZZ == 1)
+Shared <- select(ppe.asv, all_of(Sha$Seq))
+sha.phy <- Tax.sum(Shared, taxa, 5) %>% as.data.frame() #De las 6 phyla de PPE solo 4 son compartidas por todos los sitios
+difference <- Sha$Seq
+diff.sha <- select(ppe.asv, -all_of(difference))
+diff.phy <- Tax.sum(diff.sha, taxa, 5) %>% as.data.frame()
+colnames(diff.phy)[c(2,3,7,8)] <- c("A", "B", "C", "D")
+diff.phy <- diff.phy %>% 
+  mutate(Chlorophyta = rowSums(diff.phy[c(2,8)]), 
+         Cryptophyta = rowSums(diff.phy[c(3,7)])
+         ) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(diff.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_not_shared_phylum_abundance.csv")
 ```
 
-##Huasco
-```{r, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
-Hu <- APATs %>% filter(Hu == 1)
-uHu <- Hu %>% filter(Cha == 0 & Fla == 0 & Pc == 0)
-HuSeq <- Hu$Seq
-HuATs <- filter(ATs, Seq %in% all_of(HuSeq))
-HuPPE <- HuATs %>% filter(Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
-uHuPPE <- filter(Hu, Seq %in% all_of(HuPPE$Seq)) %>% filter(Cha == 0 & Fla == 0 & Pc == 0)
-all_of(uHuPPE$Seq) %in% all_of(HuPPE$Seq)
-woNAHu <- uHuPPE[complete.cases(uHuPPE), ]
+```{r Cha, echo=TRUE, message=TRUE, warning=TRUE}
+Cha <- ppe.APATs %>% filter(Cha == 1)
+unique.cha <- Cha %>% filter(Fla == 0 & Hu == 0 & Pc == 0 & Ho == 0 & LC == 0 & Qin == 0 & Qc == 0 & ZZ == 0)
+cha.abun <- select(ppe.asv, all_of(Cha$Seq))
+write.csv2(cha.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/chanaral_asv_table.csv")
+ucha.abun <- select(ppe.asv, all_of(unique.cha$Seq))
+write.csv2(ucha.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_chanaral_asv_table")
+cha.phy <- Tax.sum(cha.abun, taxa, 5) %>% as.data.frame()
+colnames(cha.phy)[c(1,3,6,8)] <- c("A", "B", "C", "D")
+cha.phy <- cha.phy %>% 
+  mutate(Chlorophyta = rowSums(cha.phy[c(1,8)]), 
+         Cryptophyta = rowSums(cha.abun[c(3,6)])
+         ) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(cha.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_chanaral_phyla_abundance.csv")
+ucha.phy <- Tax.sum(ucha.abun, taxa, 5) %>% as.data.frame()
+colnames(ucha.phy)[c(3,5)] <- c("A", "B")
+ucha.phy <- ucha.phy %>% 
+  mutate(Chlorophyta = rowSums(ucha.phy[c(3,5)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(ucha.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_ppe_chanaral_phyla_abundance.csv")
 ```
 
-##Chañaral
-```{r, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
-Cha <- APATs %>% filter(Cha == 1)
-uCha <- Cha %>% filter(Fla == 0 & Hu == 0 & Pc == 0)
-ChaSeq <- Cha$Seq
-ChaATs <- filter(ATs, Seq %in% all_of(ChaSeq))
-ChaPPE <- ChaATs %>% filter(Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
-uChaPPE <- filter(Cha, Seq %in% all_of(ChaPPE$Seq)) %>% filter(Fla == 0 & Hu == 0 & Pc == 0)
-all_of(uChaPPE$Seq) %in% all_of(ChaPPE$Seq)
-woNACha <- uChaPPE[complete.cases(uChaPPE), ]
+```{r Fla, echo=TRUE, message=TRUE, warning=TRUE}
+Fla <- ppe.APATs %>% filter(Fla == 1)
+unique.fla <- Fla %>% filter(Cha == 0 & Hu == 0 & Pc == 0 & Ho == 0 & LC == 0 & Qin == 0 & Qc == 0 & ZZ == 0)
+fla.abun <- select(ppe.asv, all_of(Fla$Seq))
+write.csv2(cha.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/flamenco_asv_table.csv")
+ufla.abun <- select(ppe.asv, all_of(unique.fla$Seq))
+write.csv2(ufla.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_flamenco_asv_table")
+fla.phy <- Tax.sum(fla.abun, taxa, 5) %>% as.data.frame()
+colnames(fla.phy)[c(1,3,6,8)] <- c("A", "B", "C", "D")
+fla.phy <- fla.phy %>% 
+  mutate(Chlorophyta = rowSums(fla.phy[c(1,8)]), 
+         Cryptophyta = rowSums(fla.abun[c(3,6)])
+         ) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(fla.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_flamenco_phyla_abundance.csv")
+ufla.phy <- Tax.sum(ufla.abun, taxa, 5) %>% as.data.frame()
+ufla.phy <- ufla.phy[, c(3,2,5,1,6,4)]
+write.csv2(ufla.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_ppe_flamenco_phyla_abundance.csv")
 ```
 
-##Flamenco
-```{r, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
-Fla <- APATs %>% filter(Fla == 1)
-uFla <- Fla %>% filter(Cha == 0 & Hu == 0 & Pc == 0)
-FlaSeq <- Fla$Seq
-FlaATs <- filter(ATs, Seq %in% all_of(FlaSeq))
-FlaPPE <- FlaATs %>% filter(Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
-uFlaPPE <- filter(Fla, Seq %in% all_of(FlaPPE$Seq)) %>% filter(Cha == 0 & Hu == 0 & Pc == 0)
-all_of(FlaPPE$Seq) %in% all_of(uFla$Seq)
-woNAFla <- uFlaPPE[complete.cases(uFlaPPE), ]
-print(all(all_of(uFlaPPE$Seq) %in% all_of(FlaPPE$Seq)))
+```{r Hu, echo=TRUE, message=TRUE, warning=TRUE}
+Hu <- ppe.APATs %>% filter(Hu == 1)
+unique.hu <- Hu %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Ho == 0 & LC == 0 & Qin == 0 & Qc == 0 & ZZ == 0)
+hu.abun <- select(ppe.asv, all_of(Hu$Seq))
+write.csv2(hu.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/huasco_asv_table.csv")
+uhu.abun <- select(ppe.asv, all_of(unique.hu$Seq))
+write.csv2(uhu.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_huasco_asv_table.csv")
+hu.phy <- Tax.sum(hu.abun, taxa, 5) %>% as.data.frame()
+colnames(hu.phy)[c(1,7)] <- c("A", "B")
+hu.phy <- hu.phy %>% 
+  mutate(Chlorophyta = rowSums(hu.phy[c(1,7)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(hu.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_huasco_phyla_abundance.csv")
+uhu.phy <- Tax.sum(uhu.abun, taxa, 5) %>% as.data.frame()
+uhu.phy <- uhu.phy[, c(1,2,5,3,6,4)]
+write.csv2(uhu.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_ppe_huasco_phyla_abundance.csv")
 ```
 
-##Punta de Choros
-```{r, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
-Pc <- APATs %>% filter(Pc == 1)
-uPc <- Pc %>% filter(Cha == 0 & Fla == 0 & Hu == 0)
-PcSeq <- Pc$Seq
-PcATs <- filter(ATs, Seq %in% all_of(PcSeq))
-PcPPE <- PcATs %>% filter(Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
-uPcPPE <- filter(Pc, Seq %in% all_of(PcPPE$Seq)) %>% filter(Cha == 0 & Fla == 0 & Hu == 0)
-all_of(PcPPE$Seq) %in% all_of(uPc$Seq)
-woNAPc <- uPcPPE[complete.cases(uPcPPE), ]
-print(all(all_of(uPcPPE$Seq) %in% all_of(PcPPE$Seq)))
+```{r Pc, echo=TRUE, message=TRUE, warning=TRUE}
+Pc <- ppe.APATs %>% filter(Pc == 1)
+unique.pc <- Pc %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Ho == 0 & LC == 0 & Qin == 0 & Qc == 0 & ZZ == 0)
+pc.abun <- select(ppe.asv, all_of(Pc$Seq))
+write.csv2(pc.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/puntachoros_asv_table.csv")
+upc.abun <- select(ppe.asv, all_of(unique.pc$Seq))
+write.csv2(upc.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_puntachoros_asv_table.csv")
+pc.phy <- Tax.sum(pc.abun, taxa, 5) %>% as.data.frame()
+colnames(pc.phy)[c(1,2,7,8)] <- c("A", "B", "C", "D")
+pc.phy <- pc.phy %>% 
+  mutate(Chlorophyta = rowSums(pc.phy[c(1,8)]), 
+         Cryptophyta = rowSums(pc.phy[c(2,7)])
+         ) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(pc.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_puntachoros_phyla_abundance.csv")
+upc.phy <- Tax.sum(upc.abun, taxa, 5) %>% as.data.frame()
+colnames(upc.phy)[c(4,7)] <- c("A", "B")
+upc.phy <- upc.phy %>% 
+  mutate(Chlorophyta = rowSums(upc.phy[c(4,7)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(upc.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_ppe_puntachoros_phyla_abundance.csv")
 ```
 
-##ASV intersections abundance
-```{r, echo=FALSE, message=TRUE, warning=TRUE, include=FALSE}
-UShrD <- read.csv2("C:/Users/Camilo/Dropbox/R/eAnalisis/UShrD.csv", header = T, sep = ";", dec = ",", skip = 0) %>% rename(Group = X)
-UShrD <- UShrD[, -c(2:6)]
-Group <- UShrD[, 1]
-prcnt <- gather(UShrD, key = "Intersection", value = "Percentage", -1)
-porcentaje <- ggplot(prcnt,
-       aes(fill = Intersection, y = Percentage, x = Group)) + 
-  geom_bar(position = "fill", stat = "identity")
-ggsave(porcentaje, file = "ASV_Intersection_Abundance.tiff", path = "E:/R/Proyecto_Doctorado/Press/eTodas/", width = 8, height = 10, dpi = 600)
+```{r Ho, echo=TRUE, message=TRUE, warning=TRUE}
+Ho <- ppe.APATs %>% filter(Ho == 1)
+unique.ho <- Ho %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Pc == 0 & LC == 0 & Qin == 0 & Qc == 0 & ZZ == 0)
+ho.abun <- select(ppe.asv, all_of(Ho$Seq))
+write.csv2(ho.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/hornos_asv_table.csv")
+uho.abun <- select(ppe.asv, all_of(unique.ho$Seq))
+write.csv2(uho.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_hornos_asv_table.csv")
+ho.phy <- Tax.sum(ho.abun, taxa, 5) %>% as.data.frame()
+colnames(ho.phy)[c(2,7)] <- c("A", "B")
+ho.phy <- ho.phy %>% 
+  mutate(Cryptophyta = rowSums(ho.phy[c(2,7)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(ho.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_hornos_phyla_abundance.csv")
+uho.phy <- Tax.sum(uho.abun, taxa, 5) %>% as.data.frame()
+uho.phy <- uho.phy[, c(2,1,4,5,3)]
+write.csv2(uho.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_ppe_hornos_phyla_abundance.csv")
 ```
 
-##Heatmaps
-```{r, echo=FALSE, message=TRUE, warning=TRUE, include=FALSE}
-dTSDiv <- read.csv2("E:/R/Proyecto_Doctorado/Press/eTodas/dTSDiv.csv", header = T, sep = ";", dec = ",", skip = 0)
-rownames(dTSDiv) <- dTSDiv[, 1]
-dTSDiv <- dTSDiv[, -c(1, 43:48)]
-dTSDiv <- t(dTSDiv)
-htmap <- t(dTSDiv)
-htmap <- decostand(htmap, method = "normalize")
-htmap <- as.matrix(t(dTSDiv))
-heatmap(dTSDiv, Colv = NA, Rowv = NA, scale="row")
-htmp <- heatmaply(normalize(dTSDiv), 
-                  Colv = NA, 
-                  Rowv = NA, 
-                  seriate = "none", 
-                  main = "Normalized data")
-saveWidget(htmp, file = "E:/R/Proyecto_Doctorado/Press/eTodas/htmp.html")
+```{r LC, echo=TRUE, message=TRUE, warning=TRUE}
+LC <- ppe.APATs %>% filter(LC == 1)
+unique.lc <- LC %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Pc == 0 & Ho == 0 & Qin == 0 & Qc == 0 & ZZ == 0)
+lc.abun <- select(ppe.asv, all_of(LC$Seq))
+write.csv2(lc.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/lascruces_asv_table.csv")
+ulc.abun <- select(ppe.asv, all_of(unique.lc$Seq))
+write.csv2(ulc.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_lascruces_asv_table.csv")
+lc.phy <- Tax.sum(lc.abun, taxa, 5) %>% as.data.frame()
+colnames(lc.phy)[c(1,3,7,8)] <- c("A", "B", "C", "D")
+lc.phy <- lc.phy %>% 
+  mutate(Cryptophyta = rowSums(lc.phy[c(3,7)]), 
+         Chlorophyta = rowSums(lc.phy[c(1,8)])
+         ) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(lc.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_lascruces_phyla_abundance.csv")
+ulc.phy <- Tax.sum(ulc.abun, taxa, 5) %>% as.data.frame()
+colnames(ulc.phy)[c(3,5,6,8)] <- c("A", "B", "C", "D")
+ulc.phy <- ulc.phy %>% 
+  mutate(Chlorophyta = rowSums(ulc.phy[c(3,8)]), 
+         Cryptophyta = rowSums(ulc.phy[c(5,6)])
+         ) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(ulc.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_ppe_lascruces_phyla_abundance.csv")
 ```
 
-##Shared Heatmap
-```{r, echo=FALSE, message=TRUE, warning=TRUE, include=FALSE}
-SharedSeq <- uShaATs[, 2]
-SharedOTUs <- uShaATs[, 3]
-SI.ASVs <- select(oASVs, all_of(SharedSeq))
-SISpp <- Tax.sum(SI.ASVs, xTXs, 10)
-SISpp <- SISpp[, -17]
-SIHeatVU <- heatmaply(normalize(SISpp), 
-                      Colv = NA, 
-                      Rowv = NA, 
-                      seriate = "none", 
-                      main = "Shared ASVs across all sites as Species")
-saveWidget(SIHeatVU, file = "E:/R/Proyecto_Doctorado/Press/eTodas/SIHeat_V1.html")
-
-SIHeatVD <- heatmaply(normalize(SISpp), 
-                      main = "Shared ASVs across all sites as Species")
-saveWidget(SIHeatVD, file = "E:/R/Proyecto_Doctorado/Press/eTodas/SIHeat_V2.html")
-
-SI.OTUs <- SI.ASVs
-colnames(SI.OTUs) <- SharedOTUs
-SIASVhm <- heatmaply(normalize(SI.ASVs), 
-                     Colv = NA, 
-                     Rowv = NA, 
-                     seriate = "none", 
-                     main = "Shared ASVs across all sites")
-saveWidget(SIASVhm, file = "E:/R/Proyecto_Doctorado/Press/eTodas/SI_ASV_heatmap.html")
+```{r Qin, echo=TRUE, message=TRUE, warning=TRUE}
+Qin <- ppe.APATs %>% filter(Qin == 1)
+unique.qin <- Qin %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Pc == 0 & Ho == 0 & LC == 0 & Qc == 0 & ZZ == 0)
+qin.abun <- select(ppe.asv, all_of(Qin$Seq))
+write.csv2(qin.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/quintero_asv_table.csv")
+uqin.abun <- select(ppe.asv, all_of(unique.qin$Seq))
+write.csv2(uqin.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_quintero_asv_table.csv")
+qin.phy <- Tax.sum(qin.abun, taxa, 5) %>% as.data.frame()
+colnames(qin.phy)[c(3,7)] <- c("A", "B")
+qin.phy <- qin.phy %>% 
+  mutate(Cryptophyta = rowSums(qin.phy[c(3,7)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(qin.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_quintero_phyla_abundance.csv")
+uqin.phy <- Tax.sum(uqin.abun, taxa, 5) %>% as.data.frame()
+uqin.phy <- uqin.phy[, c(2,1,6,3,5,4)]
+write.csv2(uqin.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_ppe_qintero_phyla_abundance.csv")
 ```
 
-##Warning message:
-In save(list = names(.GlobalEnv), file = outfile, version = version,  :
-  'package:stats' may not be available when loading
+```{r Qc, echo=TRUE, message=TRUE, warning=TRUE}
+Qc <- ppe.APATs %>% filter(Qc == 1)
+unique.qc <- Qc %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Pc == 0 & Ho == 0 & LC == 0 & Qin == 0 & ZZ == 0)
+qc.abun <- select(ppe.asv, all_of(Qc$Seq))
+write.csv2(qc.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/quinterocosta_asv_table.csv")
+uqc.abun <- select(ppe.asv, all_of(unique.qc$Seq))
+write.csv2(uqc.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_quinterocosta_asv_table.csv")
+qc.phy <- qc.abun[c(68,69),]
+qc.phy <- Tax.sum(qc.phy, taxa, 5) %>% as.data.frame()
+qc.phy <- qc.phy[,c(1,2,3,6,5,4)]
+write.csv2(qin.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_quinterocosta_phyla_abundance.csv")
+uqc.phy <- Tax.sum(uqc.abun, taxa, 5) %>% as.data.frame()
+uqc.phy <- uqc.phy[, c(3,2,1)]
+write.csv2(uqc.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/unique_ppe_qinterocosta_phyla_abundance.csv")
+```
+
+```{r ZZ, echo=TRUE, message=TRUE, warning=TRUE}
+ZZ <- ppe.APATs %>% filter(ZZ == 1)
+#esto debiese dar 0
+unique.zz <- ZZ %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Pc == 0 & Ho == 0 & LC == 0 & Qin == 0 & Qc == 0)
+zz.abun <- select(ppe.asv, all_of(ZZ$Seq))
+write.csv2(zz.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/zz_asv_table.csv")
+zz.phy <- Tax.sum(zz.abun, taxa, 5) %>% as.data.frame()
+colnames(zz.phy)[c(1,7)] <- c("A", "B")
+zz.phy <- zz.phy %>% 
+  mutate(Chlorophyta = rowSums(zz.phy[c(1,7)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(zz.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_zz_phyla_abundance.csv")
+```
+
+```{r ZZ, echo=TRUE, message=TRUE, warning=TRUE}
+ZZ <- ppe.APATs %>% filter(ZZ == 1)
+#esto debiese dar 0
+unique.zz <- ZZ %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Pc == 0 & Ho == 0 & LC == 0 & Qin == 0 & Qc == 0)
+zz.abun <- select(ppe.asv, all_of(ZZ$Seq))
+write.csv2(zz.abun, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/zz_asv_table.csv")
+zz.phy <- Tax.sum(zz.abun, taxa, 5) %>% as.data.frame()
+colnames(zz.phy)[c(1,7)] <- c("A", "B")
+zz.phy <- zz.phy %>% 
+  mutate(Chlorophyta = rowSums(zz.phy[c(1,7)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(zz.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_zz_phyla_abundance.csv")
+```
