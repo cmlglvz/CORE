@@ -75,7 +75,7 @@ CORE <- read.csv("X:/Documents/CORE/DADA2/seqtab_nonchim.csv",
                  fill = TRUE, 
                  row.names = 1)
 CORE <- apply(CORE, 2, function(x) as.numeric(as.integer(x))) %>% as.data.frame()
-samples <- c("C1A17", "C1F18", "C1A18", "C2A17", "C2F18", "C2A18", "C3A17", "C3F18", "C3A18", "C4A17", "C4F18", "C4A18", "F1A17", "F1F18", "F1A18", "F2A17", "F2F18", "F2A18", "F3A17", "F3F18", "F3A18", "F4A17", "F4F18", "F4A18", "H1A17", "H1F18", "H1A18", "H2A17", "H2F18", "H2A18", "H3A17", "H3F18", "H3A18", "H4A17", "H4F18", "H4A18", "Ho1A17", "Ho1F18", "P1F18", "P1A18", "P2F18", "P3F18", "P4F18", "Re1A17", "Re1F18", "L1A17", "L1F18", "L1A18", "L2A17", "L2F18", "L2A18", "L3A17", "L3F18", "L3A18", "L4A17", "L4F18", "L4A18", "Q1A17", "Q1F18", "Q2A17", "Q2F18", "Q3A17", "Q3F18", "Q3A18", "Q4A17", "Q4F18", "Q4A18", "Qc1A17", "Qc2A17", "Z1A18", "Z2A18", "Z3A18", "Z4A18", "Z5A18")
+samples <- c("C1A17", "C1F18", "C1A18", "C2A17", "C2F18", "C2A18", "C3A17", "C3F18", "C3A18", "C4A17", "C4F18", "C4A18", "F1A17", "F1F18", "F1A18", "F2A17", "F2F18", "F2A18", "F3A17", "F3F18", "F3A18", "F4A17", "F4F18", "F4A18", "H1A17", "H1F18", "H1A18", "H2A17", "H2F18", "H2A18", "H3A17", "H3F18", "H3A18", "H4A17", "H4F18", "H4A18", "P1F18", "P1A18", "P2F18", "P3F18", "P4F18", "Re1A17", "Re1F18", "L1A17", "L1F18", "L1A18", "L2A17", "L2F18", "L2A18", "L3A17", "L3F18", "L3A18", "L4A17", "L4F18", "L4A18", "Q1A17", "Q1F18", "Q2A17", "Q2F18", "Q3A17", "Q3F18", "Q3A18", "Q4A17", "Q4F18", "Q4A18", "Qc1A17", "Qc2A17", "Z1A18", "Z2A18", "Z3A18", "Z4A18", "Z5A18")
 rownames(CORE) <- samples
 write.csv2(CORE, file = "CORE_ASV.csv") #Saving some DF necessary for downstream analysis
 
@@ -86,20 +86,24 @@ taxa <- read.csv("X:/Documents/CORE/DADA2/taxa.csv",
                  dec = '.', 
                  skip = 0) %>% 
   rename(Seq = X) %>% 
-  add_column(OTU = c(paste0("ASV_", 1:12073)), .after = "Seq")
+  add_column(OTU = c(paste0("ASV_", 1:11155)), .after = "Seq")
 rownames(taxa) <- taxa[,1]
+taxa2 <- filter(taxa, Kingdom == "Eukaryota" | Kingdom == "Eukaryota:nucl" | Kingdom == "Eukaryota:plas")
 write.csv2(taxa, file = "CORE_taxa.csv")
-
+write.csv2(taxa2, file = "euka_CORE.csv")
+euk.CORE <- select(CORE, all_of(taxa2$Seq))
+write.csv2(euk.CORE, "eukaryotes_core.csv")
 print(all(colnames(CORE)%in%rownames(taxa))) #If TRUE you can continue
+print(all(colnames(euk.CORE)%in%rownames(taxa2)))
 ```
 
 #ASV identification
 ```{r, echo=TRUE, message=TRUE, warning=TRUE}
-non.assigned <- taxa[rowSums(is.na(taxa[, c(3,4)])) > 0, ] #All ASV and Seq that have NA values at Kingdom and Supergroup levels
+non.assigned <- taxa2[rowSums(is.na(taxa2[, c(3,4)])) > 0, ] #All ASV and Seq that have NA values at Kingdom and Supergroup levels
 NAseq <- non.assigned[, 1]
-na.taxa <- taxa[!(row.names(taxa) %in% all_of(NAseq)), ]
+na.taxa <- taxa2[!(row.names(taxa2) %in% all_of(NAseq)), ]
 write.csv2(na.taxa, file = "taxa_NA_edited.csv")
-na.asv <- CORE %>% select(-all_of(NAseq))
+na.asv <- euk.CORE %>% select(-all_of(NAseq))
 write.csv2(na.asv, file = "ASV_NA_edited.csv")
 ```
 
@@ -114,7 +118,7 @@ plot(rare.full)
 rrfy<- rarefy(CORE, rare.full[1]) #rarefaction uses the smallest number of observations per sample to extrapolate the expected number if all other samples only had that number of observations
 rrfy #gives an "expected"rarefied" number of species (not obs) if only 41641 individuals were present per sample
 
-kols <- colorRampPalette(c("#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#90BE6D", "#90BE6D", "#F9C74F", "#F9C74F", "#F9C74F", "#F9C74F", "#F9C74F", "#90BE6D", "#90BE6D", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#41576C", "#41576C", "#4D908E", "#4D908E", "#4D908E", "#4D908E", "#4D908E"))(74)
+kols <- colorRampPalette(c("#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F94144", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F3722C", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F8961E", "#F9C74F", "#F9C74F", "#F9C74F", "#F9C74F", "#F9C74F", "#90BE6D", "#90BE6D", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#43AA8B", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#577590", "#41576C", "#41576C", "#4D908E", "#4D908E", "#4D908E", "#4D908E", "#4D908E"))(72)
 
 tiff("Rarecurve_CORE.tiff", width = 12, height = 6, units = 'in', res = 300)
 par(mar=c(5.1,4.1,4.1,2.1), oma=c(0,0,0,0))
@@ -138,10 +142,15 @@ write.csv2(naCORE, file = "rarefacted_NA_filtered_CORE.csv")
 ```
 
 ```{r, echo=TRUE, message=TRUE, warning=TRUE}
-eCORE <- as.data.frame(t(na.asv))
+ppe.taxa <- filter(taxa2, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Haptophyta" | Division == "Cryptophyta:nucl" | Division == "Katablepharidophyta" | Division == "Rhodophyta" | Division == "Chlorophyta:plas")
+ppe.asv <- select(na.asv, all_of(ppe.taxa$Seq))
+print(all(colnames(ppe.asv)%in%rownames(ppe.taxa)))
+write.csv2(ppe.taxa, "ppe_taxa.csv")
+write.csv2(ppe.asv, "ppe_asv.csv")
+
+eCORE <- as.data.frame(t(ppe.asv))
 eCORE <- eCORE  %>% 
   mutate(Seq = all_of(rownames(eCORE)), .before = "C1A17")
-eCORE <- eCORE[, -c(38,39)]
 eCORE <- eCORE %>%
   mutate(Cha = rowSums(eCORE[2:13]),
          Fla = rowSums(eCORE[14:25]), 
@@ -154,7 +163,7 @@ eCORE <- eCORE %>%
          ZZ = rowSums(eCORE[69:73]), 
          Total = rowSums(eCORE[2:73])
          )
-ATs <- inner_join(eCORE, taxa, by = "Seq") %>% relocate(OTU, .after = Seq)
+ATs <- inner_join(eCORE, ppe.taxa, by = "Seq") %>% relocate(OTU, .after = Seq)
 rownames(ATs) <- all_of(ATs[,1])
 write.csv2(ATs, file = "AT_CORE.csv")
 #eATs <- ATs %>% select(Seq, Cha, Fla, Hu, Ho, Pc, Total, Division, Class, Order, Family, Genus, Species)
@@ -177,6 +186,9 @@ Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
 }
 
 Phylum <- Tax.sum(na.asv, na.taxa, 5) %>% as.data.frame()
+ppe.phy <- Tax.sum(ppe.asv, ppe.taxa, 5) %>% as.data.frame()
+ppe.phy <- ppe.phy[,c()]
+
 write.csv2(Phylum, file = "phylum_CORE.csv")
 
 ph.core <- read.csv("phylum_CORE.csv", 
@@ -184,14 +196,16 @@ ph.core <- read.csv("phylum_CORE.csv",
                     sep = ";", 
                     dec = ".", 
                     skip = 0, 
-                    row.names = 1) %>% 
-  rename(Chl = Chlorophyta, Chlx = Chlorophyta.plas, Cryp = Cryptophyta, Crypx = Cryptophyta.nucl)
-ph.core <- mutate(ph.core, 
-                  Chlorophyta = rowSums(ph.core[c(2, 36)]),
-                  Cryptophyta = rowSums(ph.core[c(6, 18)]), 
-                  )
-ph.core <- ph.core[, -c(2, 6, 18, 36)]
-write.csv2(ph.core, file = "ephylum_core.csv")
+                    row.names = 1)
+ph.core <- ph.core[,c(2,5,6,8,13,15,17,36)]
+colnames(ph.core)[c(1,3,5,8)] <- c("A", "B", "C", "D")
+ph.core <- ph.core %>% 
+  mutate(Chlorophyta = rowSums(ph.core[c(1,8)]), 
+         Cryptophyta = rowSums(ph.core[c(3,5)])
+         ) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(ph.core, file = "ppe_phylum_core.csv")
+
 phyla <- as.data.frame(t(ph.core))
 write.csv2(phyla, file = "phyla_core.csv")
 
@@ -213,13 +227,13 @@ phyla <- phyla %>%
          Total = rowSums(phyla[2:73])
          )
 phyla <- arrange(phyla, desc(Total))
-phyla <- phyla %>% 
-  mutate(Color = c("#002C3D", "#00564E", "#007F5F", "#359548", "#6AAB30", "#BACC0C", "#F1F500", "#ACDD3C", "#83E377", "#16DB93", "#FB9C70", "#FB9262", "#FA8072", "#FA776B", "#F95C74", "#F8417D", "#AA006A", "#7C0068", "#4E0066", "#410151", "#C5DBEA", "#8BB7D4", "#5193BE", "#176EA8", "#00609F", "#023E8A", "#000078", "#161664", "#17315F", "#0B0B30", "#FF0000", "#CC0000", "#9B2226", "#4E1114", "#800000", "#000000")
-         )
-write.csv2(phyla, file = "color_phyla_core.csv")
+#phyla <- phyla %>% mutate(Color = c("#002C3D", "#00564E", "#007F5F", "#359548", "#6AAB30", "#BACC0C", "#F1F500", "#ACDD3C", "#83E377", "#16DB93", "#FB9C70", "#FB9262", "#FA8072", "#FA776B", "#F95C74", "#F8417D", "#AA006A", "#7C0068", "#4E0066", "#410151", "#C5DBEA", "#8BB7D4", "#5193BE", "#176EA8", "#00609F", "#023E8A", "#000078", "#161664", "#17315F", "#0B0B30", "#FF0000", "#CC0000", "#9B2226", "#4E1114", "#800000", "#000000"))
+phycol <- phyla %>% 
+  mutate(Color = c("#440154", "#1C3B74", "#20A387", "#95D840", "#F94144", "#FFBE17"))
+write.csv2(phycol, file = "color_ppe_phyla_core.csv")
 
-tiff("Contribution_Distribution_Phylum_CORE.tiff", width = 17, height = 15, units = 'in', res = 600)
-treemap(phyla, 
+tiff("Contribution_Distribution_PPE_CORE_phylum_level.tiff", width = 17, height = 15, units = 'in', res = 600)
+treemap(phycol, 
         index = "X", 
         vSize = "Total", 
         type = "color",
@@ -227,16 +241,16 @@ treemap(phyla,
         position.legend = "none", 
         fontsize.labels = 20,
         fontsize.title = 30,
-        title = "Muestras Lab FONDECYT",
+        title = "CORE labmicmar database",
         title.legend = NA,
         border.col = NA
 )
 dev.off()
 
-tiff("Contribution_Distribution_Phylum_CORE_Legend.tiff", width = 10, height = 7, units = 'in', res = 600)
+tiff("Contribution_Distribution_PPE_CORE_phylum_level_legend.tiff", width = 10, height = 7, units = 'in', res = 600)
 plot.new()
 par(mar = c(0,0,0,0), oma = c(0,0,0,0))
-legend("center", legend = phyla[, 1], cex = 1.2, ncol = 2, fill = phyla$Color, x.intersp = 0.3, xjust = 0.3, yjust = 0.5, y.intersp = 1, bty = "n", adj = 0, text.width = 0.3, pt.cex = 0.3)
+legend("center", legend = phyla[, 1], cex = 1.2, ncol = 2, fill = phycol$Color, x.intersp = 0.3, xjust = 0.3, yjust = 0.5, y.intersp = 1, bty = "n", adj = 0, text.width = 0.3, pt.cex = 0.3)
 dev.off()
 ```
 
@@ -255,76 +269,20 @@ relative <- relative[phyla$X, ] #mantener orden
 relative <- as.data.frame(t(relative))
 relative <- rltv.Otu.Table(relative)
 apply(relative, 2, function(x) sum(x))[1:72]
-write.csv2(relative, file = "relative_abundance_core.csv")
+write.csv2(relative, file = "relative_abundance_ppe_core_phylum_level.csv")
 #rltvTSDiv <- rltvTSDiv[, -11]
 
-tiff("Relative_Abundance_Phylum_CORE.tiff", width = 20, height = 8, units = 'in', res = 600)
+tiff("Relative_Abundance_PPE_CORE_phylum_lvl.tiff", width = 20, height = 8, units = 'in', res = 600)
 par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
-barplot(t(relative), border = NA, ylab = "Relative Abundance", ylim = c(0,1), axes = TRUE, col = phyla$Color, las = 2, cex.names = 0.8, cex.axis = 0.9)
+barplot(t(relative), border = NA, ylab = "Relative Abundance", ylim = c(0,1), axes = TRUE, col = phycol$Color, las = 2, cex.names = 0.8, cex.axis = 0.9)
 dev.off()
 
-tiff("Relative_Abundance_Phylum_CORE_Legend.tiff", width = 10, height = 7, units = 'in', res = 600)
+tiff("Relative_Abundance_PPE_CORE_phylum_lvl_legend.tiff", width = 10, height = 7, units = 'in', res = 600)
 plot.new()
 par(mar = c(0,0,0,0), oma = c(0,0,0,0))
-legend("center", legend = colnames(relative), cex = 1.1, ncol = 2, fill = phyla$Color, x.intersp = 0.2, xjust = 0.2, yjust = 0.5, y.intersp = 1, bty = "n", adj = 0, text.width = 0.2, pt.cex = 0.2)
+legend("center", legend = colnames(relative), cex = 1.1, ncol = 2, fill = phycol$Color, x.intersp = 0.2, xjust = 0.2, yjust = 0.5, y.intersp = 1, bty = "n", adj = 0, text.width = 0.2, pt.cex = 0.2)
 dev.off()
 ```
-
-```{r, echo=TRUE, message=TRUE, warning=TRUE}
-ppe.core <- ph.core %>% 
-  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
-write.csv2(ppe.core, "PPE_ASV_CORE.csv")
-ppe <- as.data.frame(t(ppe.core))
-ppe <- ppe[, -c(37,38)]
-ppe <- ppe %>% 
-  mutate(Cha = rowSums(ppe[1:12]),
-         Fla = rowSums(ppe[13:24]), 
-         Hu = rowSums(ppe[25:36]), 
-         Pc = rowSums(ppe[37:41]), 
-         Ho = rowSums(ppe[42:43]), 
-         LC = rowSums(ppe[44:55]), 
-         Qin = rowSums(ppe[56:65]), 
-         Qc = rowSums(ppe[66:67]), 
-         ZZ = rowSums(ppe[68:72]), 
-         Total = rowSums(ppe[1:72])
-         )
-ppe <- mutate(ppe, Color = c("#00564E", "#BACC8C", "#ACDD3C", "#F95C74", "#AA006A", "#83E377"))
-write.csv2(ppe, "edited_PPE_CORE.csv")
-relative.ppe <- rltv.Otu.Table(ppe.core) %>% as.data.frame()
-write.csv2(relative.ppe, "relative_abundance_ppe_core.csv")
-
-ppe.tree <- read.csv("edited_PPE_CORE.csv", 
-                     header = TRUE, 
-                     sep = ";", 
-                     dec = ".", 
-                     skip = 0)
-
-tiff("Contribution_Distribution_sPPE_Phylum_CORE.tiff", width = 17, height = 15, units = 'in', res = 600)
-treemap(ppe.tree, 
-        index = "X", 
-        vSize = "Total", 
-        type = "color",
-        vColor = "Color",
-        position.legend = "none", 
-        fontsize.labels = 20,
-        fontsize.title = 30,
-        title.legend = NA,
-        border.col = NA
-)
-dev.off()
-
-tiff("Relative_Abundance_sPPE_Phylum_CORE.tiff", width = 20, height = 9, units = 'in', res = 600)
-par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
-barplot(t(relative.ppe), border = NA, ylab = "Relative Abundance", ylim = c(0,1), axes = TRUE, col = ppe.tree$Color, las = 2, cex.names = 0.8, cex.axis = 0.9)
-dev.off()
-
-tiff("Relative_Abundance_sPPE_Phylum_CORE_Legend.tiff", width = 10, height = 7, units = 'in', res = 600)
-plot.new()
-par(mar = c(0,0,0,0), oma = c(0,0,0,0))
-legend("center", legend = colnames(relative.ppe), cex = 1.1, ncol = 2, fill = ppe.tree$Color, x.intersp = 0.2, xjust = 0.2, yjust = 0.5, y.intersp = 1, bty = "n", adj = 0, text.width = 0.2, pt.cex = 0.2)
-dev.off()
-```
-
 
 ## Data preparation for UpSetR
 ```{r, echo=TRUE, message=TRUE, warning=TRUE}
@@ -448,7 +406,7 @@ diff.phy <- diff.phy %>%
          Cryptophyta = rowSums(diff.phy[c(3,7)])
          ) %>% 
   select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
-write.csv2(diff.phy, file = "/Users/Artemis/Documents/GitHub/CORE/Analisis/ppe_not_shared_phylum_abundance.csv")
+write.csv2(diff.phy, file = "ppe_not_shared_phylum_abundance.csv")
 ```
 
 ```{r Cha, echo=TRUE, message=TRUE, warning=TRUE}
