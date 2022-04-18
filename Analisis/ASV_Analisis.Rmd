@@ -1,0 +1,30 @@
+---
+title: "ASV_Analisis"
+
+output: html_document
+---
+
+## Biblioteca de funciones
+```{r libraries, echo=TRUE, message=TRUE, include=FALSE}
+library(tidyverse)
+library(leaflet)
+library(data.table)
+library(vegan)
+library(treemap)
+library(d3treeR)
+library(UpSetR)
+library(RColorBrewer)
+library(plotly)
+```
+
+## Importe de datos
+```{r dataframes, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
+#Tabla abundancia de ASV
+CORE <- read.csv("D:/Documents/GitHub/CORE/DADA2/seqtab_nonchim.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0, 
+                 fill = TRUE, 
+                 row.names = 1)
+CORE 
+```
