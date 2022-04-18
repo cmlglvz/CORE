@@ -4,6 +4,7 @@ title: "ASV_Analisis"
 output: html_document
 ---
 
+
 ## Biblioteca de funciones
 ```{r libraries, echo=TRUE, message=TRUE, include=FALSE}
 library(tidyverse)
@@ -17,6 +18,7 @@ library(RColorBrewer)
 library(plotly)
 ```
 
+
 ## Importe de datos
 ```{r dataframes, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
 #Tabla abundancia de ASV
@@ -26,5 +28,73 @@ CORE <- read.csv("D:/Documents/GitHub/CORE/DADA2/seqtab_nonchim.csv",
                  skip = 0, 
                  fill = TRUE, 
                  row.names = 1)
-CORE 
+CORE <- apply(CORE, 2, function(x) as.numeric(as.integer(x))) %>% as.data.frame()
+samples <- c("C1A17", "C1F18", "C1A18", "C2A17", "C2F18", "C2A18", "C3A17", "C3F18", "C3A18", "C4A17", "C4F18", "C4A18", "F1A17", "F1F18", "F1A18", "F2A17", "F2F18", "F2A18", "F3A17", "F3F18", "F3A18", "F4A17", "F4F18", "F4A18", "H1A17", "H1F18", "H1A18", "H2A17", "H2F18", "H2A18", "H3A17", "H3F18", "H3A18", "H4A17", "H4F18", "H4A18", "P1F18", "P1A18", "P2F18", "P3F18", "P4F18", "Re1A17", "Re1F18", "L1A17", "L1F18", "L1A18", "L2A17", "L2F18", "L2A18", "L3A17", "L3F18", "L3A18", "L4A17", "L4F18", "L4A18", "Q1A17", "Q1F18", "Q2A17", "Q2F18", "Q3A17", "Q3F18", "Q3A18", "Q4A17", "Q4F18", "Q4A18", "Qc1A17", "Qc2A17", "Z1A18", "Z2A18", "Z3A18", "Z4A18", "Z5A18")
+rownames(CORE) <- samples
+write.csv2(CORE, "CORE_ASV.csv") #Esto es lo mismo que seqtab_nonchim.csv pero con el nombre de las muestras actualizado
+
+TAXA <- read.csv("https://raw.githubusercontent.com/cmlglvz/CORE/main/DADA2/taxa.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0) %>% 
+  rename(Seq = X) %>% 
+  add_column(ASV = c(paste0("ASV_", 1:11155)), .after = "Seq")
+rownames(TAXA) <- TAXA[, 1]
+write.csv2(TAXA, "TAXA.csv")
+print(all(colnames(CORE)%in%rownames(TAXA)))
+```
+
+## Seleccion de ASV
+```{r selection, echo=TRUE, message=TRUE, warning=TRUE}
+#Lo primero es filtrar las ASV que no pudieron ser asignadas a nivel de Reino y Supergrupo
+non.assigned <- TAXA[rowSums(is.na(TAXA[, c(3,4)])) > 0, ]
+NASeq <- non.assigned[,1]
+sTAXA <- TAXA[!(row.names(TAXA) %in% all_of(NASeq)), ] #Hay dos ASV que corresponden a bacterias (?)
+write.csv2(sTAXA, "selected_TAXA.csv")
+sCORE <- select(CORE, -all_of(NASeq))
+print(all(colnames(sCORE)%in%rownames(sTAXA)))
+write.csv2(sCORE, "selected_ASV.csv")
+```
+
+## Union de tablas
+```{r union, echo=TRUE, message=TRUE, warning=TRUE}
+Union <- as.data.frame(t(sCORE))
+Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "C1A17")
+Union <- mutate(Union, 
+                Cha = rowSums(Union[2:13]), 
+                Fla = rowSums(Union[14:25]), 
+                Hu = rowSums(Union[26:37]), 
+                Pc = rowSums(Union[38:42]), 
+                Ho = rowSums(Union[43:44]), 
+                LC = rowSums(Union[45:56]), 
+                Qin = rowSums(Union[57:66]),
+                Qc = rowSums(Union[67:68]), 
+                ZZ = rowSums(Union[69:73]), 
+                Total = rowSums(Union[2:73])
+                )
+ATs <- inner_join(Union, sTAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(ATs) <- all_of(ATs[,1])
+write.csv2(ATs, "AT_CORE.csv")
+```
+
+
+## Agrupar ASV por clasificacion taxonomica
+```{r clustering, echo=TRUE, message=TRUE, warning=TRUE}
+#Esta es la funcion que dejo el Benja en el github del lab
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else { 
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+
+
 ```
