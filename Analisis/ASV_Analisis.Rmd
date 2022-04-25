@@ -137,7 +137,47 @@ upset(aus.pres,
       sets.x.label = "ASV per sampling site")
 dev.off()
 
+png("Selected_UpSet.png", width = 27, height = 11, units = "in", res = 600)
+upset(aus.pres, 
+      nsets = 9, 
+      nintersects = NA, 
+      sets = c("Cha", "Fla", "Hu", "Pc", "Ho", "LC", "Qin", "Qc", "ZZ"), 
+      intersections = list("ZZ", "Qc", "Qin", "LC", "Ho", "Pc", "Hu", "Fla", "Cha", 
+                           list("Fla", "ZZ"), 
+                           list("Cha", "ZZ"), 
+                           list("Cha", "Fla"), 
+                           list("Qin", "LC"), 
+                           list("Hu", "LC"), 
+                           list("Hu", "ZZ"), 
+                           list("Cha", "Fla", "Hu", "ZZ"), 
+                           list("Cha", "Fla", "Hu", "Pc"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC", "Qin", "ZZ"), 
+                           list("Cha", "Fla", "Hu", "Pc", "Ho", "LC", "Qin", "ZZ"), 
+                           list("Cha", "Fla", "Hu", "Pc", "Ho", "LC", "Qin", "Qc", "ZZ")
+                           ),
+      empty.intersections = "on",
+      keep.order = TRUE, 
+      query.legend = "top", 
+      queries = list(list(query = intersects, params = "Cha", color = "#F94144", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Fla", color = "#F3722C", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Hu", color = "#F8961E", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pc", color = "#F9C74F", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "Ho", color = "#90BE6D", active = TRUE, query.name = "Unique Hornos ASV"), 
+                     list(query = intersects, params = "LC", color = "#43AA8B", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = "Qin", color = "#577590", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = "Qc", color = "#41576C", active = TRUE, query.name = "Unique Quintero-costa ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Metal axis shared ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "Ho", "LC", "Qin", "Qc", "ZZ"), color = "#FF0000", active = TRUE, query.name = "Total shared ASV")
+                     ), 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites intersections", 
+      sets.x.label = "ASV per sampling site")
+dev.off()
+
 #Para ver todas las intersecciones
+png("Complete_UpSet.png", width = 50, height = 18, units = "in", res = 300)
 upset(aus.pres, 
       nsets = 9, 
       nintersects = NA, 
@@ -149,6 +189,7 @@ upset(aus.pres,
       mainbar.y.label = "Sites intersections", 
       sets.x.label = "ASV per sampling site"
       )
+dev.off()
 ```
 
 
