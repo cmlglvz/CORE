@@ -171,7 +171,7 @@ Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
 Phylum <- Tax.sum(sQinLC, sTAXA, 5) %>% 
   t() %>% 
   as.data.frame() %>% 
-  mutate(Color = c("#002C3D", "#00564E", "#007F5F", "#359548", "#6AAB30", "#BACC0C", "#F1F500", "#ACDD3C", "#83E377", "#16DB93", "#FB9C70", "#FB9262", "#FA8072", "#FA776B", "#F95C74", "#F8417D", "#AA006A", "#7C0068", "#4E0066", "#410151", "#C5DBEA", "#000000", "#8BB7D4", "#5193BE", "#176EA8", "#00609F", "#023E8A", "#000078", "#161664", "#17315F", "#0B0B30", "#FF0000", "#CC0000", "#9B2226", "#4E1114"))
+  mutate(Color = c("#00564E", "#002C3D", "#007F5F", "#359548", "#F1F500", "#16DB93", "#6AAB30", "#4E0066", "#83E377", "#BACC0C", "#FA8072", "#FB9262", "#FB9C70", "#FA776B", "#AA006A", "#F8417D", "#F95C74", "#16DB93", "#ACDD3C", "#410151", "#C5DBEA", "#000000", "#8BB7D4", "#5193BE", "#176EA8", "#00609F", "#023E8A", "#000078", "#161664", "#17315F", "#0B0B30", "#FF0000", "#CC0000", "#9B2226", "#4E1114"))
 write.csv2(Phylum, "phylum_color_QinLC.csv")
 Phylum.Total <- mutate(Phylum,
                  Cha = rowSums(Phylum[1:12]), 
@@ -204,6 +204,28 @@ treemap(read.csv("phylum_color_total_QinLC.csv",
 )
 dev.off()
 
+png("Treemap_Phylum_Total_Legend.png", width = 10, height = 7, units = 'in', res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("phylum_color_total_QinLC.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = Phylum.Total$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+
 #Sólo PPE
 PhyPPE <- read.csv("phylum_color_total_QinLC.csv", 
                    header = TRUE, 
@@ -212,6 +234,7 @@ PhyPPE <- read.csv("phylum_color_total_QinLC.csv",
                    skip = 0, 
                    fill = TRUE)
 PhyPPE <- PhyPPE[c(1,5,6,8,13,15,18),]
+
 
 png("Contribution_Distribution_Phylum_PPE_ASV.png", width = 17, height = 15, units = 'in', res = 600)
 treemap(PhyPPE, 
@@ -227,5 +250,50 @@ treemap(PhyPPE,
         border.col = NA
 )
 dev.off()
+```
 
+
+```{r recognition, echo=TRUE, message=TRUE, warning=TRUE}
+shared <- aus.pres %>% filter(Cha == 1 & Fla == 1 & Hu == 1 & Pc == 1 & LC == 1 & Qin == 1)
+sha.abun <- select(sQinLC, all_of(shared$Seq))
+div.sha <- Tax.sum(sha.abun, sTAXA, 5) %>% as.data.frame()
+colnames(div.sha)[c(6,14)] <- c("A", "B")
+div.sha <- div.sha %>% 
+  mutate(Cryptophyta = rowSums(div.sha[c(6,14)]), 
+         .after = "Ochrophyta")
+div.sha <- div.sha[,-c(7,15)]
+sha <- shared$Seq
+diff.abun <- select(sQinLC, -all_of(sha))
+div.diff <- Tax.sum(diff.abun, sTAXA, 5) %>% 
+  as.data.frame()
+colnames(div.diff)[c(12,21)] <- c("A", "B")
+ppe.diff <- div.diff %>% 
+  select(Chlorophyta, Ochrophyta, A, B, Haptophyta, Katablepharidophyta, Rhodophyta)
+ppe.diff <- mutate(ppe.diff, Cryptophyta = rowSums(ppe.diff[3:4]), .after = "Ochrophyta")
+ppe.diff <- ppe.diff[,-c(4:5)]
+write.csv2(ppe.diff, file = "ppe_not_shared_division_abundance.csv")
+
+cha <- aus.pres %>% filter(Cha == 1)
+unique.cha <- cha %>% filter(Fla == 0 & Hu == 0 & Pc == 0 & LC == 0 & Qin == 0)
+cha.abun <- select(sQinLC, all_of(unique.cha$Seq))
+write.csv2(cha.abun, file = "unique_chanaral_asv.csv")
+div.cha <- Tax.sum(cha.abun, sTAXA, 5) %>% as.data.frame()
+div.cha <- div.cha[, c(3,14,15,19)]
+write.csv2(div.cha, file = "ppe_unique_chanaral_division_abundance.csv")
+
+fla <- aus.pres %>% filter(Fla == 1)
+unique.fla <- fla %>% filter(Cha == 0 & Hu == 0 & Pc == 0 & LC == 0 & Qin == 0)
+fla.abun <- select(sQinLC, all_of(unique.fla$Seq))
+write.csv2(fla.abun, file = "unique_flamenco_asv.csv")
+div.fla <- Tax.sum(fla.abun, sTAXA, 5) %>% as.data.frame()
+div.fla <- div.fla[, c(4,6,10,16)]
+write.csv2(div.fla, file = "ppe_unique_flamenco_division_abundance.csv")
+
+hu <- aus.pres %>% filter(Hu == 1)
+unique.hu <- hu %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & LC == 0 & Qin == 0)
+hu.abun <- select(sQinLC, all_of(unique.hu$Seq))
+write.csv2(hu.abun, file = "unique_huasco_asv.csv")
+div.hu <- Tax.sum(hu.abun, sTAXA, 5) %>% as.data.frame()
+div.hu <- div.hu[, c(1,2,4,3)]
+write.csv2(div.hu, file = "/Users/Artemis/Documents/GitHub/untitlelied/Data/Revisited/ppe_unique_huasco_division_abundance.csv")
 ```
