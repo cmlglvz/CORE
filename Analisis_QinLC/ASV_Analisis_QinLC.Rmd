@@ -1,0 +1,231 @@
+---
+title: "ASV_Analisis_QinLC"
+
+output: html_document
+---
+
+
+## Biblioteca de funciones
+```{r libraries, echo=TRUE, message=TRUE, include=FALSE}
+library(tidyverse)
+library(leaflet)
+library(data.table)
+library(vegan)
+library(treemap)
+library(d3treeR)
+library(UpSetR)
+library(RColorBrewer)
+library(plotly)
+```
+
+
+## Importe de datos
+```{r dataframes, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
+#Tabla abundancia de ASV
+QinLC <- read.csv("D:/Documents/GitHub/CORE/DADA2_QinLC/seqtab_nonchim.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0, 
+                 fill = TRUE, 
+                 row.names = 1)
+QinLC <- apply(QinLC, 2, function(x) as.numeric(as.integer(x))) %>% as.data.frame()
+samples <- c("C1A17", "C1F18", "C1A18", "C2A17", "C2F18", "C2A18", "C3A17", "C3F18", "C3A18", "C4A17", "C4F18", "C4A18", "F1A17", "F1F18", "F1A18", "F2A17", "F2F18", "F2A18", "F3A17", "F3F18", "F3A18", "F4A17", "F4F18", "F4A18", "H1A17", "H1F18", "H1A18", "H2A17", "H2F18", "H2A18", "H3A17", "H3F18", "H3A18", "H4A17", "H4F18", "H4A18", "P1F18", "P1A18", "P2F18", "P3F18", "P4F18", "L1A17", "L1F18", "L1A18", "L2A17", "L2F18", "L2A18", "L3A17", "L3F18", "L3A18", "L4A17", "L4F18", "L4A18", "Q1A17", "Q1F18", "Q2A17", "Q2F18", "Q3A17", "Q3F18", "Q3A18", "Q4A17", "Q4F18", "Q4A18")
+rownames(QinLC) <- samples
+write.csv2(QinLC, "QinLC_ASV.csv")
+
+TAXA <- read.csv("https://raw.githubusercontent.com/cmlglvz/CORE/main/DADA2_QinLC/taxa.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0) %>% 
+  rename(Seq = X) %>% 
+  add_column(ASV = c(paste0("ASV_", 1:6159)), .after = "Seq")
+rownames(TAXA) <- TAXA[, 1]
+write.csv2(TAXA, "TAXA.csv")
+print(all(colnames(QinLC)%in%rownames(TAXA)))
+```
+
+## Seleccion de ASV
+```{r selection, echo=TRUE, message=TRUE, warning=TRUE}
+#Lo primero es filtrar las ASV que no pudieron ser asignadas a nivel de Reino y Supergrupo
+non.assigned <- TAXA[rowSums(is.na(TAXA[, c(3,4)])) > 0, ]
+NASeq <- non.assigned[,1]
+sTAXA <- TAXA[!(row.names(TAXA) %in% all_of(NASeq)), ] #Hay dos ASV que corresponden a bacterias (?)
+write.csv2(sTAXA, "selected_TAXA.csv")
+sQinLC <- select(QinLC, -all_of(NASeq))
+print(all(colnames(sQinLC)%in%rownames(sTAXA)))
+write.csv2(sQinLC, "selected_QinLC_ASV.csv")
+```
+
+
+## Union de tablas
+```{r union, echo=TRUE, message=TRUE, warning=TRUE}
+Union <- as.data.frame(t(sQinLC))
+Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "C1A17")
+Union <- mutate(Union, 
+                Cha = rowSums(Union[2:13]), 
+                Fla = rowSums(Union[14:25]), 
+                Hu = rowSums(Union[26:37]), 
+                Pc = rowSums(Union[38:42]), 
+                LC = rowSums(Union[43:54]), 
+                Qin = rowSums(Union[55:64]),
+                Total = rowSums(Union[2:64])
+                )
+ATs <- inner_join(Union, sTAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(ATs) <- all_of(ATs[,1])
+write.csv2(ATs, "AT_sQinLC.csv")
+```
+
+
+## Preparacion UpSet
+```{r preparation, echo=TRUE, message=TRUE, warning=TRUE}
+asv <- ATs[, 2]
+edited <- ATs[, -c(2, 72:80)]
+rownames(edited) <- asv
+write.csv2(edited, "edited_AT.csv")
+APATs <- edited[, -1]
+APATs <- decostand(APATs, method = "pa")
+APATs <- add_column(APATs, Seq = all_of(edited$Seq), .before = "C1A17")
+write.csv2(APATs, "Ausencia_Presencia_sQinLC.csv")
+```
+
+
+## UpSet para "todas" las ASV
+```{r complete, echo=TRUE, message=TRUE, warning=TRUE}
+aus.pres <- read.csv("Ausencia_Presencia_sQinLC.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     dec = ".", 
+                     skip = 0)
+
+png("Complete_UpSet.png", width = 50, height = 18, units = "in", res = 600)
+upset(aus.pres, 
+      nsets = 9, 
+      nintersects = NA, 
+      sets = c("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), 
+      empty.intersections = "on",
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites intersections", 
+      sets.x.label = "ASV per sampling site"
+      )
+dev.off()
+
+png("Selected_UpSet.png", width = 30, height = 15, units = "in", res = 600)
+upset(aus.pres, 
+      nsets = 6, 
+      nintersects = NA, 
+      sets = c("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), 
+      intersections = list("Qin", "LC", "Pc", "Hu", "Fla", "Cha", 
+                           list("Cha", "Fla"), 
+                           list("Hu", "Pc"), 
+                           list("Qin", "LC"), 
+                           list("Cha", "Hu", "Qin"), 
+                           list("Fla", "Pc", "LC"), 
+                           list("Cha", "Fla", "Qin", "LC"), 
+                           list("Hu", "Pc", "Qin", "LC"), 
+                           list("Cha", "Fla", "Hu", "Pc"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC"), 
+                           list("Cha", "Fla", "Hu", "Pc", "Qin"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC", "Qin")
+                           ),
+      empty.intersections = "on",
+      keep.order = TRUE, 
+      query.legend = "top", 
+      queries = list(list(query = intersects, params = "Cha", color = "#F94144", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Fla", color = "#F3722C", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Hu", color = "#F8961E", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pc", color = "#F9C74F", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "LC", color = "#43AA8B", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = "Qin", color = "#577590", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Metal axis shared ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#FF0000", active = TRUE, query.name = "Total shared ASV")
+                     ), 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites intersections", 
+      sets.x.label = "ASV per sampling site")
+dev.off()
+```
+
+
+## Agrupar ASV por clasificacion taxonomica
+```{r clustering, echo=TRUE, message=TRUE, warning=TRUE}
+#Esta es la funcion que dejo el Benja en el github del lab
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else { 
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+
+Phylum <- Tax.sum(sQinLC, sTAXA, 5) %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  mutate(Color = c("#002C3D", "#00564E", "#007F5F", "#359548", "#6AAB30", "#BACC0C", "#F1F500", "#ACDD3C", "#83E377", "#16DB93", "#FB9C70", "#FB9262", "#FA8072", "#FA776B", "#F95C74", "#F8417D", "#AA006A", "#7C0068", "#4E0066", "#410151", "#C5DBEA", "#000000", "#8BB7D4", "#5193BE", "#176EA8", "#00609F", "#023E8A", "#000078", "#161664", "#17315F", "#0B0B30", "#FF0000", "#CC0000", "#9B2226", "#4E1114"))
+write.csv2(Phylum, "phylum_color_QinLC.csv")
+Phylum.Total <- mutate(Phylum,
+                 Cha = rowSums(Phylum[1:12]), 
+                 Fla = rowSums(Phylum[13:24]), 
+                 Hu = rowSums(Phylum[25:36]), 
+                 Pc = rowSums(Phylum[37:41]), 
+                 LC = rowSums(Phylum[42:53]), 
+                 Qin = rowSums(Phylum[54:63]), 
+                 Total = rowSums(Phylum[1:63]), 
+                 .after = "Q4A18") %>% 
+  as.data.frame()
+write.csv2(Phylum.Total, "phylum_color_total_QinLC.csv")
+
+png("Contribution_Distribution_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
+treemap(read.csv("phylum_color_total_QinLC.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 dec = ".", 
+                 skip = 0), 
+        index = "X", 
+        vSize = "Total", 
+        type = "color",
+        vColor = "Color", 
+        position.legend = "none", 
+        fontsize.labels = 20,
+        fontsize.title = 30,
+        title = "Distribution and contribution of total ASV",
+        title.legend = NA,
+        border.col = NA
+)
+dev.off()
+
+#Sólo PPE
+PhyPPE <- read.csv("phylum_color_total_QinLC.csv", 
+                   header = TRUE, 
+                   sep = ";", 
+                   dec = ".", 
+                   skip = 0, 
+                   fill = TRUE)
+PhyPPE <- PhyPPE[c(1,5,6,8,13,15,18),]
+
+png("Contribution_Distribution_Phylum_PPE_ASV.png", width = 17, height = 15, units = 'in', res = 600)
+treemap(PhyPPE, 
+        index = "X", 
+        vSize = "Total", 
+        type = "color",
+        vColor = "Color", 
+        position.legend = "none", 
+        fontsize.labels = 20,
+        fontsize.title = 30,
+        title = "Distribution and contribution of PPE ASV",
+        title.legend = NA,
+        border.col = NA
+)
+dev.off()
+
+```
