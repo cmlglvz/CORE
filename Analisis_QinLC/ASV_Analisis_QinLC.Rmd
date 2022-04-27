@@ -120,6 +120,7 @@ upset(aus.pres,
                            list("Cha", "Fla"), 
                            list("Hu", "Pc"), 
                            list("Qin", "LC"), 
+                           list("Fla", "Pc"), 
                            list("Cha", "Hu", "Qin"), 
                            list("Fla", "Pc", "LC"), 
                            list("Cha", "Fla", "Qin", "LC"), 
@@ -249,6 +250,50 @@ treemap(PhyPPE,
         title.legend = NA,
         border.col = NA
 )
+dev.off()
+```
+
+
+```{r upset ppe, echo=TRUE,message=TRUE,warning=TRUE}
+#UpSet para PPE
+ppe.taxa <- filter(sTAXA, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta" | Division == "Cryptophyta:nucl")
+ppe.asv <- select(sQinLC, all_of(ppe.taxa$Seq))
+ppe.auspres <- filter(aus.pres, Seq %in% all_of(ppe.taxa$Seq))
+png("Selected_PPE_UpSet.png", width = 30, height = 15, units = "in", res = 600)
+upset(ppe.auspres, 
+      nsets = 6, 
+      nintersects = NA, 
+      sets = c("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), 
+      intersections = list("Qin", "LC", "Pc", "Hu", "Fla", "Cha", 
+                           list("Cha", "Fla"), 
+                           list("Hu", "Pc"), 
+                           list("Qin", "LC"), 
+                           list("Cha", "Hu", "Qin"), 
+                           list("Fla", "Pc", "LC"), 
+                           list("Cha", "Fla", "Qin", "LC"), 
+                           list("Hu", "Pc", "Qin", "LC"), 
+                           list("Cha", "Fla", "Hu", "Pc"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC"), 
+                           list("Cha", "Fla", "Hu", "Pc", "Qin"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC", "Qin")
+      ),
+      empty.intersections = "on",
+      keep.order = TRUE, 
+      query.legend = "top", 
+      queries = list(list(query = intersects, params = "Cha", color = "#F94144", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Fla", color = "#F3722C", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Hu", color = "#F8961E", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pc", color = "#F9C74F", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "LC", color = "#43AA8B", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = "Qin", color = "#577590", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Metal axis shared ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#FF0000", active = TRUE, query.name = "Total shared ASV")
+      ), 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites intersections", 
+      sets.x.label = "ASV per sampling site")
 dev.off()
 ```
 
