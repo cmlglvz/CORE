@@ -294,6 +294,36 @@ unique.hu <- hu %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & LC == 0 & Qin == 0)
 hu.abun <- select(sQinLC, all_of(unique.hu$Seq))
 write.csv2(hu.abun, file = "unique_huasco_asv.csv")
 div.hu <- Tax.sum(hu.abun, sTAXA, 5) %>% as.data.frame()
-div.hu <- div.hu[, c(1,2,4,3)]
-write.csv2(div.hu, file = "/Users/Artemis/Documents/GitHub/untitlelied/Data/Revisited/ppe_unique_huasco_division_abundance.csv")
+div.hu <- div.hu[, c(1,7:9)]
+write.csv2(div.hu, file = "ppe_unique_huasco_division_abundance.csv")
+
+pc <- aus.pres %>% filter(Pc == 1)
+unique.pc <- pc %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & LC == 0 & Qin == 0)
+pc.abun <- select(sQinLC, all_of(unique.pc$Seq))
+write.csv2(pc.abun, file = "unique_punta_choros_asv.csv")
+div.pc <- Tax.sum(pc.abun, sTAXA, 5) %>% as.data.frame()
+div.pc <- div.pc[, c(1,8,14,15,17)]
+write.csv2(div.pc, file = "ppe_unique_punta_choros_division_abundance.csv")
+
+lc <- aus.pres %>% filter(LC == 1)
+unique.lc <- lc %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Hu == 0 & Qin == 0)
+lc.abun <- select(sQinLC, all_of(unique.lc$Seq))
+write.csv2(lc.abun, file = "unique_las_cruces_asv.csv")
+div.lc <- Tax.sum(lc.abun, sTAXA, 5) %>% as.data.frame()
+div.lc <- div.lc[, c(4,7,9,11,13,16,18)]
+colnames(div.lc)[c(5,6)] <- c("A", "B")
+div.lc <- mutate(div.lc, Cryptophyta = rowSums(div.lc[5:6])) 
+div.lc <- select(div.lc, Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(div.lc, file = "ppe_unique_las_cruces_division_abundance.csv")
+
+qin <- aus.pres %>% filter(Qin == 1)
+unique.qin <- qin %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Hu == 0 & LC == 0)
+qin.abun <- select(sQinLC, all_of(unique.qin$Seq))
+write.csv2(qin.abun, file = "unique_quintero_asv.csv")
+div.qin <- Tax.sum(qin.abun, sTAXA, 5) %>% as.data.frame()
+div.qin <- div.qin[, c(4,13,14,15,20,21)]
+write.csv2(div.qin, file = "ppe_unique_quintero_division_abundance.csv")
+
+#Proximo dataframe editado externamente
+
 ```
