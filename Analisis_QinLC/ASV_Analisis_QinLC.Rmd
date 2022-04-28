@@ -49,7 +49,7 @@ print(all(colnames(QinLC)%in%rownames(TAXA)))
 #Lo primero es filtrar las ASV que no pudieron ser asignadas a nivel de Reino y Supergrupo
 non.assigned <- TAXA[rowSums(is.na(TAXA[, c(3,4)])) > 0, ]
 NASeq <- non.assigned[,1]
-sTAXA <- TAXA[!(row.names(TAXA) %in% all_of(NASeq)), ] #Hay dos ASV que corresponden a bacterias (?)
+sTAXA <- TAXA[!(row.names(TAXA) %in% all_of(NASeq)), ]
 write.csv2(sTAXA, "selected_TAXA.csv")
 sQinLC <- select(QinLC, -all_of(NASeq))
 print(all(colnames(sQinLC)%in%rownames(sTAXA)))
@@ -280,12 +280,12 @@ upset(ppe.auspres,
       empty.intersections = "on",
       keep.order = TRUE, 
       query.legend = "top", 
-      queries = list(list(query = intersects, params = "Cha", color = "#F94144", active = TRUE, query.name = "Unique Chañaral ASV"), 
-                     list(query = intersects, params = "Fla", color = "#F3722C", active = TRUE, query.name = "Unique Flamenco ASV"), 
-                     list(query = intersects, params = "Hu", color = "#F8961E", active = TRUE, query.name = "Unique Huasco ASV"), 
-                     list(query = intersects, params = "Pc", color = "#F9C74F", active = TRUE, query.name = "Unique Punta Choros ASV"), 
-                     list(query = intersects, params = "LC", color = "#43AA8B", active = TRUE, query.name = "Unique Las Cruces ASV"), 
-                     list(query = intersects, params = "Qin", color = "#577590", active = TRUE, query.name = "Unique Quintero ASV"), 
+      queries = list(list(query = intersects, params = "Cha", color = "#FF931F", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Fla", color = "#FCAE5A", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Hu", color = "#023E8A", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pc", color = "#7DAECF", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "LC", color = "#78B12A", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = "Qin", color = "#8CD165", active = TRUE, query.name = "Unique Quintero ASV"), 
                      list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Metal axis shared ASV"), 
                      list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#FF0000", active = TRUE, query.name = "Total shared ASV")
       ), 
@@ -380,4 +380,181 @@ write.csv2(pPPETot, "ppe_total_division_abundance.csv")
 
 #Proximo dataframe editado externamente
 
+```
+
+
+```{r, echo=TRUE, message=TRUE, warning=TRUE}
+#Esto lo voy a arreglar pero por mientras lo dejaré así
+ppe.shaseqs <- ppe.auspres %>% filter(Cha == 1 & Fla == 1 & Hu == 1 & Pc == 1 & LC == 1 & Qin == 1)
+ppe.shaseqs <- filter(ATs, Seq %in% all_of(ppe.shaseqs$Seq))
+ppe.shared.asv <- select(ppe.asv, all_of(ppe.shaseqs$Seq))
+nombres <- paste(ppe.shaseqs$ASV, ppe.shaseqs$Species, sep = "_")
+colnames(ppe.shared.asv) <- nombres
+metal.env <- read.csv2("metal_environment_concentrations.csv", 
+                       header = TRUE, 
+                       sep = ";", 
+                       dec = ".", 
+                       skip = 0, 
+                       fill = TRUE, 
+                       row.names = 1)
+metal.env <- metal.env[-c(62:63),]
+metal.env$Site <- as.factor(metal.env$Site)
+metal.hel <- vegan::decostand(x = ppe.shared.asv, method = "hellinger")
+metal.dist <- vegan::vegdist(x = metal.hel, method = "bray", diag = TRUE)
+npmanova <- vegan::adonis(metal.dist ~ Site, data = metal.env, permutations = 1000)
+npmanova
+str(npmanova)
+npmanova$aov.tab$`Pr(>F)`[1]
+p.adonis <- npmanova[["aov.tab"]][["Pr(>F)"]][1]
+p.adonis
+
+otro.modelo <- vegan::adonis(metal.dist ~ Copper*Iron, 
+                             data = metal.env, 
+                             permutations = 1000)
+otro.modelo
+
+#volviendo al modelo anterior
+pairwise_p <- numeric()
+chafla.dist <- vegan::vegdist(metal.hel[c(1:24),], method = "bray", diag = TRUE)
+chafla.env <- metal.env[c(1:24),]
+chafla.test <- vegan::adonis(chafla.dist~Site, 
+                             data = chafla.env, 
+                             permutations = 1000)
+pairwise_p["Cha_Fla"] <- chafla.test[["aov.tab"]][["Pr(>F)"]][1]
+
+chahu.dist <- vegan::vegdist(metal.hel[c(1:12,25:36),], method = "bray", diag = TRUE)
+chahu.env <- metal.env[c(1:12, 25:36),]
+chahu.test <- vegan::adonis(chahu.dist~Site, 
+                             data = chahu.env, 
+                             permutations = 1000)
+pairwise_p["Cha_Hu"] <- chahu.test[["aov.tab"]][["Pr(>F)"]][1]
+
+chapc.dist <- vegan::vegdist(metal.hel[c(1:12, 37:41),], method = "bray", diag = TRUE)
+chapc.env <- metal.env[c(1:12, 37:41),]
+chapc.test <- vegan::adonis(chapc.dist~Site, 
+                             data = chapc.env, 
+                             permutations = 1000)
+pairwise_p["Cha_Pc"] <- chapc.test[["aov.tab"]][["Pr(>F)"]][1]
+
+chalc.dist <- vegan::vegdist(metal.hel[c(1:12, 42:53),], method = "bray", diag = TRUE)
+chalc.env <- metal.env[c(1:12,42:53),]
+chalc.test <- vegan::adonis(chalc.dist~Site, 
+                             data = chalc.env, 
+                             permutations = 1000)
+pairwise_p["Cha_LC"] <- chalc.test[["aov.tab"]][["Pr(>F)"]][1]
+
+chaqin.dist <- vegan::vegdist(metal.hel[c(1:12,54:63),], method = "bray", diag = TRUE)
+chaqin.env <- metal.env[c(1:12,54:63),]
+chaqin.test <- vegan::adonis(chaqin.dist~Site, 
+                             data = chaqin.env, 
+                             permutations = 1000)
+pairwise_p["Cha_Qin"] <- chaqin.test[["aov.tab"]][["Pr(>F)"]][1]
+
+flahu.dist <- vegan::vegdist(metal.hel[c(13:36),], method = "bray", diag = TRUE)
+flahu.env <- metal.env[c(13:36),]
+flahu.test <- vegan::adonis(flahu.dist~Site, 
+                             data = flahu.env, 
+                             permutations = 1000)
+pairwise_p["Fla_Hu"] <- flahu.test[["aov.tab"]][["Pr(>F)"]][1]
+
+flapc.dist <- vegan::vegdist(metal.hel[c(13:24,37:41),], method = "bray", diag = TRUE)
+flapc.env <- metal.env[c(13:24,37:41),]
+flapc.test <- vegan::adonis(flapc.dist~Site, 
+                             data = flapc.env, 
+                             permutations = 1000)
+pairwise_p["Fla_Pc"] <- flapc.test[["aov.tab"]][["Pr(>F)"]][1]
+
+flalc.dist <- vegan::vegdist(metal.hel[c(13:24,42:53),], method = "bray", diag = TRUE)
+flalc.env <- metal.env[c(13:24,42:53),]
+flalc.test <- vegan::adonis(flalc.dist~Site, 
+                             data = flalc.env, 
+                             permutations = 1000)
+pairwise_p["Fla_LC"] <- flalc.test[["aov.tab"]][["Pr(>F)"]][1]
+
+flaqin.dist <- vegan::vegdist(metal.hel[c(13:24,54:63),], method = "bray", diag = TRUE)
+flaqin.env <- metal.env[c(13:24,54:63),]
+flaqin.test <- vegan::adonis(flaqin.dist~Site, 
+                             data = flaqin.env, 
+                             permutations = 1000)
+pairwise_p["Fla_Qin"] <- flaqin.test[["aov.tab"]][["Pr(>F)"]][1]
+
+hupc.dist <- vegan::vegdist(metal.hel[c(25:41),], method = "bray", diag = TRUE)
+hupc.env <- metal.env[c(25:41),]
+hupc.test <- vegan::adonis(hupc.dist~Site, 
+                             data = hupc.env, 
+                             permutations = 1000)
+pairwise_p["Hu_Pc"] <- hupc.test[["aov.tab"]][["Pr(>F)"]][1]
+
+hulc.dist <- vegan::vegdist(metal.hel[c(25:36,42:53),], method = "bray", diag = TRUE)
+hulc.env <- metal.env[c(25:36,42:53),]
+hulc.test <- vegan::adonis(hulc.dist~Site, 
+                             data = hulc.env, 
+                             permutations = 1000)
+pairwise_p["Hu_LC"] <- hulc.test[["aov.tab"]][["Pr(>F)"]][1]
+
+huqin.dist <- vegan::vegdist(metal.hel[c(25:36,54:63),], method = "bray", diag = TRUE)
+huqin.env <- metal.env[c(25:36,54:63),]
+huqin.test <- vegan::adonis(huqin.dist~Site, 
+                             data = huqin.env, 
+                             permutations = 1000)
+pairwise_p["Hu_Qin"] <- huqin.test[["aov.tab"]][["Pr(>F)"]][1]
+
+pclc.dist <- vegan::vegdist(metal.hel[c(37:53),], method = "bray", diag = TRUE)
+pclc.env <- metal.env[c(37:53),]
+pclc.test <- vegan::adonis(pclc.dist~Site, 
+                             data = pclc.env, 
+                             permutations = 1000)
+pairwise_p["Pc_LC"] <- pclc.test[["aov.tab"]][["Pr(>F)"]][1]
+
+pcqin.dist <- vegan::vegdist(metal.hel[c(37:41,54:63),], method = "bray", diag = TRUE)
+pcqin.env <- metal.env[c(37:41,54:63),]
+pcqin.test <- vegan::adonis(pcqin.dist~Site, 
+                             data = pcqin.env, 
+                             permutations = 1000)
+pairwise_p["Pc_Qin"] <- pcqin.test[["aov.tab"]][["Pr(>F)"]][1]
+
+lcqin.dist <- vegan::vegdist(metal.hel[c(42:63),], method = "bray", diag = TRUE)
+lcqin.env <- metal.env[c(42:63),]
+lcqin.test <- vegan::adonis(lcqin.dist~Site, 
+                             data = lcqin.env, 
+                             permutations = 1000)
+pairwise_p["LC_Qin"] <- lcqin.test[["aov.tab"]][["Pr(>F)"]][1]
+
+p.adjust(pairwise_p, method = "BH") < 0.05
+
+lookup <- read.csv2("metal_environment_concentrations.csv", 
+                       header = TRUE, 
+                       sep = ";", 
+                       dec = ".", 
+                       skip = 0, 
+                       fill = TRUE) %>% 
+  rename(Samples = X)
+
+
+set.seed(19910420)
+nmds <- metaMDS(metal.dist, try = 100)
+nmds
+str(nmds)
+nmds$points
+mame1 <- scores(nmds) %>% #funcion vegan similar al objeto anterior 
+  as_tibble(rownames = "Samples") %>% 
+  inner_join(., lookup, by = "Samples") %>% 
+  mutate(Cu.Level = if_else(Copper > 10, "Higher", "Lower"))
+
+MAME <- ggplot(mame1, aes(x = NMDS1, y = NMDS2, color = Site, size = Iron)) + 
+  geom_point(aes(shape = Cu.Level)) + 
+  coord_fixed() + 
+  scale_color_manual(name = NULL, 
+                     breaks = c("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), 
+                     values = c("#3B014A", "#AA006A", "#023E8A", "#95B4D2", "#269C7A", "#ACDD3C"), 
+                     labels = c("Chañaral", 
+                                "Flamenco", 
+                                "Huasco", 
+                                "Punta de Choros", 
+                                "Las Cruces", 
+                                "Quintero")
+                     ) + 
+  theme_classic()
+
+ggsave("composite_nmds.png", plot = MAME)
 ```
