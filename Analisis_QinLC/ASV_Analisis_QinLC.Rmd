@@ -379,7 +379,67 @@ pPPETot <- mutate(pPPETot, Cryptophyta = rowSums(pPPETot[c(3,7)])) %>% select(Ch
 write.csv2(pPPETot, "ppe_total_division_abundance.csv")
 
 #Proximo dataframe editado externamente
+div.unique <- read.csv2("ppe_unique_division_abundance.csv", 
+                        header = TRUE, 
+                        sep = ";", 
+                        dec = ".", 
+                        row.names = 1, 
+                        fill = TRUE, 
+                        skip = 0)
 
+ppe.diff <- read.csv2("ppe_not_shared_division_abundance.csv", 
+                      header = TRUE, 
+                      sep = ";", 
+                      dec = ".", 
+                      row.names = 1, 
+                      skip = 0, 
+                      fill = TRUE)
+
+div.comp <- read.csv2("ppe_composite_division_abundance.csv", 
+                      header = TRUE,
+                      sep = ";", 
+                      dec = ".", 
+                      skip = 0, 
+                      fill = TRUE,
+                      row.names = 1)
+div.comp <- div.comp %>% 
+  mutate(Unique = rowSums(div.comp[c(13:18)]), 
+         Rest = rowSums(div.comp[c(19:24)]))
+div.comp <- div.comp[, -c(1:6, 13:24)]
+colnames(div.comp) <- c("Chlorophyta", "Ochrophyta", "Cryptophyta", "Haptophyta", "Katablepharidophyta", "Rhodophyta", "Unique", "Others")
+
+div.comp <- div.comp %>% 
+  mutate(Unique = rowSums(div.comp[c(7:12)])) %>% 
+  mutate(Other = rowSums(div.comp[c(13:18)]))
+div.comp <- div.comp[, -c(7:18)]
+```
+
+
+```{r relative, echo=TRUE, message=TRUE,warning=TRUE}
+rltv.Otu.Table <- function(x){
+  x.Data.rltv <- NULL
+  for (i in 1:dim(x)[1]) {
+    x.Data.rltv <- rbind(x.Data.rltv, x[i,]/apply(x, 1, function(x) sum(x))[i])
+  }
+  rownames(x.Data.rltv) <- rownames(x)
+  invisible(x.Data.rltv)
+}
+
+relative.comp <- rltv.Otu.Table(div.comp)
+apply(relative.comp, 1, function(x) sum(x))[1:63]
+
+png("Relative_Abundance_Phylum_Composite_PPE_ASV.png", width = 20, height = 11, units = 'in', res = 600)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(relative.comp), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = c("#00564E", "#F1F500", "#16DB93", "4E0066", "#FB9C70", "#AA006A", "#777B81", "#ADB5BD"), 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
+dev.off()
 ```
 
 
