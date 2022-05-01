@@ -172,7 +172,7 @@ Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
 Phylum <- Tax.sum(sQinLC, sTAXA, 5) %>% 
   t() %>% 
   as.data.frame() %>% 
-  mutate(Color = c("#00564E", "#002C3D", "#007F5F", "#359548", "#F1F500", "#16DB93", "#6AAB30", "#4E0066", "#83E377", "#BACC0C", "#FA8072", "#FB9262", "#FB9C70", "#FA776B", "#AA006A", "#F8417D", "#F95C74", "#16DB93", "#ACDD3C", "#410151", "#C5DBEA", "#000000", "#8BB7D4", "#5193BE", "#176EA8", "#00609F", "#023E8A", "#000078", "#161664", "#17315F", "#0B0B30", "#FF0000", "#CC0000", "#9B2226", "#4E1114"))
+  mutate(Color = c("#004146", "#4E0066", "#007F5F", "#359548", "#F94144", "#16DB93", "#6AAB30", "#F1F500", "#83E377", "#BACC0C", "#FA8072", "#F97100", "#410151", "#FA776B", "#176EA8", "#F8417D", "#F95C74", "#31AF78", "#ACDD3C", "#FB9C70", "#C5DBEA", "#000000", "#8BB7D4", "#5193BE", "#AA006A", "#00609F", "#023E8A", "#000078", "#161664", "#17315F", "#0B0B30", "#FF0000", "#CC0000", "#9B2226", "#4E1114"))
 write.csv2(Phylum, "phylum_color_QinLC.csv")
 Phylum.Total <- mutate(Phylum,
                  Cha = rowSums(Phylum[1:12]), 
@@ -235,7 +235,6 @@ PhyPPE <- read.csv("phylum_color_total_QinLC.csv",
                    skip = 0, 
                    fill = TRUE)
 PhyPPE <- PhyPPE[c(1,5,6,8,13,15,18),]
-
 
 png("Contribution_Distribution_Phylum_PPE_ASV.png", width = 17, height = 15, units = 'in', res = 600)
 treemap(PhyPPE, 
@@ -407,11 +406,17 @@ div.comp <- div.comp %>%
          Rest = rowSums(div.comp[c(19:24)]))
 div.comp <- div.comp[, -c(1:6, 13:24)]
 colnames(div.comp) <- c("Chlorophyta", "Ochrophyta", "Cryptophyta", "Haptophyta", "Katablepharidophyta", "Rhodophyta", "Unique", "Others")
-
-div.comp <- div.comp %>% 
-  mutate(Unique = rowSums(div.comp[c(7:12)])) %>% 
-  mutate(Other = rowSums(div.comp[c(13:18)]))
-div.comp <- div.comp[, -c(7:18)]
+div.comp <- as.data.frame(t(div.comp))
+col.div <- mutate(div.comp, 
+                   Colors = c("#004146", 
+                              "#F94144", 
+                              "#16DB93", 
+                              "#F1F500", 
+                              "#410151", 
+                              "#176EA8", 
+                              "#ADB5BD", 
+                              "#DEE2E6"))
+write.csv2(col.div, "phylum_color_PPE_QinLC.csv")
 ```
 
 
@@ -435,10 +440,45 @@ barplot(t(relative.comp),
         ylab = "Relative Abundance", 
         ylim = c(0,1), 
         axes = TRUE, 
-        col = c("#00564E", "#F1F500", "#16DB93", "4E0066", "#FB9C70", "#AA006A", "#777B81", "#ADB5BD"), 
+        col = col.div$Colors, 
         las = 2, 
         cex.names = 0.8, 
         cex.axis = 0.9)
+dev.off()
+
+png("Relative_Abundance_Phylum_Composite_PPE_ASV_Legend.png", width = 5, height = 7, units = 'in', res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", legend = colnames(relative.comp), cex = 1, ncol = 1, fill = col.div$Colors, x.intersp = 0.1, xjust = 0.1, yjust = 0.3, y.intersp = 1, bty = "n", adj = 0, text.width = 0.1, pt.cex = 0.1)
+dev.off()
+
+ppe.rltv <- Phylum.Total[c(1,5,6,8,13,15,18), -c(64:70)]
+relative.ppe <- as.data.frame(t(ppe.rltv[,-64]))
+colnames(relative.ppe)[c(3,7)] <- c("A", "B")
+relative.ppe <- mutate(relative.ppe, 
+                       Cryptophyta = rowSums(relative.ppe[c(3,7)]),
+                       .after = "Ochrophyta")
+relative.ppe <- relative.ppe[, -c(4,8)]
+relative.ppe <- rltv.Otu.Table(relative.ppe)
+apply(relative.ppe, 1, function(x) sum(x))[1:63]
+  
+png("Relative_Abundance_Phylum_PPE_ASV.png", width = 20, height = 11, units = 'in', res = 600)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(relative.ppe), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = ppe.rltv[-7,]$Color, 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
+dev.off()
+
+png("Relative_Abundance_Phylum_PPE_ASV_Legend.png", width = 5, height = 7, units = 'in', res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", legend = colnames(relative.ppe), cex = 1, ncol = 1, fill = ppe.rltv[-7,]$Color, x.intersp = 0.1, xjust = 0.1, yjust = 0.3, y.intersp = 1, bty = "n", adj = 0, text.width = 0.1, pt.cex = 0.1)
 dev.off()
 ```
 
