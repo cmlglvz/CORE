@@ -16,6 +16,11 @@ library(d3treeR)
 library(UpSetR)
 library(RColorBrewer)
 library(plotly)
+library(Biostrings)
+library(DECIPHER)
+library(dendextend)
+library(heatmaply)
+library(htmlwidgets)
 ```
 
 
@@ -658,3 +663,55 @@ MAME <- ggplot(mame1, aes(x = NMDS1, y = NMDS2, color = Site, size = Iron)) +
 
 ggsave("composite_nmds.png", plot = MAME)
 ```
+
+
+
+```{r heatmap, echo=TRUE, message=TRUE, warning=TRUE}
+fasta <- data.frame(names = nombres, sequences = all_of(ppe.shaseqs$Seq))
+seqRFLP::dataframe2fas(fasta, "qinlc.fasta")
+#Realice el alineamiento de las secuencias externamente con MUSCLE5
+align <- "qinlc_aligned.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(align, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix,
+                         method = "ML", 
+                         showPlot = TRUE, 
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+#The selected model was TN93+G4
+dbDisconnect(dbConn)
+clust <- as.dendrogram(as.hclust(dendrogram)) %>% set("branches_lwd", 0.3) %>% ladderize(right = TRUE)
+plot(clust)
+
+multi.shared.ppe <- readDNAMultipleAlignment("qinlc_aligned.fasta", format = "fasta")
+multi.string <- as(multi.shared.ppe, "DNAStringSet")
+BrowseSeqs(multi.string, htmlFile = "Shared_PPE_multiple_alignment.html")
+smatrix <- as.matrix(multi.shared.ppe) %>% rownames() %>% as.vector()
+print(all(colnames(ppe.shared.asv)%in%gtools::mixedsort(smatrix, decreasing = FALSE)))
+sort.abun <- ppe.shared.asv[,rownames(as.matrix(multi.shared.ppe))]
+norm.hel <- heatmaply(normalize(decostand(sort.abun, method = "hellinger")), 
+                      Colv = clust, 
+                      Rowv = NA, 
+                      main = "Shared ASVs across all sites clustered by maximum likelihood", 
+                      margins = c(50, 50, 70, 0), 
+                      grid_gap = 1, 
+                      width = 1920, 
+                      height = 1080, 
+                      subplot_heights = c(0.35, 0.65), 
+                      color = viridis(n = 256, 
+                                      alpha = 1, 
+                                      begin = 0, 
+                                      end = 1, 
+                                      option = "mako")
+                      )
+saveWidget(norm.hel, file = "hellinger_normalized_heatmap.html")
+```
+
+
+
