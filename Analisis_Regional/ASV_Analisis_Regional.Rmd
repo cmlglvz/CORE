@@ -125,7 +125,12 @@ upset(aus.pres,
                            list("Cha", "Fla"), 
                            list("Hu", "Pc"), 
                            list("Qin", "LC"), 
+                           list("Cha", "Hu"), 
+                           list("Cha", "Qin"), 
+                           list("Hu", "Qin"), 
                            list("Fla", "Pc"), 
+                           list("Fla", "LC"), 
+                           list("Pc", "LC"), 
                            list("Cha", "Hu", "Qin"), 
                            list("Fla", "Pc", "LC"), 
                            list("Cha", "Fla", "Qin", "LC"), 
@@ -138,14 +143,14 @@ upset(aus.pres,
       empty.intersections = "on",
       keep.order = TRUE, 
       query.legend = "top", 
-      queries = list(list(query = intersects, params = "Cha", color = "#F94144", active = TRUE, query.name = "Unique Chañaral ASV"), 
-                     list(query = intersects, params = "Fla", color = "#F3722C", active = TRUE, query.name = "Unique Flamenco ASV"), 
-                     list(query = intersects, params = "Hu", color = "#F8961E", active = TRUE, query.name = "Unique Huasco ASV"), 
-                     list(query = intersects, params = "Pc", color = "#F9C74F", active = TRUE, query.name = "Unique Punta Choros ASV"), 
-                     list(query = intersects, params = "LC", color = "#43AA8B", active = TRUE, query.name = "Unique Las Cruces ASV"), 
-                     list(query = intersects, params = "Qin", color = "#577590", active = TRUE, query.name = "Unique Quintero ASV"), 
-                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Metal axis shared ASV"), 
-                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#FF0000", active = TRUE, query.name = "Total shared ASV")
+      queries = list(list(query = intersects, params = "Cha", color = "#FF9F1C", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Fla", color = "#FFCA85", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Hu", color = "#2EC4B6", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pc", color = "#CBF3F0", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "LC", color = "#DEB1FB", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = "Qin", color = "#AC3CF6", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#0466C8", active = TRUE, query.name = "Metal axis shared ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#F94144", active = TRUE, query.name = "Total shared ASV")
                      ), 
       point.size = 3.5, 
       line.size = 1.5, 
@@ -174,25 +179,25 @@ Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
   invisible((y))
 }
 
-Phylum <- Tax.sum(sQinLC, sTAXA, 5) %>% 
+Phylum <- Tax.sum(sCORE, sTAXA, 5) %>% 
   t() %>% 
   as.data.frame() %>% 
-  mutate(Color = c("#004146", "#4E0066", "#007F5F", "#359548", "#F94144", "#16DB93", "#6AAB30", "#F1F500", "#83E377", "#BACC0C", "#FA8072", "#F97100", "#410151", "#FA776B", "#176EA8", "#F8417D", "#F95C74", "#31AF78", "#ACDD3C", "#FB9C70", "#C5DBEA", "#000000", "#8BB7D4", "#5193BE", "#AA006A", "#00609F", "#023E8A", "#000078", "#161664", "#17315F", "#0B0B30", "#FF0000", "#CC0000", "#9B2226", "#4E1114"))
-write.csv2(Phylum, "phylum_color_QinLC.csv")
+  mutate(Color = c("#440154", "#4E0066", "#007F5F", "#359548", "#20A387", "#FFBE17", "#6AAB30", "#1C3B74", "#83E377", "#BACC0C", "#FA8072", "#F97100", "#FFBE17", "#F94144", "#FA776B", "#95D840", "#F8417D", "#F95C74", "#ACDD3C", "#FB9C70", "#C5DBEA", "#000000", "#8BB7D4", "#5193BE", "#00609F", "#AA006A", "#023E8A", "#0B0B30", "#000078", "#9B2226", "#161664", "#FF0000", "#17315F", "#CC0000", "#4E1114", "#DEB1FB"))
+write.csv2(Phylum, "phylum_color_CORE.csv")
 Phylum.Total <- mutate(Phylum,
                  Cha = rowSums(Phylum[1:12]), 
                  Fla = rowSums(Phylum[13:24]), 
                  Hu = rowSums(Phylum[25:36]), 
                  Pc = rowSums(Phylum[37:41]), 
-                 LC = rowSums(Phylum[42:53]), 
-                 Qin = rowSums(Phylum[54:63]), 
+                 Qin = rowSums(Phylum[42:51]), 
+                 LC = rowSums(Phylum[52:63]), 
                  Total = rowSums(Phylum[1:63]), 
-                 .after = "Q4A18") %>% 
+                 .after = "L4A18") %>% 
   as.data.frame()
-write.csv2(Phylum.Total, "phylum_color_total_QinLC.csv")
+write.csv2(Phylum.Total, "phylum_color_total_CORE.csv")
 
 png("Contribution_Distribution_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
-treemap(read.csv("phylum_color_total_QinLC.csv", 
+treemap(read.csv("phylum_color_total_CORE.csv", 
                  header = TRUE, 
                  sep = ";", 
                  dec = ".", 
@@ -214,7 +219,7 @@ png("Treemap_Phylum_Total_Legend.png", width = 10, height = 7, units = 'in', res
 plot.new()
 par(mar = c(0,0,0,0), oma = c(0,0,0,0))
 legend("center", 
-       legend = read.csv("phylum_color_total_QinLC.csv", 
+       legend = read.csv("phylum_color_total_CORE.csv", 
                          header = TRUE, 
                          sep = ";", 
                          dec = ".", 
@@ -233,13 +238,13 @@ legend("center",
 dev.off()
 
 #Sólo PPE
-PhyPPE <- read.csv("phylum_color_total_QinLC.csv", 
+PhyPPE <- read.csv("phylum_color_total_CORE.csv", 
                    header = TRUE, 
                    sep = ";", 
                    dec = ".", 
                    skip = 0, 
                    fill = TRUE)
-PhyPPE <- PhyPPE[c(1,5,6,8,13,15,18),]
+PhyPPE <- PhyPPE[c(1,5,6,8,13,14,16),]
 
 png("Contribution_Distribution_Phylum_PPE_ASV.png", width = 17, height = 15, units = 'in', res = 600)
 treemap(PhyPPE, 
@@ -261,8 +266,13 @@ dev.off()
 ```{r upset ppe, echo=TRUE,message=TRUE,warning=TRUE}
 #UpSet para PPE
 ppe.taxa <- filter(sTAXA, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta" | Division == "Cryptophyta:nucl")
-ppe.asv <- select(sQinLC, all_of(ppe.taxa$Seq))
+ppe.asv <- select(sCORE, all_of(ppe.taxa$Seq))
 ppe.auspres <- filter(aus.pres, Seq %in% all_of(ppe.taxa$Seq))
+ppe.div <- Tax.sum(ppe.asv, ppe.taxa, 5) %>% as.data.frame()
+colnames(ppe.div)[c(3,5)] <- c("A", "B")
+ppe.div <- mutate(ppe.div, Cryptophyta = rowSums(ppe.div[c(3,5)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+
 png("Selected_PPE_UpSet.png", width = 30, height = 15, units = "in", res = 600)
 upset(ppe.auspres, 
       nsets = 6, 
@@ -272,6 +282,12 @@ upset(ppe.auspres,
                            list("Cha", "Fla"), 
                            list("Hu", "Pc"), 
                            list("Qin", "LC"), 
+                           list("Cha", "Hu"), 
+                           list("Cha", "Qin"), 
+                           list("Hu", "Qin"), 
+                           list("Fla", "Pc"), 
+                           list("Fla", "LC"), 
+                           list("Pc", "LC"), 
                            list("Cha", "Hu", "Qin"), 
                            list("Fla", "Pc", "LC"), 
                            list("Cha", "Fla", "Qin", "LC"), 
@@ -280,19 +296,19 @@ upset(ppe.auspres,
                            list("Cha", "Fla", "Hu", "Pc", "LC"), 
                            list("Cha", "Fla", "Hu", "Pc", "Qin"), 
                            list("Cha", "Fla", "Hu", "Pc", "LC", "Qin")
-      ),
+                           ),
       empty.intersections = "on",
       keep.order = TRUE, 
       query.legend = "top", 
-      queries = list(list(query = intersects, params = "Cha", color = "#FF931F", active = TRUE, query.name = "Unique Chañaral ASV"), 
-                     list(query = intersects, params = "Fla", color = "#FCAE5A", active = TRUE, query.name = "Unique Flamenco ASV"), 
-                     list(query = intersects, params = "Hu", color = "#023E8A", active = TRUE, query.name = "Unique Huasco ASV"), 
-                     list(query = intersects, params = "Pc", color = "#7DAECF", active = TRUE, query.name = "Unique Punta Choros ASV"), 
-                     list(query = intersects, params = "LC", color = "#78B12A", active = TRUE, query.name = "Unique Las Cruces ASV"), 
-                     list(query = intersects, params = "Qin", color = "#8CD165", active = TRUE, query.name = "Unique Quintero ASV"), 
-                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Metal axis shared ASV"), 
-                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#FF0000", active = TRUE, query.name = "Total shared ASV")
-      ), 
+      queries = list(list(query = intersects, params = "Cha", color = "#FF9F1C", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Fla", color = "#FFCA85", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Hu", color = "#2EC4B6", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pc", color = "#CBF3F0", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "LC", color = "#DEB1FB", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = "Qin", color = "#AC3CF6", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#0466C8", active = TRUE, query.name = "Metal axis shared ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#F94144", active = TRUE, query.name = "Total shared ASV")
+                     ), 
       point.size = 3.5, 
       line.size = 1.5, 
       text.scale = 2, 
@@ -303,83 +319,76 @@ dev.off()
 
 
 ```{r recognition, echo=TRUE, message=TRUE, warning=TRUE}
-shared <- aus.pres %>% filter(Cha == 1 & Fla == 1 & Hu == 1 & Pc == 1 & LC == 1 & Qin == 1)
-sha.abun <- select(sQinLC, all_of(shared$Seq))
-div.sha <- Tax.sum(sha.abun, sTAXA, 5) %>% as.data.frame()
-colnames(div.sha)[c(6,14)] <- c("A", "B")
-div.sha <- div.sha %>% 
-  mutate(Cryptophyta = rowSums(div.sha[c(6,14)]), 
-         .after = "Ochrophyta")
-div.sha <- div.sha[,-c(7,15)]
-ppe.sha <- div.sha[,c(1,5,6,8,11)]
-write.csv2(ppe.sha, "ppe_shared_division_abundance.csv")
-sha <- shared$Seq
-diff.abun <- select(sQinLC, -all_of(sha))
-div.diff <- Tax.sum(diff.abun, sTAXA, 5) %>% 
-  as.data.frame()
-colnames(div.diff)[c(12,21)] <- c("A", "B")
-ppe.diff <- div.diff %>% 
-  select(Chlorophyta, Ochrophyta, A, B, Haptophyta, Katablepharidophyta, Rhodophyta)
-ppe.diff <- mutate(ppe.diff, Cryptophyta = rowSums(ppe.diff[3:4]), .after = "Ochrophyta")
-ppe.diff <- ppe.diff[,-c(4:5)]
-write.csv2(ppe.diff, file = "ppe_not_shared_division_abundance.csv")
+shared <- ppe.auspres %>% filter(Cha == 1 & Fla == 1 & Hu == 1 & Pc == 1 & Qin == 1 & LC == 1)
+shared.abundance <- select(ppe.asv, all_of(shared$Seq))
+shared.division <- Tax.sum(shared.abundance, ppe.taxa, 5) %>% as.data.frame()
+colnames(shared.division)[c(3,5)] <- c("A", "B")
+shared.division <- mutate(shared.division, Cryptophyta = rowSums(shared.division[c(3,5)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta)
+write.csv2(shared.division, "ppe_shared_division_abundance.csv")
+ppe.wo.shared <- select(ppe.asv, -all_of(shared$Seq))
+woshared.division <- Tax.sum(ppe.wo.shared, ppe.taxa, 5) %>% as.data.frame()
+colnames(woshared.division)[c(3,6)] <- c("A", "B")
+woshared.division <- mutate(woshared.division, 
+                            Cryptophyta = rowSums(woshared.division[c(3,6)])) %>% 
+  select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(woshared.division, file = "ppe_not_shared_division_abundance.csv")
 
 cha <- aus.pres %>% filter(Cha == 1)
-unique.cha <- cha %>% filter(Fla == 0 & Hu == 0 & Pc == 0 & LC == 0 & Qin == 0)
-cha.abun <- select(sQinLC, all_of(unique.cha$Seq))
+unique.cha <- cha %>% filter(Fla == 0 & Hu == 0 & Pc == 0 & Qin == 0 & LC == 0)
+cha.abun <- select(sCORE, all_of(unique.cha$Seq))
 write.csv2(cha.abun, file = "unique_chanaral_asv.csv")
 div.cha <- Tax.sum(cha.abun, sTAXA, 5) %>% as.data.frame()
-div.cha <- div.cha[, c(3,14,15,19)]
+div.cha <- div.cha[, c(14,3,15,17)]
 write.csv2(div.cha, file = "ppe_unique_chanaral_division_abundance.csv")
 
 fla <- aus.pres %>% filter(Fla == 1)
-unique.fla <- fla %>% filter(Cha == 0 & Hu == 0 & Pc == 0 & LC == 0 & Qin == 0)
-fla.abun <- select(sQinLC, all_of(unique.fla$Seq))
+unique.fla <- fla %>% filter(Cha == 0 & Hu == 0 & Pc == 0 & Qin == 0 & LC == 0)
+fla.abun <- select(sCORE, all_of(unique.fla$Seq))
 write.csv2(fla.abun, file = "unique_flamenco_asv.csv")
 div.fla <- Tax.sum(fla.abun, sTAXA, 5) %>% as.data.frame()
-div.fla <- div.fla[, c(4,6,10,16)]
+div.fla <- div.fla[, c(12,6,9,5,17,20)]
 write.csv2(div.fla, file = "ppe_unique_flamenco_division_abundance.csv")
 
 hu <- aus.pres %>% filter(Hu == 1)
-unique.hu <- hu %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & LC == 0 & Qin == 0)
-hu.abun <- select(sQinLC, all_of(unique.hu$Seq))
+unique.hu <- hu %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Qin == 0 & LC == 0)
+hu.abun <- select(sCORE, all_of(unique.hu$Seq))
 write.csv2(hu.abun, file = "unique_huasco_asv.csv")
 div.hu <- Tax.sum(hu.abun, sTAXA, 5) %>% as.data.frame()
-div.hu <- div.hu[, c(1,7:9)]
+div.hu <- div.hu[, c(1,7,18,9,8)]
 write.csv2(div.hu, file = "ppe_unique_huasco_division_abundance.csv")
 
 pc <- aus.pres %>% filter(Pc == 1)
 unique.pc <- pc %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & LC == 0 & Qin == 0)
-pc.abun <- select(sQinLC, all_of(unique.pc$Seq))
+pc.abun <- select(sCORE, all_of(unique.pc$Seq))
 write.csv2(pc.abun, file = "unique_punta_choros_asv.csv")
 div.pc <- Tax.sum(pc.abun, sTAXA, 5) %>% as.data.frame()
-div.pc <- div.pc[, c(1,8,14,15,17)]
+div.pc <- div.pc[, c(13,1,14,12,7)]
 write.csv2(div.pc, file = "ppe_unique_punta_choros_division_abundance.csv")
-
-lc <- aus.pres %>% filter(LC == 1)
-unique.lc <- lc %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Hu == 0 & Qin == 0)
-lc.abun <- select(sQinLC, all_of(unique.lc$Seq))
-write.csv2(lc.abun, file = "unique_las_cruces_asv.csv")
-div.lc <- Tax.sum(lc.abun, sTAXA, 5) %>% as.data.frame()
-div.lc <- div.lc[, c(4,7,9,11,13,16,18)]
-colnames(div.lc)[c(5,6)] <- c("A", "B")
-div.lc <- mutate(div.lc, Cryptophyta = rowSums(div.lc[5:6])) 
-div.lc <- select(div.lc, Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
-write.csv2(div.lc, file = "ppe_unique_las_cruces_division_abundance.csv")
 
 qin <- aus.pres %>% filter(Qin == 1)
 unique.qin <- qin %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Hu == 0 & LC == 0)
-qin.abun <- select(sQinLC, all_of(unique.qin$Seq))
+qin.abun <- select(sCORE, all_of(unique.qin$Seq))
 write.csv2(qin.abun, file = "unique_quintero_asv.csv")
 div.qin <- Tax.sum(qin.abun, sTAXA, 5) %>% as.data.frame()
-div.qin <- div.qin[, c(4,13,14,15,20,21)]
+div.qin <- div.qin[, c(14,4,21,15,20,13)]
 write.csv2(div.qin, file = "ppe_unique_quintero_division_abundance.csv")
 
+lc <- aus.pres %>% filter(LC == 1)
+unique.lc <- lc %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Hu == 0 & Qin == 0)
+lc.abun <- select(sCORE, all_of(unique.lc$Seq))
+write.csv2(lc.abun, file = "unique_las_cruces_asv.csv")
+div.lc <- Tax.sum(lc.abun, sTAXA, 5) %>% as.data.frame()
+div.lc <- div.lc[, c(9,5,12,16,18,10,3)]
+colnames(div.lc)[c(3,4)] <- c("A", "B")
+div.lc <- mutate(div.lc, Cryptophyta = rowSums(div.lc[3:4])) 
+div.lc <- select(div.lc, Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+write.csv2(div.lc, file = "ppe_unique_las_cruces_division_abundance.csv")
 
-pPPETot <- Phylum.Total[c(1,5,6,8,13,15,18), -c(64:71)]
+pPPETot <- Phylum.Total[c(1,5,6,8,13,14,16), -c(64:71)]
 pPPETot <- as.data.frame(t(pPPETot))
-colnames(pPPETot)[c(3,7)] <- c("A", "B")
-pPPETot <- mutate(pPPETot, Cryptophyta = rowSums(pPPETot[c(3,7)])) %>% select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+colnames(pPPETot)[c(3,5)] <- c("A", "B")
+pPPETot <- mutate(pPPETot, Cryptophyta = rowSums(pPPETot[c(3,5)])) %>% select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
 write.csv2(pPPETot, "ppe_total_division_abundance.csv")
 
 #Proximo dataframe editado externamente
@@ -399,6 +408,7 @@ ppe.diff <- read.csv2("ppe_not_shared_division_abundance.csv",
                       skip = 0, 
                       fill = TRUE)
 
+#Corregir
 div.comp <- read.csv2("ppe_composite_division_abundance.csv", 
                       header = TRUE,
                       sep = ";", 
