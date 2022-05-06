@@ -321,6 +321,10 @@ dev.off()
 ```{r recognition, echo=TRUE, message=TRUE, warning=TRUE}
 shared <- ppe.auspres %>% filter(Cha == 1 & Fla == 1 & Hu == 1 & Pc == 1 & Qin == 1 & LC == 1)
 shared.abundance <- select(ppe.asv, all_of(shared$Seq))
+#Para Lucas
+ppe.shared.asv <- shared.abundance
+colnames(ppe.shared.asv) <- shared$X
+write.csv2(ppe.shared.asv, "/Users/Artemis/Documents/GitHub/CORE/Lucas/shared_ppe_asv_abundance.csv")
 shared.division <- Tax.sum(shared.abundance, ppe.taxa, 5) %>% as.data.frame()
 colnames(shared.division)[c(3,5)] <- c("A", "B")
 shared.division <- mutate(shared.division, Cryptophyta = rowSums(shared.division[c(3,5)])) %>% 
@@ -334,56 +338,113 @@ woshared.division <- mutate(woshared.division,
   select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
 write.csv2(woshared.division, file = "ppe_not_shared_division_abundance.csv")
 
-cha <- aus.pres %>% filter(Cha == 1)
-unique.cha <- cha %>% filter(Fla == 0 & Hu == 0 & Pc == 0 & Qin == 0 & LC == 0)
-cha.abun <- select(sCORE, all_of(unique.cha$Seq))
-write.csv2(cha.abun, file = "unique_chanaral_asv.csv")
-div.cha <- Tax.sum(cha.abun, sTAXA, 5) %>% as.data.frame()
-div.cha <- div.cha[, c(14,3,15,17)]
-write.csv2(div.cha, file = "ppe_unique_chanaral_division_abundance.csv")
+chañaral <- ppe.auspres %>% filter(Cha == 1)
+ppe.asv.cha <- select(ppe.asv, all_of(chañaral$Seq))
+colnames(ppe.asv.cha) <- chañaral$X
+ppe.asv.cha <- ppe.asv.cha[c(1:12),]
+write.csv2(ppe.asv.cha, "/Users/Artemis/Documents/GitHub/CORE/Lucas/chanaral_ppe_asv_abundance.csv")
+unique.chañaral <- chañaral %>% filter(Fla == 0 & Hu == 0 & Pc == 0 & Qin == 0 & LC == 0)
+unique.cha.abun <- select(ppe.asv, all_of(unique.chañaral$Seq))
+ucha.abun <- unique.cha.abun
+colnames(ucha.abun) <- unique.chañaral$X
+ucha.abun <- ucha.abun[c(1:12),]
+write.csv2(ucha.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_chanaral_ppe_asv_abundance.csv")
+chañaral.division <- Tax.sum(unique.cha.abun, ppe.taxa, 5) %>% as.data.frame()
+chañaral.division <- chañaral.division[, c(2,1,3,4)]
+write.csv2(chañaral.division, file = "unique_chanaral_ppe_asv_division_abundance.csv")
+ppe.without.us <- select(ppe.wo.shared, -all_of(unique.chañaral$Seq))
+#wous.division al final
 
-fla <- aus.pres %>% filter(Fla == 1)
-unique.fla <- fla %>% filter(Cha == 0 & Hu == 0 & Pc == 0 & Qin == 0 & LC == 0)
-fla.abun <- select(sCORE, all_of(unique.fla$Seq))
-write.csv2(fla.abun, file = "unique_flamenco_asv.csv")
-div.fla <- Tax.sum(fla.abun, sTAXA, 5) %>% as.data.frame()
-div.fla <- div.fla[, c(12,6,9,5,17,20)]
-write.csv2(div.fla, file = "ppe_unique_flamenco_division_abundance.csv")
+flamenco <- ppe.auspres %>% filter(Fla == 1)
+ppe.asv.fla <- select(ppe.asv, all_of(flamenco$Seq))
+colnames(ppe.asv.fla) <- flamenco$X
+ppe.asv.fla <- ppe.asv.fla[c(13:24),]
+write.csv2(ppe.asv.fla, "/Users/Artemis/Documents/GitHub/CORE/Lucas/flamenco_ppe_asv_abundance.csv")
+unique.flamenco <- flamenco %>% filter(Cha == 0 & Hu == 0 & Pc == 0 & Qin == 0 & LC == 0)
+unique.fla.abun <- select(ppe.asv, all_of(unique.flamenco$Seq))
+ufla.abun <- unique.fla.abun
+colnames(ufla.abun) <- unique.flamenco$X
+ufla.abun <- ufla.abun[c(13:24),]
+write.csv2(ufla.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_flamenco_ppe_asv_abundance.csv")
+flamenco.division <- Tax.sum(unique.fla.abun, ppe.taxa, 5) %>% as.data.frame()
+colnames(flamenco.division)[3] <- "Cryptophyta"
+flamenco.division <- flamenco.division[c(13:24), c(4,2,3,1,5,6)]
+write.csv2(flamenco.division, "unique_flamenco_ppe_asv_division_abundance.csv")
+ppe.without.us <- select(ppe.without.us, -all_of(unique.flamenco$Seq))
 
-hu <- aus.pres %>% filter(Hu == 1)
-unique.hu <- hu %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Qin == 0 & LC == 0)
-hu.abun <- select(sCORE, all_of(unique.hu$Seq))
-write.csv2(hu.abun, file = "unique_huasco_asv.csv")
-div.hu <- Tax.sum(hu.abun, sTAXA, 5) %>% as.data.frame()
-div.hu <- div.hu[, c(1,7,18,9,8)]
-write.csv2(div.hu, file = "ppe_unique_huasco_division_abundance.csv")
+huasco <- ppe.auspres %>% filter(Hu == 1)
+ppe.asv.hu <- select(ppe.asv, all_of(huasco$Seq))
+colnames(ppe.asv.hu) <- huasco$X
+ppe.asv.hu <- ppe.asv.hu[c(25:36),]
+write.csv2(ppe.asv.hu, "/Users/Artemis/Documents/GitHub/CORE/Lucas/huasco_ppe_asv_abundance.csv")
+unique.huasco <- huasco %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Qin == 0 & LC == 0)
+unique.hu.abun <- select(ppe.asv, all_of(unique.huasco$Seq))
+uhu.abun <- unique.hu.abun
+colnames(uhu.abun) <- unique.huasco$X
+uhu.abun <- uhu.abun[c(25:36),]
+write.csv2(uhu.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_huasco_ppe_asv_abundance.csv")
+huasco.division <- Tax.sum(unique.hu.abun, ppe.taxa, 5) %>% as.data.frame()
+colnames(huasco.division)[5] <- "Cryptophyta"
+huasco.division <- huasco.division[c(25:36), c(1,2,5,4,3)]
+write.csv2(huasco.division, "unique_huasco_ppe_asv_division_abundance.csv")
+ppe.without.us <- select(ppe.without.us, -all_of(unique.huasco$Seq))
 
-pc <- aus.pres %>% filter(Pc == 1)
-unique.pc <- pc %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & LC == 0 & Qin == 0)
-pc.abun <- select(sCORE, all_of(unique.pc$Seq))
-write.csv2(pc.abun, file = "unique_punta_choros_asv.csv")
-div.pc <- Tax.sum(pc.abun, sTAXA, 5) %>% as.data.frame()
-div.pc <- div.pc[, c(13,1,14,12,7)]
-write.csv2(div.pc, file = "ppe_unique_punta_choros_division_abundance.csv")
+ptachoros <- ppe.auspres %>% filter(Pc == 1)
+ppe.asv.pc <- select(ppe.asv, all_of(ptachoros$Seq))
+colnames(ppe.asv.pc) <- ptachoros$X
+ppe.asv.pc <- ppe.asv.pc[c(37:41),]
+write.csv2(ppe.asv.pc, "/Users/Artemis/Documents/GitHub/CORE/Lucas/punta_choros_ppe_asv_abundance.csv")
+unique.ptachoros <- ptachoros %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Qin == 0 & LC == 0)
+unique.pc.abun <- select(ppe.asv, all_of(unique.ptachoros$Seq))
+upc.abun <- unique.pc.abun
+colnames(upc.abun) <- unique.ptachoros$X
+upc.abun <- upc.abun[c(37:41),]
+write.csv2(uhu.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_punta_choros_ppe_asv_abundance.csv")
+ptachoros.division <- Tax.sum(unique.pc.abun, ppe.taxa, 5) %>% as.data.frame()
+ptachoros.division <- ptachoros.division[c(37:41), c(4,1,5,3,2)]
+write.csv2(ptachoros.division, "unique_punta_choros_ppe_asv_division_abundance.csv")
+ppe.without.us <- select(ppe.without.us, -all_of(unique.ptachoros$Seq))
 
-qin <- aus.pres %>% filter(Qin == 1)
-unique.qin <- qin %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Hu == 0 & LC == 0)
-qin.abun <- select(sCORE, all_of(unique.qin$Seq))
-write.csv2(qin.abun, file = "unique_quintero_asv.csv")
-div.qin <- Tax.sum(qin.abun, sTAXA, 5) %>% as.data.frame()
-div.qin <- div.qin[, c(14,4,21,15,20,13)]
-write.csv2(div.qin, file = "ppe_unique_quintero_division_abundance.csv")
+quintero <- ppe.auspres %>% filter(Qin == 1)
+ppe.asv.qin <- select(ppe.asv, all_of(quintero$Seq))
+colnames(ppe.asv.qin) <- quintero$X
+ppe.asv.qin <- ppe.asv.qin[c(42:51),]
+write.csv2(ppe.asv.qin, "/Users/Artemis/Documents/GitHub/CORE/Lucas/quintero_ppe_asv_abundance.csv")
+unique.quintero <- quintero %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Pc == 0 & LC == 0)
+unique.qin.abun <- select(ppe.asv, all_of(unique.quintero$Seq))
+uqin.abun <- unique.qin.abun
+colnames(uqin.abun) <- unique.quintero$X
+uqin.abun <- uqin.abun[c(42:51),]
+write.csv2(uhu.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_quintero_ppe_asv_abundance.csv")
+quintero.division <- Tax.sum(unique.qin.abun, ppe.taxa, 5) %>% as.data.frame()
+quintero.division <- quintero.division[c(42:51), c(3,1,6,4,5,2)]
+write.csv2(quintero.division, "unique_quintero_ppe_asv_division_abundance.csv")
+ppe.without.us <- select(ppe.without.us, -all_of(unique.quintero$Seq))
 
-lc <- aus.pres %>% filter(LC == 1)
-unique.lc <- lc %>% filter(Cha == 0 & Fla == 0 & Pc == 0 & Hu == 0 & Qin == 0)
-lc.abun <- select(sCORE, all_of(unique.lc$Seq))
-write.csv2(lc.abun, file = "unique_las_cruces_asv.csv")
-div.lc <- Tax.sum(lc.abun, sTAXA, 5) %>% as.data.frame()
-div.lc <- div.lc[, c(9,5,12,16,18,10,3)]
-colnames(div.lc)[c(3,4)] <- c("A", "B")
-div.lc <- mutate(div.lc, Cryptophyta = rowSums(div.lc[3:4])) 
-div.lc <- select(div.lc, Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
-write.csv2(div.lc, file = "ppe_unique_las_cruces_division_abundance.csv")
+lascruces <- ppe.auspres %>% filter(LC == 1)
+ppe.asv.lc <- select(ppe.asv, all_of(lascruces$Seq))
+colnames(ppe.asv.lc) <- lascruces$X
+ppe.asv.lc <- ppe.asv.lc[c(52:63),]
+write.csv2(ppe.asv.lc, "/Users/Artemis/Documents/GitHub/CORE/Lucas/las_cruces_ppe_asv_abundance.csv")
+unique.lascruces <- lascruces %>% filter(Cha == 0 & Fla == 0 & Hu == 0 & Pc == 0 & Qin == 0)
+unique.lc.abun <- select(ppe.asv, all_of(unique.lascruces$Seq))
+ulc.abun <- unique.lc.abun
+colnames(ulc.abun) <- unique.lascruces$X
+ulc.abun <- ulc.abun[c(52:63),]
+write.csv2(ulc.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_las_cruces_ppe_asv_abundance.csv")
+lascruces.division <- Tax.sum(unique.lc.abun, ppe.taxa, 5) %>% as.data.frame()
+colnames(lascruces.division)[c(5,6)] <- c("A", "B")
+lascruces.division <- mutate(lascruces.division, 
+                             Cryptophyta = rowSums(lascruces.division[c(5,6)]))
+lascruces.division <- lascruces.division[c(52:63), c(3,2,8,7,4,1)]
+write.csv2(lascruces.division, "unique_las_cruces_ppe_asv_division_abundance.csv")
+ppe.without.us <- select(ppe.without.us, -all_of(unique.lascruces$Seq))
+wous.division <- Tax.sum(ppe.without.us, ppe.taxa, 5) %>% as.data.frame()
+colnames(wous.division)[c(3,6)] <- c("A","B")
+wous.division <- mutate(wous.division, 
+                        Cryptophyta = rowSums(wous.division[c(3,6)]))
+wous.division <- wous.division[, c(2,1,8,7,5,4)]
+write.csv2(wous.division, "other_ppe_asv_division_abundance.csv")
 
 pPPETot <- Phylum.Total[c(1,5,6,8,13,14,16), -c(64:71)]
 pPPETot <- as.data.frame(t(pPPETot))
