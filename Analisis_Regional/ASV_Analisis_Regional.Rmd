@@ -315,6 +315,49 @@ upset(ppe.auspres,
       mainbar.y.label = "Sites intersections", 
       sets.x.label = "ASV per sampling site")
 dev.off()
+
+png("Selected_PPE_UpSet_2.png", width = 30, height = 15, units = "in", res = 300)
+upset(ppe.auspres, 
+      nsets = 6, 
+      nintersects = NA, 
+      sets = c("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), 
+      intersections = list("Qin", "LC", "Pc", "Hu", "Fla", "Cha", 
+                           list("Cha", "Fla"), 
+                           list("Hu", "Pc"), 
+                           list("Qin", "LC"), 
+                           list("Cha", "Hu"), 
+                           list("Cha", "Qin"), 
+                           list("Hu", "Qin"), 
+                           list("Fla", "Pc"), 
+                           list("Fla", "LC"), 
+                           list("Pc", "LC"), 
+                           list("Cha", "Hu", "Qin"), 
+                           list("Fla", "Pc", "LC"), 
+                           list("Cha", "Fla", "Qin", "LC"), 
+                           list("Hu", "Pc", "Qin", "LC"), 
+                           list("Cha", "Fla", "Hu", "Pc"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC"), 
+                           list("Cha", "Fla", "Hu", "Pc", "Qin"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC", "Qin")
+                           ),
+      empty.intersections = "on",
+      keep.order = TRUE, 
+      query.legend = "top", 
+      queries = list(list(query = intersects, params = "Cha", color = "#FF9F1C", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Fla", color = "#FFCA85", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Hu", color = "#2EC4B6", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pc", color = "#CBF3F0", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "LC", color = "#DEB1FB", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = "Qin", color = "#AC3CF6", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#0466C8", active = TRUE, query.name = "Metal axis shared ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#F94144", active = TRUE, query.name = "Total shared ASV")
+                     ), 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites intersections", 
+      sets.x.label = "ASV per sampling site")
+dev.off()
 ```
 
 
@@ -446,10 +489,10 @@ wous.division <- mutate(wous.division,
 wous.division <- wous.division[, c(2,1,8,7,5,4)]
 write.csv2(wous.division, "other_ppe_asv_division_abundance.csv")
 
-pPPETot <- Phylum.Total[c(1,5,6,8,13,14,16), -c(64:71)]
+pPPETot <- Phylum.Total[c(1,5,6,13,8,14,16), -c(64:71)]
 pPPETot <- as.data.frame(t(pPPETot))
-colnames(pPPETot)[c(3,5)] <- c("A", "B")
-pPPETot <- mutate(pPPETot, Cryptophyta = rowSums(pPPETot[c(3,5)])) %>% select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
+colnames(pPPETot)[c(3,4)] <- c("A", "B")
+pPPETot <- mutate(pPPETot, Cryptophyta = rowSums(pPPETot[c(3,4)])) %>% select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
 write.csv2(pPPETot, "ppe_total_division_abundance.csv")
 
 #Proximo dataframe editado externamente
@@ -461,7 +504,7 @@ div.unique <- read.csv2("ppe_unique_division_abundance.csv",
                         fill = TRUE, 
                         skip = 0)
 
-ppe.diff <- read.csv2("ppe_not_shared_division_abundance.csv", 
+ppe.diff <- read.csv2("other_ppe_asv_division_abundance.csv", 
                       header = TRUE, 
                       sep = ";", 
                       dec = ".", 
@@ -469,8 +512,7 @@ ppe.diff <- read.csv2("ppe_not_shared_division_abundance.csv",
                       skip = 0, 
                       fill = TRUE)
 
-#Corregir
-div.comp <- read.csv2("ppe_composite_division_abundance.csv", 
+div.comp <- read.csv2("composite_ppe_asv_division_abundance.csv", 
                       header = TRUE,
                       sep = ";", 
                       dec = ".", 
@@ -478,21 +520,57 @@ div.comp <- read.csv2("ppe_composite_division_abundance.csv",
                       fill = TRUE,
                       row.names = 1)
 div.comp <- div.comp %>% 
-  mutate(Unique = rowSums(div.comp[c(13:18)]), 
-         Rest = rowSums(div.comp[c(19:24)]))
-div.comp <- div.comp[, -c(1:6, 13:24)]
-colnames(div.comp) <- c("Chlorophyta", "Ochrophyta", "Cryptophyta", "Haptophyta", "Katablepharidophyta", "Rhodophyta", "Unique", "Others")
-div.comp <- as.data.frame(t(div.comp))
-col.div <- mutate(div.comp, 
-                   Colors = c("#004146", 
-                              "#F94144", 
-                              "#16DB93", 
-                              "#F1F500", 
-                              "#410151", 
-                              "#176EA8", 
-                              "#ADB5BD", 
-                              "#DEE2E6"))
-write.csv2(col.div, "phylum_color_PPE_QinLC.csv")
+  mutate(Shared = rowSums(div.comp[c(7:12)]), 
+         Unique = rowSums(div.comp[c(13:18)]), 
+         Rest = rowSums(div.comp[c(19:24)])
+         )
+macro.div.comp <- div.comp[, c(25:27)]
+macro.div.comp <- as.data.frame(t(macro.div.comp))
+macro.col <- mutate(macro.div.comp, 
+                    Colors = c("#2F3E46", 
+                               "#F93822", 
+                               "#CED4DA")
+                    )
+write.csv2(macro.col, "macro_color_PPE_CORE.csv")
+
+micro.div.comp <- div.comp[, -c(1:6, 13:25)]
+colnames(micro.div.comp) <- c("Chlorophyta", "Ochrophyta", "Cryptophyta", "Haptophyta", "Katablepharidophyta", "Rhodophyta", "Unique", "Rest")
+micro.div.comp <- as.data.frame(t(micro.div.comp))
+micro.col <- mutate(micro.div.comp, 
+                    Colors = c("#440154", 
+                               "#20A387", 
+                               "#FFBE17", 
+                               "#1C3B74", 
+                               "#9EF01A", 
+                               "#95D840", 
+                               "#FFBE17", 
+                               "#CED4DA")
+                    )
+
+micro.col <- mutate(micro.div.comp, 
+                    Colors = c("#002C3D", 
+                               "#FCA72D", 
+                               "#BACC0C", 
+                               "#16DB93", 
+                               "#F1F500", 
+                               "#00564E", 
+                               "#F93822", 
+                               "#CED4DA")
+                    )
+write.csv2(micro.col, "detailed_phylum_color_PPE_ASV_CORE.csv")
+
+mid.div.comp <- div.comp[-c(1:6, 13:25, 27)]
+colnames(mid.div.comp) <- c("Chlorophyta", "Ochrophyta", "Cryptophyta", "Haptophyta", "Katablepharidophyta", "Rhodophyta", "Unique")
+mid.div.comp <- as.data.frame(t(mid.div.comp))
+mid.col <- mutate(mid.div.comp, 
+                  Colors = c("#002C3D", 
+                             "#FCA72D", 
+                             "#BACC0C", 
+                             "#16DB93", 
+                             "#F1F500", 
+                             "#00564E", 
+                             "#F93822")
+                  )
 ```
 
 
@@ -506,29 +584,93 @@ rltv.Otu.Table <- function(x){
   invisible(x.Data.rltv)
 }
 
-relative.comp <- rltv.Otu.Table(div.comp)
-apply(relative.comp, 1, function(x) sum(x))[1:63]
+relative.macro <- rltv.Otu.Table(t(macro.div.comp))
+apply(relative.macro, 1, function(x) sum(x))[1:63]
 
-png("Relative_Abundance_Phylum_Composite_PPE_ASV.png", width = 20, height = 11, units = 'in', res = 600)
+png("Relative_Abundance_Macro_Composite_PPE_ASV.png", width = 20, height = 11, units = 'in', res = 600)
 par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
-barplot(t(relative.comp), 
+barplot(t(relative.macro), 
         border = NA, 
         ylab = "Relative Abundance", 
         ylim = c(0,1), 
         axes = TRUE, 
-        col = col.div$Colors, 
+        col = macro.col$Colors, 
         las = 2, 
         cex.names = 0.8, 
         cex.axis = 0.9)
 dev.off()
 
-png("Relative_Abundance_Phylum_Composite_PPE_ASV_Legend.png", width = 5, height = 7, units = 'in', res = 600)
-plot.new()
-par(mar = c(0,0,0,0), oma = c(0,0,0,0))
-legend("center", legend = colnames(relative.comp), cex = 1, ncol = 1, fill = col.div$Colors, x.intersp = 0.1, xjust = 0.1, yjust = 0.3, y.intersp = 1, bty = "n", adj = 0, text.width = 0.1, pt.cex = 0.1)
+png("Relative_Abundance_Macro_Composite_PPE_ASV_2.png", width = 20, height = 11, units = 'in', res = 300)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(relative.macro), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = macro.col$Colors, 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
 dev.off()
 
-ppe.rltv <- Phylum.Total[c(1,5,6,8,13,15,18), -c(64:70)]
+png("Relative_Abundance_Macro_Composite_PPE_ASV_Legend.png", width = 3, height = 5, units = 'in', res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", legend = colnames(relative.macro), cex = 1, ncol = 1, fill = macro.col$Colors, x.intersp = 0.1, xjust = 0.1, yjust = 0.3, y.intersp = 1.2, bty = "n", adj = 0, text.width = 0.1, pt.cex = 0.1)
+dev.off()
+
+relative.micro <- rltv.Otu.Table(t(micro.div.comp))
+apply(relative.macro, 1, function(x) sum(x))[1:63]
+
+png("Relative_Abundance_Detailed_Shared_Composite_PPE_ASV.png", width = 20, height = 11, units = 'in', res = 600)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(relative.micro), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = micro.col$Colors, 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
+dev.off()
+
+png("Relative_Abundance_Detailed_Shared_Composite_PPE_ASV_2.png", width = 20, height = 11, units = 'in', res = 300)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(relative.micro), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = micro.col$Colors, 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
+dev.off()
+
+relative.mid <- rltv.Otu.Table(t(mid.div.comp))
+apply(relative.mid, 1, function(x) sum(x))[1:63]
+
+png("Relative_Abundance_Mid_Detailed_Shared_Composite_PPE_ASV_2.png", width = 20, height = 11, units = 'in', res = 300)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(relative.mid), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = mid.col$Colors, 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
+dev.off()
+
+png("Relative_Abundance_Detailed_Shared_Composite_PPE_ASV_Legend.png", width = 5, height = 5, units = 'in', res = 300)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", legend = colnames(relative.micro), cex = 1, ncol = 1, fill = micro.col$Colors, x.intersp = 0.1, xjust = 0.1, yjust = 0.3, y.intersp = 1.2, bty = "n", adj = 0, text.width = 0.1, pt.cex = 0.1)
+dev.off()
+
+ppe.rltv <- Phylum.Total[c(1,5,6,13,8,14,16), -c(64:70)]
 relative.ppe <- as.data.frame(t(ppe.rltv[,-64]))
 colnames(relative.ppe)[c(3,7)] <- c("A", "B")
 relative.ppe <- mutate(relative.ppe, 
