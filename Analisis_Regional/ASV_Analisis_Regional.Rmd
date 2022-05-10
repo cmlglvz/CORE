@@ -316,7 +316,7 @@ upset(ppe.auspres,
       sets.x.label = "ASV per sampling site")
 dev.off()
 
-png("Selected_PPE_UpSet_2.png", width = 30, height = 15, units = "in", res = 300)
+png("Selected_PPE_UpSet_2.png", width = 30, height = 15, units = "in", res = 200)
 upset(ppe.auspres, 
       nsets = 6, 
       nintersects = NA, 
@@ -927,4 +927,36 @@ saveWidget(norm.hel, file = "hellinger_normalized_heatmap.html")
 ```
 
 
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+library(hrbrthemes)
+hrbrthemes::import_roboto_condensed()
+kols <- c("Shared" = "#2F3E46", "Unique" = "#F93822", "Rest" = "#CED4DA")
+ppe.upset <- ppe.auspres
+inverted <- as.data.frame(t(ppe.asv))
+ppe.upset <- mutate(ppe.upset, Abs.Abun = rowSums(inverted))
+write.csv2(ppe.upset, "auspress_ppe_asv_score.csv")
+intersect <- read.csv2("ppe_asv_total_abundance_intersecs.csv", 
+                       header = TRUE, 
+                       sep = ";", 
+                       dec = ".", 
+                       skip = 0, 
+                       fill = TRUE)
 
+complement <- ggplot(intersect, aes(fill=Intersec, y=Abundance, x=Site)) + 
+    geom_bar(position="stack", stat="identity") +
+    scale_fill_manual(values = kols) +
+    ggtitle("Abundance...") +
+    theme_ipsum() +
+    xlab("")
+
+ggsave("total_abundance_ppe_asv_per_site.png", plot = complement)
+
+percent <- ggplot(intersect, aes(fill=Intersec, y=Abundance, x=Site)) + 
+    geom_bar(position="fill", stat="identity") +
+    scale_fill_manual(values = kols) +
+    ggtitle("Abundance...") +
+    theme_ipsum() +
+    xlab("")
+
+ggsave("percent_abundance_ppe_asv_per_site.png", plot = percent)
+```
