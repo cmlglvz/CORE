@@ -521,6 +521,7 @@ fedos <- ggplot(metal.env,
 ggsave("copper_complete_boxplot.png", plot = cudos)
 ggsave("iron_complete_boxplot.png", plot = fedos)
 
+set.seed(19951013)
 npmanova <- vegan::adonis(metal.dist ~ Site, data = metal.env, permutations = 1000)
 npmanova
 str(npmanova)

@@ -21,6 +21,7 @@ library(DECIPHER)
 library(dendextend)
 library(heatmaply)
 library(htmlwidgets)
+library(hrbrthemes)
 ```
 
 
@@ -38,12 +39,12 @@ samples <- c("C1A17", "C1F18", "C1A18", "C2A17", "C2F18", "C2A18", "C3A17", "C3F
 rownames(CORE) <- samples
 write.csv2(CORE, "CORE_ASV.csv")
 
-TAXA <- read.csv("D:/Documents/GitHub/CORE/DADA2_Regional/taxa.csv", 
+TAXA <- read.csv("/Users/Artemis/Documents/GitHub/CORE/DADA2_Regional/taxa.csv", 
                  header = TRUE, 
                  sep = ";", 
                  skip = 0) %>% 
   dplyr::rename(Seq = X) %>% 
-  add_column(ASV = c(paste0("ASV_", 1:6191)), .after = "Seq")
+  add_column(ASV = c(str_glue("ASV000{1:9}"),str_glue("ASV00{10:99}"),str_glue("ASV0{100:999}"),str_glue("ASV{1000:6191}")), .after = "Seq")
 rownames(TAXA) <- TAXA[, 1]
 write.csv2(TAXA, "TAXA.csv")
 print(all(colnames(CORE)%in%rownames(TAXA)))
@@ -494,7 +495,9 @@ pPPETot <- as.data.frame(t(pPPETot))
 colnames(pPPETot)[c(3,4)] <- c("A", "B")
 pPPETot <- mutate(pPPETot, Cryptophyta = rowSums(pPPETot[c(3,4)])) %>% select(Chlorophyta, Ochrophyta, Cryptophyta, Haptophyta, Katablepharidophyta, Rhodophyta)
 write.csv2(pPPETot, "ppe_total_division_abundance.csv")
+```
 
+```{r}
 #Proximo dataframe editado externamente
 div.unique <- read.csv2("ppe_unique_division_abundance.csv", 
                         header = TRUE, 
@@ -537,7 +540,7 @@ micro.div.comp <- div.comp[, -c(1:6, 13:25)]
 colnames(micro.div.comp) <- c("Chlorophyta", "Ochrophyta", "Cryptophyta", "Haptophyta", "Katablepharidophyta", "Rhodophyta", "Unique", "Rest")
 micro.div.comp <- as.data.frame(t(micro.div.comp))
 micro.col <- mutate(micro.div.comp, 
-                    Colors = c("#440154", 
+                    Colors = c("#359548", 
                                "#20A387", 
                                "#FFBE17", 
                                "#1C3B74", 
@@ -548,12 +551,12 @@ micro.col <- mutate(micro.div.comp,
                     )
 
 micro.col <- mutate(micro.div.comp, 
-                    Colors = c("#002C3D", 
-                               "#FCA72D", 
-                               "#BACC0C", 
-                               "#16DB93", 
+                    Colors = c("#0E4F44", 
+                               "#F6B213", 
                                "#F1F500", 
-                               "#00564E", 
+                               "#6AAB30", 
+                               "#16DB93", 
+                               "#83E377", 
                                "#F93822", 
                                "#CED4DA")
                     )
@@ -563,13 +566,13 @@ mid.div.comp <- div.comp[-c(1:6, 13:25, 27)]
 colnames(mid.div.comp) <- c("Chlorophyta", "Ochrophyta", "Cryptophyta", "Haptophyta", "Katablepharidophyta", "Rhodophyta", "Unique")
 mid.div.comp <- as.data.frame(t(mid.div.comp))
 mid.col <- mutate(mid.div.comp, 
-                  Colors = c("#002C3D", 
-                             "#FCA72D", 
-                             "#BACC0C", 
-                             "#16DB93", 
-                             "#F1F500", 
-                             "#00564E", 
-                             "#F93822")
+                  Colors = c("#0E4F44", 
+                               "#F6B213", 
+                               "#F1F500", 
+                               "#6AAB30", 
+                               "#16DB93", 
+                               "#83E377", 
+                               "#F93822")
                   )
 ```
 
@@ -651,7 +654,7 @@ dev.off()
 relative.mid <- rltv.Otu.Table(t(mid.div.comp))
 apply(relative.mid, 1, function(x) sum(x))[1:63]
 
-png("Relative_Abundance_Mid_Detailed_Shared_Composite_PPE_ASV_2.png", width = 20, height = 11, units = 'in', res = 300)
+png("Relative_Abundance_Mid_Detailed_Shared_Composite_PPE_ASV_3.png", width = 20, height = 11, units = 'in', res = 300)
 par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
 barplot(t(relative.mid), 
         border = NA, 
@@ -928,7 +931,6 @@ saveWidget(norm.hel, file = "hellinger_normalized_heatmap.html")
 
 
 ```{r, echo=TRUE,message=TRUE,warning=TRUE}
-library(hrbrthemes)
 hrbrthemes::import_roboto_condensed()
 kols <- c("Shared" = "#2F3E46", "Unique" = "#F93822", "Rest" = "#CED4DA")
 ppe.upset <- ppe.auspres
@@ -951,7 +953,7 @@ complement <- ggplot(intersect, aes(fill=Intersec, y=Abundance, x=Site)) +
 
 ggsave("total_abundance_ppe_asv_per_site.png", plot = complement)
 
-percent <- ggplot(intersect, aes(fill=Intersec, y=Abundance, x=Site)) + 
+percent <- ggplot(intersect, aes(fill=Phylum, y=Abundance, x=Site)) + 
     geom_bar(position="fill", stat="identity") +
     scale_fill_manual(values = kols) +
     ggtitle("Abundance...") +
@@ -959,4 +961,8 @@ percent <- ggplot(intersect, aes(fill=Intersec, y=Abundance, x=Site)) +
     xlab("")
 
 ggsave("percent_abundance_ppe_asv_per_site.png", plot = percent)
+```
+
+```{r}
+
 ```
