@@ -1,0 +1,6 @@
+chanaral<-t1
+flamenco<-t2
+huasco<-t3
+las_cruces<-t4
+punta_choros<-t5
+quintero<-t6
