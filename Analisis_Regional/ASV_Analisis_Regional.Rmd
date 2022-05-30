@@ -443,7 +443,7 @@ unique.pc.abun <- select(ppe.asv, all_of(unique.ptachoros$Seq))
 upc.abun <- unique.pc.abun
 colnames(upc.abun) <- unique.ptachoros$X
 upc.abun <- upc.abun[c(37:41),]
-write.csv2(uhu.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_punta_choros_ppe_asv_abundance.csv")
+write.csv2(upc.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_punta_choros_ppe_asv_abundance.csv")
 ptachoros.division <- Tax.sum(unique.pc.abun, ppe.taxa, 5) %>% as.data.frame()
 ptachoros.division <- ptachoros.division[c(37:41), c(4,1,5,3,2)]
 write.csv2(ptachoros.division, "unique_punta_choros_ppe_asv_division_abundance.csv")
@@ -459,7 +459,7 @@ unique.qin.abun <- select(ppe.asv, all_of(unique.quintero$Seq))
 uqin.abun <- unique.qin.abun
 colnames(uqin.abun) <- unique.quintero$X
 uqin.abun <- uqin.abun[c(42:51),]
-write.csv2(uhu.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_quintero_ppe_asv_abundance.csv")
+write.csv2(uqin.abun, "/Users/Artemis/Documents/GitHub/CORE/Lucas/unique_quintero_ppe_asv_abundance.csv")
 quintero.division <- Tax.sum(unique.qin.abun, ppe.taxa, 5) %>% as.data.frame()
 quintero.division <- quintero.division[c(42:51), c(3,1,6,4,5,2)]
 write.csv2(quintero.division, "unique_quintero_ppe_asv_division_abundance.csv")
