@@ -651,6 +651,7 @@ lookup <- read.csv2("metal_environment_concentrations.csv",
                        fill = TRUE) %>% 
   rename(Samples = X)
 
+lookup <- lookup[-c(62:63),]
 
 set.seed(19910420)
 nmds <- metaMDS(metal.dist, try = 100, autotransform = FALSE)
