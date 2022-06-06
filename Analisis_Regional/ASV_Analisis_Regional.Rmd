@@ -39,7 +39,7 @@ samples <- c("C1A17", "C1F18", "C1A18", "C2A17", "C2F18", "C2A18", "C3A17", "C3F
 rownames(CORE) <- samples
 write.csv2(CORE, "CORE_ASV.csv")
 
-TAXA <- read.csv("/Users/Artemis/Documents/GitHub/CORE/DADA2_Regional/taxa.csv", 
+TAXA <- read.csv("/Documents/GitHub/CORE/DADA2_Regional/taxa.csv", 
                  header = TRUE, 
                  sep = ";", 
                  skip = 0) %>% 
