@@ -3,3 +3,55 @@ title: "ReDO"
 author: "Camilo Gálvez A."
 output: html_document
 ---
+
+#Libraries
+```{r libraries, echo=TRUE, message=TRUE, warning=TRUE, include=FALSE}
+library(tidyverse)
+library(leaflet)
+library(data.table)
+library(vegan)
+library(treemap)
+library(UpSetR)
+library(RColorBrewer)
+library(plotly)
+library(Biostrings)
+library(DECIPHER)
+library(dendextend)
+library(heatmaply)
+library(htmlwidgets)
+library(hrbrthemes)
+```
+
+```{r dataframes, echo=TRUE, message=TRUE, warning=TRUE, include=FALSE}
+CORE <- read.csv("/Users/Artemis/Documents/GitHub/CORE/Camilo/DADA2/seqtab_nonchim.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0, 
+                 fill = TRUE, 
+                 row.names = 1)
+CORE <- apply(CORE, 2, function(x) as.numeric(as.integer(x))) %>% as.data.frame()
+samples <- c("C1A17", "C1F18", "C1A18", "C2A17", "C2F18", "C2A18", "C3A17", "C3F18", "C3A18", "C4A17", "C4F18", "C4A18", 
+             "F1A17", "F1F18", "F1A18", "F2A17", "F2F18", "F2A18", "F3A17", "F3F18", "F3A18", "F4A17", "F4F18", "F4A18", 
+             "H1A17", "H1F18", "H1A18", "H2A17", "H2F18", "H2A18", "H3A17", "H3F18", "H3A18", "H4A17", "H4F18", "H4A18", 
+             "P1F18", "P1A18", "P2F18", "P3F18", "P4F18", 
+             "Q1A17", "Q1F18", "Q2A17", "Q2F18", "Q3A17", "Q3F18", "Q3A18", "Q4A17", "Q4F18", "Q4A18", 
+             "L1A17", "L1F18", "L1A18", "L2A17", "L2F18", "L2A18", "L3A17", "L3F18", "L3A18", "L4A17", "L4F18", "L4A18")
+rownames(CORE) <- samples
+write.csv2(CORE, "CORE_ASV_Abundance.csv")
+
+TAXA <- read.csv("/Users/Artemis/Documents/GitHub/CORE/Camilo/DADA2/taxa.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0) %>% 
+  dplyr::rename(Seq = X) %>%
+  add_column(ASV = c(str_glue("ASV000{1:9}"), 
+                     str_glue("ASV00{10:99}"), 
+                     str_glue("ASV0{100:999}"), 
+                     str_glue("ASV{1000:6192}")), 
+             .after = "Seq")
+rownames(TAXA) <- TAXA[,1]
+write.csv2(TAXA, "CORE_TAXA.csv")
+
+print(all(colnames(CORE)%in%rownames(TAXA))) #If TRUE you can continue
+```
+
