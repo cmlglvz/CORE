@@ -14,7 +14,7 @@ positions %>% head()
 colnames(positions) <- c("PCoA1", "PCoA2")
 percent_explained <- 100 * pcoa$eig / sum(pcoa$eig)
 percent_explained[1:2]
-pretty_pe <- format(round(percent_eplained[1:2], digits = 1), nsmall = 1, trim = TRUE)
+pretty_pe <- format(round(percent_explained[1:2], digits = 1), nsmall = 1, trim = TRUE)
 labs <- c(glue("PCo 1 ({pretty_pe[1]}%)"), 
           glue("PCo 2 ({pretty_pe[2]}%)")
           )
