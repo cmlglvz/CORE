@@ -127,7 +127,7 @@ taxa <- assignTaxonomy(seqtab.nochim,
                        "X:/Documents/Proyectos_R/IDTAXA/data/pr2_version_4.14.0_SSU_dada2.fasta.gz", 
                        taxLevels = c("Kingdom", "Supergroup", "Division", "Class", "Order", "Family", "Genus", "Species"), 
                        multithread = TRUE)
-write.csv2(taxa, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/taxa_osd_v4_ns.csv")
+write.csv2(taxa, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/taxa_osd_v4_ns.csv")
 ```
 
 ```{r echo=TRUE,message=FALSE,warning=FALSE}
