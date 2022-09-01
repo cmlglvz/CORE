@@ -1,0 +1,153 @@
+---
+title: "OSD_V4_NWAO"
+author: "Camilo Gálvez A."
+date: '2022-08-31'
+output: html_document
+---
+
+##Libraries
+```{r echo=TRUE,message=FALSE,warning=FALSE,include=TRUE}
+library(tidyverse)
+library(BiocGenerics)
+library(ShortRead)
+library(dada2)
+library(Biostrings)
+library(DECIPHER)
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+path <- "X:/Documents/Proyectos_R/OSD/NeoV4/NWAO/"
+fns <- list.files(path)
+fastqs <- fns[grepl(".fastq.gz", fns)]
+fastqs <- sort(fastqs)
+fnFs <- fastqs[grepl("_R1_18S_raw.fastq.gz", fastqs)]
+fnRs <- fastqs[grepl("_R2_18S_raw.fastq.gz", fastqs)]
+sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
+fnFs <- paste0(path, fnFs)
+fnRs <- paste0(path, fnRs)
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+plotQualityProfile(fnFs)
+plotQualityProfile(fnRs)
+```
+
+```{r echo=TRUE,message=TRUE,warning=TRUE}
+ptm <- proc.time()
+filtpth <- file.path(path, "Filtered_")
+filtFs <- paste0(filtpth, sample.names, "_F_filt.fastq.gz")
+filtRs <- paste0(filtpth, sample.names, "_R_filt.fastq.gz")
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, 
+                     truncLen = c(250,240), trimLeft = c(10,10),
+                     maxN = 0, maxEE = c(2,2), truncQ = 2, 
+                     compress = TRUE, multithread = FALSE, verbose = TRUE)
+rinout <- as.data.frame(out)
+write.csv2(rinout, file = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/reads_out.csv")
+proc.time() - ptm
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+ptm <- proc.time()
+derepFs <- derepFastq(filtFs, verbose = TRUE)
+derepRs <- derepFastq(filtRs, verbose = TRUE)
+names(derepFs) <- sample.names
+names(derepRs) <- sample.names
+proc.time() - ptm
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+ptm <- proc.time()
+errF <- learnErrors(filtFs, multithread = 10, randomize = TRUE)
+errR <- learnErrors(filtRs, multithread = 10, randomize = TRUE)
+proc.time() - ptm
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+plotErrors(errF, nominalQ = TRUE)
+plotErrors(errR, nominalQ = TRUE)
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+ptm <- proc.time()
+dadaFs <- dada(derepFs, err = errF, multithread = TRUE)
+dadaRs <- dada(derepRs, err = errR, multithread = TRUE)
+proc.time() - ptm
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose = TRUE)
+class(mergers)
+length(mergers)
+names(mergers)
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+seqtab <- makeSequenceTable(mergers)
+dim(seqtab)
+table(nchar(getSequences(seqtab)))
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+seqtab.nochim <- removeBimeraDenovo(seqtab, method = "consensus", verbose = TRUE)
+dim(seqtab.nochim)
+sum(seqtab.nochim)/sum(seqtab)
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+getN <- function(x) sum(getUniques(x))
+summary_tab <- data.frame(row.names = )
+track <- cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers,getN), rowSums(seqtab.nochim))
+colnames(track) <- c("input", "filtered", "denoisedFws", "denoisedRvs", "merged", "nochim")
+rownames(track) <- sample.names
+print(track)
+trackdf <- as.data.frame(track)
+write.csv2(trackdf, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/process_check.csv")
+
+#Alt
+Samples <- sample.names
+s_tab <- data.frame(row.names = Samples,
+                    dada2_input = out[,1],
+                    filtered = out[,2], 
+                    dada_Fw = sapply(dadaFs, getN), 
+                    dada_Rv = sapply(dadaRs, getN), 
+                    merged = sapply(mergers, getN), 
+                    nonchim = rowSums(seqtab.nochim), 
+                    final_perc_reads_retained = round(rowSums(seqtab.nochim)/out[,1]*100, 1)
+                    )
+write.csv2(s_tab, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/summary_tab_dada2.csv")
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+seqtab.nochim <- seqtab.nochim[, colSums(seqtab.nochim)>10]
+write.csv2(seqtab.nochim, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/seqtab_nonchim_med.csv")
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+taxa <- assignTaxonomy(seqtab.nochim, 
+                       "X:/Documents/Proyectos_R/IDTAXA/data/pr2_version_4.14.0_SSU_dada2.fasta.gz", 
+                       taxLevels = c("Kingdom", "Supergroup", "Division", "Class", "Order", "Family", "Genus", "Species"), 
+                       multithread = TRUE)
+write.csv2(taxa, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/taxa_osd_v4_nwao.csv")
+```
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+asv_seqs <- colnames(seqtab.nochim)
+asv_headers <- vector(dim(seqtab.nochim)[2], mode = "character")
+
+for (i in 1:dim(seqtab.nochim)[2]) {
+  asv_headers[i] <- paste(">ASV", i, sep = "_")
+}
+
+#making and writing out a fasta of our final ASV seqs:
+asv_fasta <- c(rbind(asv_headers, asv_seqs))
+write(asv_fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/seqs_OSD_V4_NWAO.fasta") #Will be send to dropbox, not sure if push to dataset repository
+
+#count table
+asv_tab <- t(seqtab.nochim) %>% as.data.frame()
+rownames(asv_tab) <- sub(">", "", asv_headers)
+colnames(asv_tab) <- c("OSD143", "OSD037", "OSD039", "OSD060", "OSD054", "OSD055", "OSD152")
+asv_tab <- mutate(asv_tab, Seqs = all_of(colnames(seqtab.nochim)), .before = "OSD143")
+write.csv2(asv_tab, file = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/ASV_counts_OSD_V4_NWAO.csv")
+```
+
+### END ###
