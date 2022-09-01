@@ -38,7 +38,7 @@ filtpth <- file.path(path, "Filtered_")
 filtFs <- paste0(filtpth, sample.names, "_F_filt.fastq.gz")
 filtRs <- paste0(filtpth, sample.names, "_R_filt.fastq.gz")
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, 
-                     truncLen = c(230,220), trimLeft = c(10,10),
+                     truncLen = c(240,230), trimLeft = c(10,10),
                      maxN = 0, maxEE = c(2,2), truncQ = 2, 
                      compress = TRUE, multithread = FALSE, verbose = TRUE)
 rinout <- as.data.frame(out)
@@ -119,7 +119,7 @@ write.csv2(s_tab, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/summary_t
 
 ```{r echo=TRUE,message=FALSE,warning=FALSE}
 seqtab.nochim <- seqtab.nochim[, colSums(seqtab.nochim)>10]
-write.csv2(seqtab.nochim, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/seqtab_nonchim_med.csv")
+write.csv2(seqtab.nochim, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/seqtab_nonchim_ns.csv")
 ```
 
 ```{r echo=TRUE,message=FALSE,warning=FALSE}
@@ -127,7 +127,7 @@ taxa <- assignTaxonomy(seqtab.nochim,
                        "X:/Documents/Proyectos_R/IDTAXA/data/pr2_version_4.14.0_SSU_dada2.fasta.gz", 
                        taxLevels = c("Kingdom", "Supergroup", "Division", "Class", "Order", "Family", "Genus", "Species"), 
                        multithread = TRUE)
-write.csv2(taxa, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/taxa_osd_v4_ns.csv")
+write.csv2(taxa, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/taxa_osd_v4_ns.csv")
 ```
 
 ```{r echo=TRUE,message=FALSE,warning=FALSE}
@@ -145,7 +145,7 @@ write(asv_fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/seqs_OSD_V
 #count table
 asv_tab <- t(seqtab.nochim) %>% as.data.frame()
 rownames(asv_tab) <- sub(">", "", asv_headers)
-colnames(asv_tab) <- c("OSD159", "OSD002", "OSD141", "OSD003", "OSD0072", "OSD030")
+colnames(asv_tab) <- c("OSD159", "OSD002", "OSD141", "OSD003", "OSD072", "OSD030")
 asv_tab <- mutate(asv_tab, Seqs = all_of(colnames(seqtab.nochim)), .before = "OSD159")
 write.csv2(asv_tab, file = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/ASV_counts_OSD_V4_NS.csv")
 ```
