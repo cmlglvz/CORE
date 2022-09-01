@@ -38,7 +38,7 @@ filtpth <- file.path(path, "Filtered_")
 filtFs <- paste0(filtpth, sample.names, "_F_filt.fastq.gz")
 filtRs <- paste0(filtpth, sample.names, "_R_filt.fastq.gz")
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, 
-                     truncLen = c(250,240), trimLeft = c(10,10),
+                     truncLen = c(240,230), trimLeft = c(10,10),
                      maxN = 0, maxEE = c(2,2), truncQ = 2, 
                      compress = TRUE, multithread = FALSE, verbose = TRUE)
 rinout <- as.data.frame(out)
@@ -119,7 +119,7 @@ write.csv2(s_tab, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/summary
 
 ```{r echo=TRUE,message=FALSE,warning=FALSE}
 seqtab.nochim <- seqtab.nochim[, colSums(seqtab.nochim)>10]
-write.csv2(seqtab.nochim, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/seqtab_nonchim_med.csv")
+write.csv2(seqtab.nochim, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/NWAO/DADA2/seqtab_nonchim_nwao.csv")
 ```
 
 ```{r echo=TRUE,message=FALSE,warning=FALSE}
