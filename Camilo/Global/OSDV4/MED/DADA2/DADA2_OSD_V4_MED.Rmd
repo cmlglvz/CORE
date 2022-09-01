@@ -38,7 +38,7 @@ filtpth <- file.path(path, "Filtered_")
 filtFs <- paste0(filtpth, sample.names, "_F_filt.fastq.gz")
 filtRs <- paste0(filtpth, sample.names, "_R_filt.fastq.gz")
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, 
-                     truncLen = c(230,220), trimLeft = c(10,10),
+                     truncLen = c(240,230), trimLeft = c(10,10),
                      maxN = 0, maxEE = c(2,2), truncQ = 2, 
                      compress = TRUE, multithread = FALSE, verbose = TRUE)
 rinout <- as.data.frame(out)
@@ -145,7 +145,7 @@ write(asv_fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/MED/DADA2/seqs_OSD_
 #count table
 asv_tab <- t(seqtab.nochim) %>% as.data.frame()
 rownames(asv_tab) <- sub(">", "", asv_headers)
-colnames(asv_tab) <- c("OSD014", "OSD022", "OSD099", "OSD049", "OSD0076", "OSD077", "OSD123", "OSD132")
+colnames(asv_tab) <- c("OSD014", "OSD022", "OSD099", "OSD049", "OSD076", "OSD077", "OSD123", "OSD132")
 asv_tab <- mutate(asv_tab, Seqs = all_of(colnames(seqtab.nochim)), .before = "OSD014")
 write.csv2(asv_tab, file = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/MED/DADA2/ASV_counts_OSD_V4_MED.csv")
 ```
