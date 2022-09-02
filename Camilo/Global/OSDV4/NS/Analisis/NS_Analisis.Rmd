@@ -1,0 +1,733 @@
+---
+title: "OSD_V4_NS_Analisis"
+author: "Camilo Gálvez A."
+output: html_document
+---
+
+#Libraries
+```{r libraries, echo=TRUE, message=TRUE, warning=TRUE, include=FALSE}
+library(tidyverse)
+library(leaflet)
+library(data.table)
+library(vegan)
+library(treemap)
+library(UpSetR)
+library(RColorBrewer)
+library(plotly)
+library(Biostrings)
+library(DECIPHER)
+library(dendextend)
+library(heatmaply)
+library(htmlwidgets)
+library(hrbrthemes)
+```
+
+
+```{r dataframes, echo=TRUE, message=TRUE, warning=TRUE}
+NS <- read.csv("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/seqtab_nonchim_ns.csv", 
+                header = TRUE, 
+                sep = ";", 
+                skip = 0, 
+                fill = TRUE, 
+                row.names = 1)
+NS <- apply(NS, 2, function(x) as.numeric(as.integer(x))) %>% as.data.frame()
+samples <- c("OSD159", "OSD002", "OSD141", "OSD003", "OSD072", "OSD030")
+rownames(NS) <- samples
+write.csv2(NS, "NS_ASV_Abundance.csv")
+
+TAXA <- read.csv("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/DADA2/taxa_osd_v4_ns.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0) %>% 
+  dplyr::rename(Seq = X) %>%
+  add_column(ASV = c(str_glue("ASV000{1:9}"), 
+                     str_glue("ASV00{10:99}"), 
+                     str_glue("ASV0{100:620}")
+                     ), 
+             .after = "Seq")
+rownames(TAXA) <- TAXA[,1]
+write.csv2(TAXA, "OSD_V4_NS_TAXA.csv")
+
+print(all(colnames(NS)%in%rownames(TAXA))) #If TRUE you can continue
+```
+
+
+#Filtro de ASV según asignación taxonómica
+```{r ASV filter, echo=TRUE, message=TRUE, warning=TRUE}
+#Me deshago de las secuencias de ASV que no fueron asignadas a nivel de Reino y Supergrupo
+unassigned <- TAXA[rowSums(is.na(TAXA[, c(3,4)])) > 0, ]
+nada <- TAXA[rowSums(is.na(TAXA[3])) > 0, ]
+na.seq <- unassigned[,1]
+mTAXA <- TAXA[!(row.names(TAXA) %in% all_of(na.seq)),]
+write.csv2(mTAXA, "Filtered_NS_TAXA.csv")
+mNS <- dplyr::select(NS, -all_of(na.seq))
+write.csv2(mNS, "Filtered_NS_ASV_Abundance.csv")
+
+print(all(colnames(mNS)%in%rownames(mTAXA))) #If TRUE you can continue
+```
+
+
+#Rarefacción
+```{r Rarefaction, echo=TRUE, message=TRUE, warning=TRUE}
+rare.all <- sort(rowSums(mNS)) #To identify the sample with the smallest number of observations, which will be used as the number of observations to rarefy samples
+
+rrfy <- rarefy(mNS, rare.all[1]) #rarefaction use the smallest number of observations per sample to extrapolate the expected number if all other samples only had that number of observations
+rrfy #Gives an "expected" rarefied number of species (not observations) if only "rare.all[1]" individuals were present per sample
+
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Imagenes/Fig_1_Rarecurve_mNS.png", width = 12, height = 6, units = "in", res = 300)
+par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 0, 0, 0))
+rarecurve(x = mNS, col = "red", lwd = 2, las = 1, label = TRUE, step = 10, cex = 0.5)
+dev.off()
+
+rareNS <- as.data.frame(rrarefy(mNS, rrfy[1]))
+write.csv2(rareNS, file = "Rarefacted_filt_NS_ASV_Abundance.csv")
+```
+
+
+#Unify abundance and taxonomic dataframes
+```{r}
+Union <- as.data.frame(t(mNS))
+Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "OSD159")
+Union <- mutate(Union, 
+                Total = rowSums(Union[2:7])
+                )
+ATs <- inner_join(Union, mTAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(ATs) <- all_of(ATs[,1])
+write.csv2(ATs, "Taxonomic_and_Abundance_NS.csv")
+```
+
+
+#UpSet preparation
+```{r preparation, echo=TRUE, message=TRUE, warning=TRUE}
+asv <- ATs[,2]
+edited <- ATs[, -c(2,9:17)]
+rownames(edited) <- asv
+write.csv2(edited, "edited_Taxonomic_and_Abundance_NS.csv")
+APATs <- edited[, -1]
+APATs <- vegan::decostand(APATs, method = "pa")
+APATs <- add_column(APATs, Seq = all_of(edited$Seq), .before = "OSD159")
+write.csv2(APATs, "Absence_Presence_NS.csv")
+```
+
+
+#Complete UpSet
+```{r Complete, echo=TRUE, message=TRUE, warning=TRUE}
+aus.pres <- read.csv("Absence_Presence_NS.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     dec = ".", 
+                     skip = 0)
+
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Imagenes/Fig_2_Complete_UpSet.png", width = 40, height = 17, units = "in", res = 200)
+upset(aus.pres, 
+      nsets = 6, 
+      nintersects = NA, 
+      sets = c("OSD030", "OSD072", "OSD003", "OSD141", "OSD002", "OSD159"), 
+      empty.intersections = "on", 
+      keep.order = TRUE, 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites Intersections", 
+      sets.x.label = "ASV per sampling site"
+      )
+dev.off()
+```
+
+
+#Shorter UpSet
+```{r Shorter, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Imagenes/Fig_3_Shorter_UpSet.png", width = 30, height = 13, units = "in", res = 200)
+upset(aus.pres, 
+      nsets = 6,
+      nintersects = NA, 
+      sets = c("OSD030", "OSD072", "OSD003", "OSD141", "OSD002", "OSD159"), 
+      intersections = list("OSD030", "OSD072", "OSD003", "OSD141", "OSD002", "OSD159", 
+                           list("OSD002", "OSD159"), 
+                           list("OSD003", "OSD002"), 
+                           list("OSD030", "OSD072"),
+                           list("OSD003", "OSD002", "OSD159"), 
+                           list("OSD003", "OSD141", "OSD002", "OSD159"), 
+                           list("OSD030", "OSD072", "OSD003", "OSD141", "OSD002", "OSD159")
+                           ),
+      empty.intersections = "on", 
+      keep.order = TRUE, 
+      query.legend = "top", 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites Intersections", 
+      sets.x.label = "ASV per sampling site")
+dev.off()
+```
+
+
+#Selected UpSet
+```{r Selected, echo=TRUE, message=TRUE, warning=TRUE}
+#Modify this according to selected intersections from previous UpSet
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Selected_UpSet.png", width = 30, height = 15, units = "in", res = 300)
+upset(aus.pres, 
+      nsets = 6,
+      nintersects = NA, 
+      sets = c("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), 
+      intersections = list("Qin", "LC", "Pc", "Hu", "Fla", "Cha", 
+                           list("Cha", "Fla"), 
+                           list("Hu", "Pc"), 
+                           list("Qin", "LC"), 
+                           list("Fla", "Pc"), 
+                           list("Cha", "Hu", "Qin"), 
+                           list("Fla", "Pc", "LC"), 
+                           list("Cha", "Fla", "Qin", "LC"), 
+                           list("Hu", "Pc", "Qin", "LC"), 
+                           list("Cha", "Fla", "Hu", "Pc"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC"), 
+                           list("Cha", "Fla", "Hu", "Pc", "Qin"), 
+                           list("Cha", "Fla", "Hu", "Pc", "LC", "Qin")
+                           ),
+      empty.intersections = "on", 
+      keep.order = TRUE, 
+      query.legend = "top", 
+      queries = list(list(query = intersects, params = "Cha", color = "#E94144", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Fla", color = "#F3722C", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Hu", color = "#F8961E", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pc", color = "#F9C74F", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "LC", color = "#43AA8B", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = "Qin", color = "#577590", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Metal axis shared ASV"), 
+                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#FF0000", active = TRUE, query.name = "Total shared ASV")
+                     ), 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites Intersections", 
+      sets.x.label = "ASV per sampling site")
+dev.off()
+```
+
+
+```{r Tax.sum, echo=TRUE,message=TRUE,warning=TRUE}
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else {
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+```
+
+
+```{r Phylum clustering, echo=TRUE,message=TRUE,warning=TRUE}
+Phylum <- Tax.sum(mNS, mTAXA, 5) %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  dplyr::mutate(Color = c("#FDFBE3", "#60F649", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#24F205", "#88F877", "#AFFAA4", "#FDFBE3", "#C8FBC1", 
+                          "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#88F877", "#FDFBE3", "#E0FDDC", "#FDFBE3", 
+                          "#FDFBE3", "#000000", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", 
+                          "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", 
+                          "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3")
+                )
+Phylum <- dplyr::mutate(Phylum, 
+                        Total = rowSums(Phylum[1:6]), 
+                        .after = "OSD030")
+Phylum <- Phylum[order(Phylum$Total, decreasing = TRUE),]
+write.csv2(Phylum, "Phylum_NS_Abundance_and_color.csv")
+```
+
+
+```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Imagenes/Fig_4_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 300)
+treemap::treemap(read.csv("Phylum_NS_Abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Total", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "Sequence/ASV distribution and contribution", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Imagenes/Fig_4_Legend.png", width = 10, height = 7, units = "in", res = 300)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("Phylum_NS_Abundance_and_color.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = Phylum$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r relative function, echo=TRUE,message=TRUE,warning=TRUE}
+rltv.Otu.Table <- function(x) {
+  x.Data.rltv <- NULL
+  for (i in 1:dim(x)[1]) {
+    x.Data.rltv <- rbind(x.Data.rltv, x[i,]/apply(x, 1, function(x) sum(x))[i])
+  }
+  rownames(x.Data.rltv) <- rownames(x)
+  invisible(x.Data.rltv)
+}
+```
+
+
+```{r}
+rltv.abun <- rltv.Otu.Table(Tax.sum(mNS, mTAXA, 5)) %>% as.data.frame()
+write.csv2(rltv.abun, "NS_Relative_Abundance_dataframe.csv")
+```
+
+
+```{r}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Imagenes/Fig_5_NS_Relative_Abundance.png", width = 30, height = 11, units = "in", res = 300)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(rltv.abun), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = c("#FDFBE3", "#60F649", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#24F205", "#88F877", "#AFFAA4", "#FDFBE3", "#C8FBC1", 
+                "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#88F877", "#FDFBE3", "#E0FDDC", "#FDFBE3", 
+                "#FDFBE3", "#000000", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", 
+                "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", 
+                "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3"), 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
+dev.off()
+
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Imagenes/Fig_5_Legend.png", width = 3, height = 5, units = "in", res = 300)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = colnames(rltv.abun), 
+       cex = 1, 
+       ncol = 1, 
+       fill = c("#FDFBE3", "#60F649", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#24F205", "#88F877", "#AFFAA4", "#FDFBE3", "#C8FBC1", 
+                "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#88F877", "#FDFBE3", "#E0FDDC", "#FDFBE3", 
+                "#FDFBE3", "#000000", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", 
+                "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", 
+                "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3"), 
+       x.intersp = 0.1, 
+       xjust = 0.1, 
+       yjust = 0.3, 
+       y.intersp = 1.2, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.1, 
+       pt.cex = 0.1)
+dev.off()
+```
+
+
+```{r}
+ppe.taxa <- dplyr::filter(mTAXA,
+                          Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
+write.csv2(ppe.taxa, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Analisis/PPE/NS_PPE_TAXA.csv")
+ppe.ns <- select(mNS, all_of(ppe.taxa$Seq))
+write.csv2(ppe.ns, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Analisis/PPE/NS_PPE_ASV_Abundance.csv")
+ppe.un <- as.data.frame(t(ppe.ns)) %>% dplyr::mutate(Seq = all_of(ppe.taxa$Seq), .before = "OSD159")
+ppe.un <- mutate(ppe.un, 
+                 Total = rowSums(ppe.un[2:7])
+                 )
+ppe.at <- inner_join(ppe.un, ppe.taxa, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(ppe.at) <- all_of(ppe.at[,1])
+write.csv2(ppe.at, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Analisis/PPE/Taxonomic_and_Abundance_PPE.csv")
+```
+
+
+```{r}
+verdes <- ppe.at[,2]
+vedited <- ppe.at[, -c(2,9:17)]
+rownames(vedited) <- verdes
+write.csv2(vedited, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Analisis/PPE/edited_taxonomic_and_abundance_PPE.csv")
+ppe.apats <- vedited[,-1]
+ppe.apats <- vegan::decostand(ppe.apats, method = "pa") %>% add_column(Seq = all_of(vedited$Seq), .before = "OSD159")
+write.csv2(ppe.apats, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Analisis/PPE/Absence_Presence_PPE.csv")
+```
+
+
+#PPE UpSet
+```{r}
+aps.ppe <- read.csv2("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Analisis/PPE/Absence_Presence_PPE.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     dec = ".", 
+                     skip = 0)
+
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/NS/Imagenes/PPE/Fig_6_Complete_PPE_UpSet.png", width = 40, height = 17, units = "in", res = 200)
+upset(aps.ppe, 
+      nsets = 6, 
+      nintersects = NA, 
+      sets = c("OSD030", "OSD072", "OSD003", "OSD141", "OSD002", "OSD159"), 
+      empty.intersections = "on", 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites intersections", 
+      sets.x.label = "ASV per sampling site"
+      )
+dev.off()
+```
+
+```{r echo=TRUE,message=TRUE,warning=TRUE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/MED/Imagenes/PPE/Fig_7_Shorter_MED_PPE_UpSet.png", width = 30, height = 13, units = "in", res = 200)
+upset(aps.ppe, 
+      nsets = 8,
+      nintersects = NA, 
+      sets = c("OSD132", "OSD123", "OSD077", "OSD076", "OSD049", "OSD099", "OSD022", "OSD014"), 
+      intersections = list("OSD132", "OSD123", "OSD077", "OSD076", "OSD049", "OSD099", "OSD022", "OSD014", 
+                           list("OSD022", "OSD014"), 
+                           list("OSD132", "OSD123"), 
+                           list("OSD049", "OSD022", "OSD014"), 
+                           list("OSD132", "OSD123", "OSD077", "OSD076", "OSD049", "OSD099", "OSD022", "OSD014")
+                           ),
+      empty.intersections = "on", 
+      keep.order = TRUE, 
+      query.legend = "top", 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites Intersections", 
+      sets.x.label = "ASV per sampling site")
+dev.off()
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+shared <- aps.ppe %>% 
+  dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta.Choros == 1 & Quintero == 1 & LasCruces == 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+sha.abun <- dplyr::select(ppe.asv, all_of(shared$Seq))
+write.csv2(sha.abun, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Shared_PPE_CORE_ASV_Abundance.csv")
+sha.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(shared$Seq))
+write.csv2(sha.taxa, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Shared_PPE_CORE_TAXA.csv")
+```
+
+
+```{r}
+nms <- paste(sha.taxa$ASV, sha.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(sha.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Shared_PPE_ASV_CORE.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+alignment <- "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Alignment/shared_alignment.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(alignment, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, 
+                         method = "ML", 
+                         showPlot = TRUE, 
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+dbDisconnect(dbConn)
+#Selected model was TN93+G4
+```
+
+
+```{r}
+clust <- as.dendrogram(as.hclust(dendrogram)) %>% 
+  set("branches_lwd", 0.3) %>% 
+  ladderize(right = TRUE)
+plot(clust)
+```
+
+
+```{r}
+shasv <- sha.abun
+colnames(shasv) <- nms
+multi.align <- readDNAMultipleAlignment("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Alignment/shared_alignment.fasta", format = "fasta")
+multi.string <- as(multi.align, "DNAStringSet")
+BrowseSeqs(multi.string, htmlFile = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/shared_PPE_multiple_alignment.html")
+smatrix <- as.matrix(multi.align) %>% rownames() %>% as.vector()
+print(all(colnames(shasv)%in%gtools::mixedsort(smatrix, decreasing = FALSE)))
+sort.abun <- shasv[, rownames(as.matrix(multi.align))]
+norm.hel <- heatmaply(normalize(decostand(sort.abun, method = "hellinger")), 
+                      Colv = clust, 
+                      Rowv = NA, 
+                      main = "Shared PPE ASVs across all sites clustered by maximum likelihood", 
+                      margins = c(50,50,70,0), 
+                      grid_gap = 1, 
+                      width = 1920, 
+                      height = 1080, 
+                      subplot_heights = c(0.35, 0.65), 
+                      color = viridis(n = 256, 
+                                      alpha = 1, 
+                                      begin = 0, 
+                                      end = 1, 
+                                      option = "viridis")
+                      )
+saveWidget(norm.hel, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/hellinger_normalized_heatmap.html")
+```
+
+
+```{r}
+rcc.shared <- readDNAMultipleAlignment("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Alignment/rcc_sha_align.fasta", format = "fasta")
+rcc.mstring <- as(rcc.shared, "DNAStringSet")
+BrowseSeqs(rcc.mstring, htmlFile = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/Tree/RCC_Shared_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = rcc.shared, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/Tree/Masked_RCC_Shared_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Alignment/masked_rcc_shared_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+#Get shared sequences and start tree, it's going to take a while. Also read about network analysis THEN keep with heatmap!
+#Keep up with the good work
+
+
+#Nueva inspiracion
+#Nuevos heatmaps pero solo con dos intersecciones, para ver si es que existe info que no estemos viendo.
+#Las intersecciones serán Cha-Fla, Hu-Pc, Cha-Hu.
+```{r}
+chafla <- aps.ppe %>% dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+chfl.abun <- dplyr::select(ppe.asv, all_of(chafla$Seq))
+write.csv2(chfl.abun, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Fla/ChaFla_PPE_CORE_ASV_Abundance.csv")
+chfl.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(chafla$Seq))
+write.csv2(chfl.taxa, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Fla/ChaFla_PPE_CORE_TAXA.csv")
+```
+
+
+```{r}
+chfl.nms <- paste(chfl.taxa$ASV, chfl.taxa$Species, sep = "_")
+chl.fas <- data.frame(names = chfl.nms, sequences = all_of(chfl.taxa$Seq))
+seqRFLP::dataframe2fas(chl.fas, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Fla/ChaFla_PPE_ASV_CORE.fasta")
+```
+
+
+```{r}
+chfl.align <- "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Fla/Alignment/aligned_chafla.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(chfl.align, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, 
+                         method = "ML", 
+                         showPlot = TRUE,
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+dbDisconnect(dbConn)
+#Selected model TN93+G4
+```
+
+
+```{r}
+clust <-as.dendrogram(as.hclust(dendrogram)) %>% set("branches_lwd", 0.3) %>% ladderize(right = TRUE)
+plot(clust)
+```
+
+
+```{r}
+chfl.asv <- chfl.abun
+colnames(chfl.asv) <- chfl.nms
+chfl.multialign <- readDNAMultipleAlignment("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Fla/Alignment/aligned_chafla.fasta", format = "fasta")
+chfl.multistring <- as(chfl.multialign, "DNAStringSet")
+BrowseSeqs(chfl.multistring, htmlFile = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Others/Cha_Fla/ChaFla_PPE_multiple_alignment.html")
+chfl.smatrix <- as.matrix(chfl.multialign) %>% rownames() %>% as.vector()
+print(all(colnames(chfl.asv)%in%gtools::mixedsort(chfl.smatrix, decreasing = FALSE)))
+sort.chfl <- chfl.asv[, rownames(as.matrix(chfl.multialign))]
+chfl.heat <- heatmaply(heatmaply::normalize(vegan::decostand(sort.chfl, method = "hellinger")), 
+                       Colv = clust, 
+                       Rowv = NA, 
+                       main = "Shared PPE ASV between Chañaral and Flamenco clustered by maximum likelihood", 
+                       margins = c(50,50,70,0), 
+                       grid_gap = 1, 
+                       width = 1920, 
+                       height = 1080, 
+                       subplot_height = c(0.35, 0.65), 
+                       color = viridis::viridis(n = 256, 
+                                                alpha = 1, 
+                                                begin = 0, 
+                                                end = 1,
+                                                option = "mako")
+                       )
+saveWidget(chfl.heat, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Others/Cha_Fla/ChaFla_hellinger_normalized_heatmap.html")
+```
+
+
+```{r}
+hupc <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta.Choros == 1 & Quintero == 0 & LasCruces == 0)
+hupc.abun <- dplyr::select(ppe.asv, all_of(hupc$Seq))
+write.csv2(hupc.abun, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Hu_Pc/HuPc_PPE_CORE_ASV_Abundance.csv")
+hupc.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(hupc$Seq))
+write.csv2(hupc.taxa, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Hu_Pc/HuPc_PPE_CORE_TAXA.csv")
+```
+
+
+```{r}
+hupc.nms <- paste(hupc.taxa$ASV, hupc.taxa$Species, sep = "_")
+hupc.fas <- data.frame(names = hupc.nms, sequences = all_of(hupc.taxa$Seq))
+seqRFLP::dataframe2fas(hupc.fas, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Hu_Pc/HuPc_PPE_ASV_CORE.fasta")
+```
+
+
+```{r}
+hupc.align <- "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Hu_Pc/Alignment/hupc_aligned.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(hupc.align, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, 
+                         method = "ML", 
+                         showPlot = TRUE,
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+dbDisconnect(dbConn)
+#Selected model... TN93 + G4
+```
+
+
+```{r}
+clust <- as.dendrogram(as.hclust(dendrogram)) %>% set("branches_lwd", 0.3) %>% dendextend::ladderize(right = TRUE)
+plot(clust)
+```
+
+
+```{r}
+hupc.asv <- hupc.abun
+colnames(hupc.asv) <- hupc.nms
+hupc.multialign <- Biostrings::readDNAMultipleAlignment("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Hu_Pc/Alignment/hupc_aligned.fasta", format = "fasta")
+hupc.multistring <- as(hupc.multialign, "DNAStringSet")
+BrowseSeqs(hupc.multistring, htmlFile = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Others/Hu_Pc/HuPc_PPE_multiple_alignment.html")
+hupc.smatrix <- as.matrix(hupc.multialign) %>% rownames() %>% as.vector()
+print(all(colnames(hupc.asv)%in%gtools::mixedsort(hupc.smatrix, decreasing = FALSE)))
+sort.hupc <- hupc.asv[,rownames(as.matrix(hupc.multialign))]
+hupc.heat <- heatmaply(heatmaply::normalize(vegan::decostand(sort.hupc, method = "hellinger")), 
+                       Colv = clust, 
+                       Rowv = NA, 
+                       main = "Shared PPE ASV between Huasco and Punta de Choros clustered by maximum likelihood", 
+                       margins = c(50,50,70,0), 
+                       grid_gap = 1, 
+                       width = 1920, 
+                       height = 1080, 
+                       subplot_height = c(0.35,0.65), 
+                       color = viridis::viridis(n = 256, 
+                                                alpha = 1, 
+                                                begin = 0, 
+                                                end = 1, 
+                                                option = "mako")
+                       )
+saveWidget(hupc.heat, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Others/Hu_Pc/HuPc_hellinger_normalized_heatmap.html")
+```
+
+
+```{r}
+chahu <- aps.ppe %>% dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 1 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+chahu.abun <- dplyr::select(ppe.asv, all_of(chahu$Seq))
+write.csv2(chahu.abun, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Hu/ChaHu_PPE_CORE_ASV_Abundance.csv")
+chahu.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(chahu$Seq))
+write.csv2(chahu.taxa, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Hu/ChaHu_PPE_CORE_TAXA.csv")
+```
+
+
+```{r}
+chahu.nms <- paste(chahu.taxa$ASV, chahu.taxa$Species, sep = "_")
+chahu.fas <- data.frame(names = chahu.nms, sequences = all_of(chahu.taxa$Seq))
+seqRFLP::dataframe2fas(chahu.fas, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Hu/ChaHu_PPE_ASV_CORE.fasta")
+```
+
+
+```{r}
+chahu.align <- "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Hu/Alignment/chahu_aligned.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(chahu.align, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, 
+                                  correction = "Jukes-Cantor", 
+                                  processors = NULL, 
+                                  verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, 
+                         method = "ML", 
+                         showPlot = TRUE, 
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+dbDisconnect(dbConn)
+#Selected model... TN93+G4
+```
+
+
+```{r}
+clust <- as.dendrogram(as.hclust(dendrogram)) %>% set("branches_lwd", 0.3) %>% dendextend::ladderize(right = TRUE)
+plot(clust)
+```
+
+
+```{r}
+chahu.asv <- chahu.abun
+colnames(chahu.asv) <- chahu.nms
+chahu.multialign <- Biostrings::readAAMultipleAlignment("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Others/Cha_Hu/Alignment/chahu_aligned.fasta", format = "fasta")
+chahu.multistring <- as(chahu.multialign, "DNAStringSet")
+BrowseSeqs(chahu.multistring, htmlFile = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Others/Cha_Hu/ChaHu_PPE_multiple_alignment.html")
+chahu.smatrix <- as.matrix(chahu.multialign) %>% rownames() %>% as.vector()
+print(all(colnames(chahu.asv)%in%gtools::mixedsort(chahu.smatrix, decreasing = FALSE)))
+sort.chahu <- chahu.asv[,rownames(as.matrix(chahu.multialign))]
+chahu.heat <- heatmaply::heatmaply(normalize(vegan::decostand(sort.chahu, method = "hellinger")), 
+                                   Colv = clust, 
+                                   Rowv = NA, 
+                                   main = "Shared PPE ASV between Chañaral and Huasco clustered by maximun likelihood", 
+                                   margins = c(50,50,70,0), 
+                                   grid_gap = 1, 
+                                   width = 1920, 
+                                   height = 1080, 
+                                   subplot_height = c(0.45,0.55), 
+                                   color = viridis::viridis(n = 256, 
+                                                            alpha = 1, 
+                                                            begin = 0, 
+                                                            end = 1, 
+                                                            option = "mako")
+                                   )
+saveWidget(chahu.heat, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Others/Cha_Hu/ChaHu_hellinger_normalized_heatmap.html")
+```
+
+
+
+
+
+
+
