@@ -440,6 +440,102 @@ dev.off()
 ```
 
 
+```{r}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Fig_7_Selected_PPE_UpSet.png", width = 30, height = 13, units = "in", res = 300)
+upset(aps.ppe,
+      nsets = 6, 
+      nintersects = NA, 
+      sets = c("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces"), 
+      intersections = list("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral", 
+                           list("Chanaral", "Flamenco"), 
+                           list("Huasco", "Pta.Choros"), 
+                           list("Quintero", "LasCruces"), 
+                           list("Huasco", "LasCruces"),
+                           list("Chanaral", "Huasco"), 
+                           list("Chanaral", "Quintero"), 
+                           list("Flamenco", "Quintero"), 
+                           list("Pta.Choros", "LasCruces"), 
+                           list("Chanaral", "Flamenco", "Huasco"), 
+                           list("Huasco", "Pta.Choros", "LasCruces"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"),
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Quintero", "LasCruces"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces")
+                           ),
+      empty.intersections = "on", 
+      keep.order = TRUE, 
+      query.legend = "top", 
+      queries = list(list(query = intersects, params = "Chanaral", color = "#D47B2E", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Flamenco", color = "#F2C066", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Huasco", color = "#16387B", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pta.Choros", color = "#8BE2FC", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "Quintero", color = "#EC4E44", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = "LasCruces", color = "#E96B67", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"), color = "#F1F500", active = TRUE, query.name = "Metal axis shared ASV"), 
+                     list(query = intersects, params = list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces"), color = "#007F5F", active = TRUE, query.name = "Total shared ASV")
+                     ), 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites Intersections", 
+      sets.x.label = "ASV per sampling site")
+dev.off()
+```
+
+
+```{r}
+rltv.class.ppe <- rltv.Otu.Table(Tax.sum(ppe.asv, ppe.taxa, 6)) %>% as.data.frame()
+write.csv2(rltv.class.ppe, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/CORE_PPE_Class_Relative_Abundance_dataframe.csv")
+rltv.class.ppe <- add_column(rltv.class.ppe, Sample = rownames(rltv.class.ppe), .before = "Mamiellophyceae", .name_repair = "minimal")
+rltv.class.ppe$Sample <- factor(rltv.class.ppe$Sample, levels = rltv.class.ppe$Sample)
+class.long <- reshape2::melt(rltv.class.ppe, id.vars = "Sample", variable.name = "Class")
+class <- ggplot(class.long, aes(x = Sample, y = value, fill = Class)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_viridis(discrete = TRUE, 
+                     direction = -1,
+                     option = "mako") + 
+  theme_ipsum()
+class.legend <- cowplot::get_legend(class)
+class <- class + theme(legend.position = "none")
+ggsave(plot = class, 
+       filename = "Fig_8_CORE_PPE_Class_Relative_Abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/", 
+       width = 35, 
+       height = 21, 
+       dpi = 300)
+ggsave(ggpubr::as_ggplot(class.legend), 
+       filename = "Fig_8_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/")
+```
+
+
+```{r echo=TRUE,message=FALSE,warning=FALSE}
+rltv.phylum.ppe <- rltv.Otu.Table(Tax.sum(ppe.asv, ppe.taxa, 5)) %>% as.data.frame()
+write.csv2(rltv.phylum.ppe, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/CORE_PPE_Phylum_Relative_Abundance_dataframe.csv")
+rltv.phylum.ppe <- add_column(rltv.phylum.ppe, Sample = rownames(rltv.phylum.ppe), .before = "Chlorophyta", .name_repair = "minimal")
+rltv.phylum.ppe$Sample <- factor(rltv.phylum.ppe$Sample, levels = rltv.phylum.ppe$Sample)
+phyla.long <- reshape2::melt(rltv.phylum.ppe, id.vars = "Sample", variable.name = "Phyla")
+phyla <- ggplot(phyla.long, aes(x = Sample, y = value, fill = Phyla)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_viridis(discrete = TRUE, 
+                     direction = 1, 
+                     option = "viridis") + 
+  theme_ipsum() + 
+  xlab("")
+phyla.legend <- cowplot::get_legend(phyla)
+phyla <- phyla + theme(legend.position = "none")
+ggsave(plot = phyla, 
+       filename = "Fig_9_CORE_PPE_Phylum_Relative_Abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/", 
+       width = 35, 
+       height = 21, 
+       dpi = 300)
+ggsave(ggpubr::as_ggplot(phyla.legend), 
+       filename = "Fig_9_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/")
+```
+
+
 ```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
 shared <- aps.ppe %>% 
   dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta.Choros == 1 & Quintero == 1 & LasCruces == 1)
