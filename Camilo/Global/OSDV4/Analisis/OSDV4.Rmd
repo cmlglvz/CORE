@@ -229,7 +229,7 @@ dev.off()
 ```
 
 
-```{r}
+```{r, echo=TRUE,message=FALSE,warning=FALSE,include=FALSE}
 rltv.div <- rltv.abun
 rltv.div <- add_column(rltv.div, Sample = rownames(rltv.div), .before = "Metazoa", .name_repair = "minimal")
 rltv.div$Sample <- factor(rltv.div$Sample, levels = rltv.div$Sample)
@@ -237,20 +237,20 @@ div.long <- reshape2::melt(rltv.div, id.vars = "Sample", variable.name = "Phylum
 div <- ggplot(div.long, aes(x = Sample, y = value, fill = Phylum)) + 
   geom_bar(position = "fill", stat = "identity") + 
   scale_fill_viridis(discrete = TRUE,
-                     direction = -1, 
-                     option = "mako") + 
+                     direction = 1, 
+                     option = "viridis") + 
   theme_ipsum()
 div.legend <- cowplot::get_legend(div)
 div <- div + theme(legend.position = "none")
 ggsave(plot = div, 
        filename = "Fig_4_OSDV4_Phylum_Relative_Abundance.png", 
-       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/", 
        width = 35, 
        height = 21, 
        dpi = 300)
 ggsave(ggpubr::as_ggplot(div.legend), 
        filename = "Fig_4_legend.png", 
-       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/")
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/")
 g <- ggplot_build(div)
 list <- unique(g$data[[1]]["fill"])
 list <- list$fill
