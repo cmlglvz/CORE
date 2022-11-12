@@ -872,8 +872,66 @@ saveWidget(chahu.heat, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Image
 ```
 
 
+```{r}
+align <- "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/selected_sha_align.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(align, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, 
+                         method = "ML", 
+                         showPlot = TRUE, 
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+dbDisconnect(dbConn)
+#Selected model was TN93+G4
+```
 
 
+```{r}
+clust <- as.dendrogram(as.hclust(dendrogram)) %>% 
+  set("branches_lwd", 0.3) %>% 
+  ladderize(right = TRUE)
+plot(clust)
+```
 
 
-
+```{r}
+multi.align <- readDNAMultipleAlignment("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/selected_sha_align.fasta", format = "fasta")
+multi.string <- as(multi.align, "DNAStringSet")
+BrowseSeqs(multi.string, htmlFile = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/selected_shared_PPE_multiple_alignment.html")
+smatrix <- as.matrix(multi.align) %>% rownames() %>% as.vector()
+selected.sha <- dplyr::select(shasv, all_of(smatrix))
+print(all(colnames(selected.sha)%in%gtools::mixedsort(smatrix, decreasing = FALSE)))
+sort.abun <- selected.sha[, rownames(as.matrix(multi.align))]
+resume <- as.data.frame(t(sort.abun))
+resume <- dplyr::mutate(resume, 
+                        Chanaral = rowSums(resume[1:12]),
+                        Flamenco = rowSums(resume[13:24]), 
+                        Huasco = rowSums(resume[25:36]), 
+                        PtaChoros = rowSums(resume[37:41]), 
+                        Quintero = rowSums(resume[42:51]), 
+                        LasCruces = rowSums(resume[52:63])
+                        ) %>% as.data.frame()
+selective <- resume[,-c(1:63)] %>% t() %>% as.data.frame()
+norm.hel <- heatmaply(normalize(decostand(selective, method = "hellinger")), 
+                      Colv = clust, 
+                      Rowv = NA, 
+                      main = "Selected Shared PPE ASVs across all sites clustered by maximum likelihood", 
+                      margins = c(50,50,70,0), 
+                      grid_gap = 1, 
+                      width = 1920, 
+                      height = 1080, 
+                      subplot_heights = c(0.35, 0.65), 
+                      color = viridis(n = 256, 
+                                      alpha = 1, 
+                                      begin = 0, 
+                                      end = 1, 
+                                      option = "rocket")
+                      )
+saveWidget(norm.hel, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/selected_hellinger_normalized_heatmap_rocket.html")
+```
