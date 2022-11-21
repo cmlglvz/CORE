@@ -1,0 +1,29 @@
+---
+title: "Maps"
+author: "Camilo Gálvez A."
+date: "9/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(leaflet)
+library(htmlwidgets)
+```
+
+## Mapa regional
+```{r}
+stationsmap <- leaflet() %>% 
+  addTiles() %>% 
+  addProviderTiles("Stamen.TonerBackground") %>% 
+  addCircleMarkers(lng = -70.667222, lat = -26.224278, color = "#F77F00", radius = 10, opacity = 0.9, label = "Chañaral") %>% 
+  addCircleMarkers(lng = -70.7, lat = -26.548611, color = "#FCB740", radius = 10, opacity = 0.9, label = "Flamenco") %>% 
+  addCircleMarkers(lng = -71.210278, lat = -28.336944, color = "#023E8A", radius = 10, opacity = 0.9, label = "Huasco") %>% 
+  addCircleMarkers(lng = -71.4975, lat = -29.223333, color = "#57E3FF", radius = 10, opacity = 0.9, label = "Punta de Choros") %>% 
+  addCircleMarkers(lng = -71.519083, lat = -32.7555, color = "#FF1F1F", radius = 10, opacity = 0.9, label = "Quintero") %>% 
+  addCircleMarkers(lng = -71.624688, lat = -33.500600, color = "#FA4D50", radius = 10, opacity = 0.9, label = "Las Cruces") %>% 
+  addMeasure(position = "bottomright", primaryLengthUnit = "kilometers") %>% 
+  addScaleBar(position = "bottomleft")
+saveWidget(stationsmap, file = "Camilo/Imagenes/mapa_regional.html")
+```
+
