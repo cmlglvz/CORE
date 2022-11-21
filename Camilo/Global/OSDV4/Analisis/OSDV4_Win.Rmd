@@ -1,0 +1,1078 @@
+---
+title: "OSDV4"
+author: "Camilo Gálvez A."
+output: html_document
+---
+
+#Libraries
+```{r libraries, echo=TRUE, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(leaflet)
+library(data.table)
+library(vegan)
+library(treemap)
+library(UpSetR)
+library(RColorBrewer)
+library(plotly)
+library(Biostrings)
+library(DECIPHER)
+library(dendextend)
+library(heatmaply)
+library(htmlwidgets)
+library(hrbrthemes)
+```
+
+
+```{r dataframes, echo=TRUE, message=TRUE, warning=TRUE}
+OSDV4 <- read.csv("/Documents/GitHub/CORE/Camilo/Global/OSDV4/eqtab_nonchim_osdv4.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0, 
+                 fill = TRUE, 
+                 row.names = 1)
+OSDV4 <- apply(OSDV4, 2, function(x) as.numeric(as.integer(x))) %>% as.data.frame()
+samples <- c("OSD143", "OSD037", "OSD039", "OSD060", "OSD054", "OSD055", "OSD152", 
+             "OSD159", "OSD002", "OSD141", "OSD003", "OSD072", "OSD030", "OSD014", 
+             "OSD022", "OSD099", "OSD049", "OSD076", "OSD077", "OSD123", "OSD132")
+rownames(OSDV4) <- samples
+write.csv2(OSDV4, "OSDV4_ASV_Abundance.csv")
+
+TAXA <- read.csv("/Documents/GitHub/CORE/Camilo/Global/OSDV4/taxa_osd_v4_ns.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0) %>% 
+  dplyr::rename(Seq = X) %>%
+  add_column(ASV = c(str_glue("ASV000{1:9}"), 
+                     str_glue("ASV00{10:99}"), 
+                     str_glue("ASV0{100:999}"), 
+                     str_glue("ASV{1000:2180}")), 
+             .after = "Seq")
+rownames(TAXA) <- TAXA[,1]
+write.csv2(TAXA, "OSDV4_TAXA.csv")
+
+print(all(colnames(OSDV4)%in%rownames(TAXA))) #If TRUE you can continue
+```
+
+
+#Filtro de ASV según asignación taxonómica
+```{r ASV filter, echo=TRUE, message=TRUE, warning=TRUE}
+#Me deshago de las secuencias de ASV que no fueron asignadas a nivel de Reino y Supergrupo
+unassigned <- TAXA[rowSums(is.na(TAXA[, c(3,4)])) > 0, ]
+nada <- TAXA[rowSums(is.na(TAXA[3])) > 0, ]
+na.seq <- unassigned[,1]
+mTAXA <- TAXA[!(row.names(TAXA) %in% all_of(na.seq)),]
+write.csv2(mTAXA, "Filtered_OSDV4_TAXA.csv")
+mV4 <- dplyr::select(OSDV4, -all_of(na.seq))
+write.csv2(mV4, "Filtered_OSDV4_ASV_Abundance.csv")
+
+print(all(colnames(mV4)%in%rownames(mTAXA))) #If TRUE you can continue
+```
+
+
+#Rarefacción
+```{r Rarefaction, echo=TRUE, message=TRUE, warning=TRUE}
+rare.all <- sort(rowSums(mV4)) #To identify the sample with the smallest number of observations, which will be used as the number of observations to rarefy samples
+
+rrfy <- rarefy(mV4, rare.all[1]) #rarefaction use the smallest number of observations per sample to extrapolate the expected number if all other samples only had that number of observations
+rrfy #Gives an "expected" rarefied number of species (not observations) if only "rare.all[1]" individuals were present per sample
+
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Figura_1_rarecurve_mOSDV4.png", width = 12, height = 6, units = "in", res = 300)
+par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 0, 0, 0))
+rarecurve(x = mV4, col = "blue", lwd = 2, las = 1, label = TRUE, step = 10, cex = 0.5)
+dev.off()
+
+rareV4 <- as.data.frame(rrarefy(mV4, rrfy[1]))
+write.csv2(rareV4, file = "Rarefacted_filt_OSDV4_ASV_Abundance.csv")
+```
+
+
+#Unify abundance and taxonomic dataframes
+```{r}
+Union <- as.data.frame(t(mV4))
+Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "OSD143")
+Union <- mutate(Union, Total = rowSums(Union[2:22])                )
+ATs <- inner_join(Union, mTAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(ATs) <- all_of(ATs[,1])
+write.csv2(ATs, "Taxonomic_and_Abundance_OSDV4.csv")
+```
+
+
+```{r Tax.sum, echo=TRUE,message=TRUE,warning=TRUE}
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else {
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+```
+
+
+```{r Phylum clustering, echo=TRUE,message=TRUE,warning=TRUE}
+Phylum <- Tax.sum(mV4, mTAXA, 5) %>% 
+  t() %>% 
+  as.data.frame() %>% 
+  dplyr::mutate(Color = c("#DEF5E5", "#CCEDD6", "#B9E6C7", "#A3E0BA", "#8AD9B1", "#6ED4AD", "#58CBAD", "#49C1AD", "#40B7AD", "#3AADAC", 
+                          "#36A3AB", "#3499AA", "#348FA7", "#3485A5", "#357BA2", "#3670A0", "#37659E", "#3A5B9B", "#3E5095", "#40468A", 
+                          "#413D7B", "#3E356B", "#3B2D5A", "#35254B", "#2E1E3C", "#27182D", "#1E111F", "#150A12", "#0B0405")
+                )
+Phylum <- dplyr::mutate(Phylum, Total = rowSums(Phylum[1:21]), .after = "OSD132")
+Phylum <- Phylum[order(Phylum$Total, decreasing = TRUE),]
+write.csv2(Phylum, "Phylum_OSDV4_Abundance_and_color.csv")
+```
+
+
+```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_2_Contribution_Distribution_Phylum_OSDV4.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("Phylum_OSDV4_Abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Total", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "Sequence/ASV distribution and contribution", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_2_Legend.png", width = 10, height = 7, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("Phylum_OSDV4_Abundance_and_color.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = Phylum$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r relative function, echo=TRUE,message=TRUE,warning=TRUE}
+rltv.Otu.Table <- function(x) {
+  x.Data.rltv <- NULL
+  for (i in 1:dim(x)[1]) {
+    x.Data.rltv <- rbind(x.Data.rltv, x[i,]/apply(x, 1, function(x) sum(x))[i])
+  }
+  rownames(x.Data.rltv) <- rownames(x)
+  invisible(x.Data.rltv)
+}
+```
+
+
+```{r}
+rltv.abun <- rltv.Otu.Table(Tax.sum(mV4, mTAXA, 5)) %>% as.data.frame()
+write.csv2(rltv.abun, "OSDV4_Relative_Abundance_dataframe.csv")
+```
+
+
+```{r}
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_3_OSDV4_Relative_Abundance.png", width = 30, height = 11, units = "in", res = 600)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(rltv.abun), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = c("#DEF5E5", "#CCEDD6", "#B9E6C7", "#A3E0BA", "#8AD9B1", "#6ED4AD", "#58CBAD", "#49C1AD", "#40B7AD", "#3AADAC", 
+                "#36A3AB", "#3499AA", "#348FA7", "#3485A5", "#357BA2", "#3670A0", "#37659E", "#3A5B9B", "#3E5095", "#40468A", 
+                "#413D7B", "#3E356B", "#3B2D5A", "#35254B", "#2E1E3C", "#27182D", "#1E111F", "#150A12", "#0B0405"), 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_3_Legend.png", width = 3, height = 5, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = colnames(rltv.abun), 
+       cex = 1, 
+       ncol = 1, 
+       fill = c("#DEF5E5", "#CCEDD6", "#B9E6C7", "#A3E0BA", "#8AD9B1", "#6ED4AD", "#58CBAD", "#49C1AD", "#40B7AD", "#3AADAC", 
+                "#36A3AB", "#3499AA", "#348FA7", "#3485A5", "#357BA2", "#3670A0", "#37659E", "#3A5B9B", "#3E5095", "#40468A", 
+                "#413D7B", "#3E356B", "#3B2D5A", "#35254B", "#2E1E3C", "#27182D", "#1E111F", "#150A12", "#0B0405"), 
+       x.intersp = 0.1, 
+       xjust = 0.1, 
+       yjust = 0.3, 
+       y.intersp = 1.2, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.1, 
+       pt.cex = 0.1)
+dev.off()
+```
+
+
+```{r}
+rltv.div <- rltv.abun
+rltv.div <- add_column(rltv.div, Sample = rownames(rltv.div), .before = "Metazoa", .name_repair = "minimal")
+rltv.div$Sample <- factor(rltv.div$Sample, levels = rltv.div$Sample)
+div.long <- reshape2::melt(rltv.div, id.vars = "Sample", variable.name = "Phylum")
+div <- ggplot(div.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_viridis(discrete = TRUE,
+                     direction = -1, 
+                     option = "mako") + 
+  theme_ipsum()
+div.legend <- cowplot::get_legend(div)
+div <- div + theme(legend.position = "none")
+ggsave(plot = div, 
+       filename = "Fig_4_OSDV4_Phylum_Relative_Abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/", 
+       width = 35, 
+       height = 21, 
+       dpi = 300)
+ggsave(ggpubr::as_ggplot(div.legend), 
+       filename = "Fig_4_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/")
+g <- ggplot_build(div)
+list <- unique(g$data[[1]]["fill"])
+list <- list$fill
+```
+
+
+```{r}
+ppe.taxa <- dplyr::filter(mTAXA,
+                          Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
+write.csv2(ppe.taxa, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSDV4_PPE_TAXA.csv")
+ppe.asv <- select(mV4, all_of(ppe.taxa$Seq))
+write.csv2(ppe.asv, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSDV4_PPE_ASV_Abundance.csv")
+ppe.un <- as.data.frame(t(ppe.asv)) %>% dplyr::mutate(Seq = all_of(ppe.taxa$Seq), .before = "OSD143")
+ppe.un <- mutate(ppe.un, Total = rowSums(ppe.un[2:22])
+                 )
+ppe.at <- inner_join(ppe.un, ppe.taxa, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(ppe.at) <- all_of(ppe.at[,1])
+write.csv2(ppe.at, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSDV4_Taxonomic_and_Abundance_PPE.csv")
+```
+
+
+```{r}
+rltv.ppe <- rltv.Otu.Table(Tax.sum(ppe.asv, ppe.taxa, 5)) %>% as.data.frame() %>% dplyr::rename("A" = 3, "B" = 6)
+rltv.ppe <- mutate(rltv.ppe, Cryptophyta = rowSums(rltv.ppe[c(3,6)]), .after = "Chlorophyta")
+rltv.ppe <- rltv.ppe[, -c(4,7)]
+write.csv2(rltv.ppe, "OSDV4_Relative_PPE_Abundance_dataframe.csv")
+```
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, include=FALSE}
+ppe.rltv <- rltv.ppe
+ppe.rltv <- add_column(ppe.rltv, Sample = rownames(ppe.rltv), .before = "Ochrophyta", .name_repair = "minimal")
+ppe.rltv$Sample <- factor(ppe.rltv$Sample, levels = ppe.rltv$Sample)
+ppe.long <- reshape2::melt(ppe.rltv, id.vars = "Sample", variable.name = "Phylum")
+ppe <- ggplot(ppe.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_viridis(discrete = TRUE,
+                     direction = 1, 
+                     option = "viridis") + 
+  theme_ipsum()
+ppe.legend <- cowplot::get_legend(ppe)
+ppe <- ppe + theme(legend.position = "none")
+ggsave(plot = ppe, 
+       filename = "Fig_5_OSDV4_PPE_Phylum_Relative_Abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/", 
+       width = 35, 
+       height = 21, 
+       dpi = 300)
+ggsave(ggpubr::as_ggplot(ppe.legend), 
+       filename = "Fig_5_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/")
+z <- ggplot_build(ppe)
+lista <- unique(z$data[[1]]["fill"])
+lista <- lista$fill
+```
+
+
+```{r}
+PPE.phylum <- Tax.sum(ppe.asv, ppe.taxa, 5) %>% 
+  as.data.frame() %>% 
+  dplyr::rename("A" = 3, "B" = 6)
+PPE.phylum <- mutate(PPE.phylum, Cryptophyta = rowSums(PPE.phylum[c(3,6)]), .after = "Chlorophyta")
+PPE.phylum <- PPE.phylum[,-c(4,7)] %>% t() %>% as.data.frame()
+PPE.phylum <- mutate(PPE.phylum, 
+                     Total = rowSums(PPE.phylum[1:21]), 
+                     Color = c("#440154", "#414487", "#2A788E", "#22A884", "#7AD151", "#FDE725"), 
+                     .after = "OSD132"
+                     )
+PPE.phylum <- PPE.phylum[order(PPE.phylum$Total, decreasing = TRUE),]
+write.csv2(PPE.phylum, "PPE_Phylum_OSDV4_Abundance_and_color.csv")
+```
+
+
+```{r}
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_6_Contribution_Distribution_PPE_Phylum_OSDV4.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("PPE_Phylum_OSDV4_Abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Total", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "PPE OSD V4 Sequence/ASV distribution and contribution", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_6_Legend.png", width = 10, height = 7, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("PPE_Phylum_OSDV4_Abundance_and_color.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = Phylum$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r}
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_7_OSDV4_Relative_Abundance.png", width = 30, height = 11, units = "in", res = 600)
+par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
+barplot(t(rltv.ppe), 
+        border = NA, 
+        ylab = "Relative Abundance", 
+        ylim = c(0,1), 
+        axes = TRUE, 
+        col = c("#440154", "#414487", "#2A788E", "#22A884", "#7AD151", "#FDE725"), 
+        las = 2, 
+        cex.names = 0.8, 
+        cex.axis = 0.9)
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_7_Legend.png", width = 3, height = 5, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = colnames(rltv.ppe), 
+       cex = 1, 
+       ncol = 1, 
+       fill = c("#440154", "#414487", "#2A788E", "#22A884", "#7AD151", "#FDE725"), 
+       x.intersp = 0.1, 
+       xjust = 0.1, 
+       yjust = 0.3, 
+       y.intersp = 1.2, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.1, 
+       pt.cex = 0.1)
+dev.off()
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD143 <- ppe.at %>% 
+  dplyr::filter(OSD143 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st1.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD143$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD_V4", ppe.taxa$ASV, ppe.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(ppe.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/ORS_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+ORSX <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/orsx_multialign.fasta", format = "fasta")
+orsx.mstring <- as(ORSX, "DNAStringSet")
+BrowseSeqs(orsx.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/orsx_multialign.html")
+masked <- maskGaps(x = ORSX, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/Masked_ORSX.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/masked_orsx.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD143", st1.taxa$ASV, st1.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st1.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD143_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+alignment <- "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/shared_osd143_alignment.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(alignment, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, 
+                         method = "ML", 
+                         showPlot = TRUE, 
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+dbDisconnect(dbConn)
+#Selected model was TN93+G4
+```
+
+
+```{r}
+clust <- as.dendrogram(as.hclust(dendrogram)) %>% 
+  set("branches_lwd", 0.3) %>% 
+  ladderize(right = TRUE)
+plot(clust)
+```
+
+
+```{r}
+shared.143 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/shared_osd143_alignment.fasta", format = "fasta")
+sh143.mstring <- as(shared.143, "DNAStringSet")
+BrowseSeqs(sh143.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/Shared_OSD143_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.143, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/Masked_Shared_OSD143_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/masked_shared_osd143_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+#Rinse and repeat with the rest of the sites
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD037 <- ppe.at %>% 
+  dplyr::filter(OSD037 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st2.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD037$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD037", st2.taxa$ASV, st2.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st2.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S002_OSD037/OSD037_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.037 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S002_OSD037/shared_osd037_alignment.fasta", format = "fasta")
+sh037.mstring <- as(shared.037, "DNAStringSet")
+BrowseSeqs(sh037.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S002_OSD037/Shared_OSD037_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.037, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S002_OSD037/Masked_Shared_OSD037_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S002_OSD037/masked_shared_osd037_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD039 <- ppe.at %>% 
+  dplyr::filter(OSD039 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st3.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD039$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD039", st3.taxa$ASV, st3.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st3.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S003_OSD039/OSD039_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.039 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S003_OSD039/shared_osd039_alignment.fasta", format = "fasta")
+sh039.mstring <- as(shared.039, "DNAStringSet")
+BrowseSeqs(sh039.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S003_OSD039/Shared_OSD039_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.039, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S003_OSD039/Masked_Shared_OSD039_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S003_OSD039/masked_shared_osd039_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD060 <- ppe.at %>% 
+  dplyr::filter(OSD060 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st4.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD060$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD060", st4.taxa$ASV, st4.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st4.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S004_OSD060/OSD060_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.060 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S004_OSD060/shared_osd060_alignment.fasta", format = "fasta")
+sh060.mstring <- as(shared.060, "DNAStringSet")
+BrowseSeqs(sh060.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S004_OSD060/Shared_OSD060_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.060, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S004_OSD060/Masked_Shared_OSD060_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S004_OSD060/masked_shared_osd060_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD054 <- ppe.at %>% 
+  dplyr::filter(OSD054 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st5.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD054$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD054", st5.taxa$ASV, st5.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st5.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S005_OSD054/OSD054_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.054 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S005_OSD054/shared_osd054_alignment.fasta", format = "fasta")
+sh054.mstring <- as(shared.054, "DNAStringSet")
+BrowseSeqs(sh054.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S005_OSD054/Shared_OSD054_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.054, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S005_OSD054/Masked_Shared_OSD054_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S005_OSD054/masked_shared_osd054_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD055 <- ppe.at %>% 
+  dplyr::filter(OSD055 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st6.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD055$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD055", st6.taxa$ASV, st6.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st6.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S006_OSD055/OSD055_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.055 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S006_OSD055/shared_osd055_alignment.fasta", format = "fasta")
+sh055.mstring <- as(shared.055, "DNAStringSet")
+BrowseSeqs(sh055.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S006_OSD055/Shared_OSD055_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.055, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S006_OSD055/Masked_Shared_OSD055_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S006_OSD055/masked_shared_osd055_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD152 <- ppe.at %>% 
+  dplyr::filter(OSD152 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st7.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD152$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD152", st7.taxa$ASV, st7.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st7.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S007_OSD152/OSD152_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.152 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S007_OSD152/shared_osd152_alignment.fasta", format = "fasta")
+sh152.mstring <- as(shared.152, "DNAStringSet")
+BrowseSeqs(sh152.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S007_OSD152/Shared_OSD152_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.152, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S007_OSD152/Masked_Shared_OSD152_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S007_OSD152/masked_shared_osd152_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD159 <- ppe.at %>% 
+  dplyr::filter(OSD159 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st8.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD159$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD159", st8.taxa$ASV, st8.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st8.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S008_OSD159/OSD159_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.159 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S008_OSD159/shared_osd159_alignment.fasta", format = "fasta")
+sh159.mstring <- as(shared.159, "DNAStringSet")
+BrowseSeqs(sh159.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S008_OSD159/Shared_OSD159_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.159, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S008_OSD159/Masked_Shared_OSD159_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S008_OSD159/masked_shared_osd159_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD002 <- ppe.at %>% 
+  dplyr::filter(OSD002 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st9.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD002$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD002", st9.taxa$ASV, st9.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st9.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S009_OSD002/OSD002_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.002 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S009_OSD002/shared_osd002_alignment.fasta", format = "fasta")
+sh002.mstring <- as(shared.002, "DNAStringSet")
+BrowseSeqs(sh002.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S009_OSD002/Shared_OSD002_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.002, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S009_OSD002/Masked_Shared_OSD002_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S009_OSD002/masked_shared_osd002_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD141 <- ppe.at %>% 
+  dplyr::filter(OSD141 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st10.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD141$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD141", st10.taxa$ASV, st10.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st10.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S010_OSD141/OSD141_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.141 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S010_OSD141/shared_osd141_alignment.fasta", format = "fasta")
+sh141.mstring <- as(shared.141, "DNAStringSet")
+BrowseSeqs(sh141.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S010_OSD141/Shared_OSD141_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.141, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S010_OSD141/Masked_Shared_OSD141_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S010_OSD141/masked_shared_osd141_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD003 <- ppe.at %>% 
+  dplyr::filter(OSD003 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st11.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD003$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD003", st11.taxa$ASV, st11.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st11.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S011_OSD003/OSD003_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.003 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S011_OSD003/shared_osd003_alignment.fasta", format = "fasta")
+sh003.mstring <- as(shared.003, "DNAStringSet")
+BrowseSeqs(sh003.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S011_OSD003/Shared_OSD003_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.003, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S011_OSD003/Masked_Shared_OSD003_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S011_OSD003/masked_shared_osd003_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD072 <- ppe.at %>% 
+  dplyr::filter(OSD072 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st12.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD072$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD072", st12.taxa$ASV, st12.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st12.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S012_OSD072/OSD072_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.072 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S012_OSD072/shared_osd072_alignment.fasta", format = "fasta")
+sh072.mstring <- as(shared.072, "DNAStringSet")
+BrowseSeqs(sh072.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S012_OSD072/Shared_OSD072_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.072, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S012_OSD072/Masked_Shared_OSD072_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S012_OSD072/masked_shared_osd072_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD030 <- ppe.at %>% 
+  dplyr::filter(OSD030 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st13.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD030$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD030", st13.taxa$ASV, st13.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st13.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S013_OSD030/OSD030_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.030 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S013_OSD030/shared_osd030_alignment.fasta", format = "fasta")
+sh030.mstring <- as(shared.030, "DNAStringSet")
+BrowseSeqs(sh030.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S013_OSD030/Shared_OSD030_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.030, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S013_OSD030/Masked_Shared_OSD030_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S013_OSD030/masked_shared_osd030_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD014 <- ppe.at %>% 
+  dplyr::filter(OSD014 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st14.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD014$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD014", st14.taxa$ASV, st14.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st14.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S014_OSD014/OSD014_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.014 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S014_OSD014/shared_osd014_alignment.fasta", format = "fasta")
+sh014.mstring <- as(shared.014, "DNAStringSet")
+BrowseSeqs(sh014.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S014_OSD014/Shared_OSD014_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.014, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S014_OSD014/Masked_Shared_OSD014_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S014_OSD014/masked_shared_osd014_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD022 <- ppe.at %>% 
+  dplyr::filter(OSD022 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st15.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD022$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD022", st15.taxa$ASV, st15.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st15.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S015_OSD022/OSD022_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.022 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S015_OSD022/shared_osd022_alignment.fasta", format = "fasta")
+sh022.mstring <- as(shared.022, "DNAStringSet")
+BrowseSeqs(sh022.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S015_OSD022/Shared_OSD022_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.022, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S015_OSD022/Masked_Shared_OSD022_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S015_OSD022/masked_shared_osd015_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD099 <- ppe.at %>% 
+  dplyr::filter(OSD099 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st16.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD099$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD099", st16.taxa$ASV, st16.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st16.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S016_OSD099/OSD099_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.099 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S016_OSD099/shared_osd099_alignment.fasta", format = "fasta")
+sh099.mstring <- as(shared.099, "DNAStringSet")
+BrowseSeqs(sh099.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S016_OSD099/Shared_OSD099_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.099, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S016_OSD099/Masked_Shared_OSD099_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S016_OSD099/masked_shared_osd099_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD049 <- ppe.at %>% 
+  dplyr::filter(OSD049 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st17.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD049$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD049", st17.taxa$ASV, st17.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st17.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S017_OSD049/OSD049_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.049 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S017_OSD049/shared_osd049_alignment.fasta", format = "fasta")
+sh049.mstring <- as(shared.049, "DNAStringSet")
+BrowseSeqs(sh049.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S017_OSD049/Shared_OSD049_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.049, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S017_OSD049/Masked_Shared_OSD049_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S017_OSD049/masked_shared_osd049_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD076 <- ppe.at %>% 
+  dplyr::filter(OSD076 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st18.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD076$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD076", st18.taxa$ASV, st18.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st18.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S018_OSD076/OSD076_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.076 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S018_OSD076/shared_osd076_alignment.fasta", format = "fasta")
+sh076.mstring <- as(shared.076, "DNAStringSet")
+BrowseSeqs(sh076.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S018_OSD076/Shared_OSD076_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.076, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S018_OSD076/Masked_Shared_OSD076_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S018_OSD076/masked_shared_osd076_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD077 <- ppe.at %>% 
+  dplyr::filter(OSD077 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st19.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD077$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD077", st19.taxa$ASV, st19.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st19.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S019_OSD077/OSD077_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.077 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S019_OSD077/shared_osd077_alignment.fasta", format = "fasta")
+sh077.mstring <- as(shared.077, "DNAStringSet")
+BrowseSeqs(sh077.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S019_OSD077/Shared_OSD077_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.077, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S019_OSD077/Masked_Shared_OSD077_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S019_OSD077/masked_shared_osd077_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD123 <- ppe.at %>% 
+  dplyr::filter(OSD123 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st20.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD123$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD123", st20.taxa$ASV, st20.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st20.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S020_OSD123/OSD123_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.123 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S020_OSD123/shared_osd123_alignment.fasta", format = "fasta")
+sh123.mstring <- as(shared.123, "DNAStringSet")
+BrowseSeqs(sh123.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S020_OSD123/Shared_OSD123_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.123, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S020_OSD123/Masked_Shared_OSD123_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S020_OSD123/masked_shared_osd123_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r shared PPE,echo=TRUE,message=TRUE,warning=TRUE}
+OSD132 <- ppe.at %>% 
+  dplyr::filter(OSD132 >= 1)
+#we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
+st21.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD132$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD132", st21.taxa$ASV, st21.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(st21.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S021_OSD132/OSD132_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+shared.132 <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S021_OSD132/shared_osd132_alignment.fasta", format = "fasta")
+sh132.mstring <- as(shared.132, "DNAStringSet")
+BrowseSeqs(sh132.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S021_OSD132/Shared_OSD132_PPE_ASV_multiple_alignment.html")
+masked <- maskGaps(x = shared.132, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S021_OSD132/Masked_Shared_OSD132_PPE_ASV_multiple_alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S021_OSD132/masked_shared_osd132_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r}
+osd.rcc.sha <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD_V4/osd_sha_rcc_alignment.fasta", format = "fasta")
+ors.mstring <- as(osd.rcc.sha, "DNAStringSet")
+BrowseSeqs(ors.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD_V4/ORS_multiple_alignment.html")
+masked <- maskGaps(x = osd.rcc.sha, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD_V4/Masked_ORS_Multi_Alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD_V4/masked_ors_multialignment.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+#END
