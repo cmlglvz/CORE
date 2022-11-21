@@ -20,6 +20,7 @@ library(dendextend)
 library(heatmaply)
 library(htmlwidgets)
 library(hrbrthemes)
+library(viridis)
 ```
 
 
@@ -262,11 +263,11 @@ Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
 Phylum <- Tax.sum(mCORE, mTAXA, 5) %>% 
   t() %>% 
   as.data.frame() %>% 
-  dplyr::mutate(Color = c("#24F205", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#60F649", "#88F877", "#FDFBE3", "#AFFAA4", "#FDFBE3", "#FDFBE3", 
-                   "#FDFBE3", "#FDFBE3", "#88F877", "#C8FBC1", "#FDFBE3", "#E0FDDC", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", 
-                   "#FBFDE3", "#000000", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", 
-                   "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3", "#FDFBE3")
-         )
+  dplyr::mutate(Color = c("#440154", "#460C5F", "#481769", "#482071", "#482979", "#46337E", "#443B84", "#414487", "#3E4C8A", 
+                          "#3A548C", "#365C8D", "#33638D", "#306A8E", "#2C718E", "#2A788E", "#277F8E", "#24868E", "#228D8D", 
+                          "#20938C", "#1F9A8A", "#1FA187", "#22A884", "#28AE80", "#32B67A", "#3DBC74", "#4AC16D", "#59C864", 
+                          "#68CD5B", "#7AD151", "#8CD646", "#9FDA3A", "#B2DD2D", "#C5E021", "#D9E219", "#EBE51B", "#FDE725")
+                )
 Phylum <- dplyr::mutate(Phylum, 
                         Chanaral = rowSums(Phylum[1:12]), 
                         Flamenco = rowSums(Phylum[13:24]), 
@@ -380,6 +381,34 @@ legend("center",
        text.width = 0.1, 
        pt.cex = 0.1)
 dev.off()
+```
+
+
+```{r}
+rltv.div <- rltv.abun
+rltv.div <- add_column(rltv.div, Sample = rownames(rltv.div), .before = "Chlorophyta", .name_repair = "minimal")
+rltv.div$Sample <- factor(rltv.div$Sample, levels = rltv.div$Sample)
+div.long <- reshape2::melt(rltv.div, id.vars = "Sample", variable.name = "Phylum")
+div <- ggplot(div.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_viridis(discrete = TRUE,
+                     direction = 1, 
+                     option = "viridis") + 
+  theme_ipsum()
+div.legend <- cowplot::get_legend(div)
+div <- div + theme(legend.position = "none")
+ggsave(plot = div, 
+       filename = "Fig_X_CORE_Phylum_Relative_Abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/", 
+       width = 35, 
+       height = 21, 
+       dpi = 300)
+ggsave(ggpubr::as_ggplot(div.legend), 
+       filename = "Fig_X_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/")
+g <- ggplot_build(div)
+list <- unique(g$data[[1]]["fill"])
+list <- list$fill
 ```
 
 
@@ -605,9 +634,9 @@ norm.hel <- heatmaply(normalize(decostand(sort.abun, method = "hellinger")),
                                       alpha = 1, 
                                       begin = 0, 
                                       end = 1, 
-                                      option = "viridis")
+                                      option = "rocket")
                       )
-saveWidget(norm.hel, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/hellinger_normalized_heatmap.html")
+saveWidget(norm.hel, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/hellinger_normalized_heatmap_rocket.html")
 ```
 
 
@@ -843,8 +872,66 @@ saveWidget(chahu.heat, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Image
 ```
 
 
+```{r}
+align <- "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/selected_sha_align.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(align, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, 
+                         method = "ML", 
+                         showPlot = TRUE, 
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+dbDisconnect(dbConn)
+#Selected model was TN93+G4
+```
 
 
+```{r}
+clust <- as.dendrogram(as.hclust(dendrogram)) %>% 
+  set("branches_lwd", 0.3) %>% 
+  ladderize(right = TRUE)
+plot(clust)
+```
 
 
-
+```{r}
+multi.align <- readDNAMultipleAlignment("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/selected_sha_align.fasta", format = "fasta")
+multi.string <- as(multi.align, "DNAStringSet")
+BrowseSeqs(multi.string, htmlFile = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/selected_shared_PPE_multiple_alignment.html")
+smatrix <- as.matrix(multi.align) %>% rownames() %>% as.vector()
+selected.sha <- dplyr::select(shasv, all_of(smatrix))
+print(all(colnames(selected.sha)%in%gtools::mixedsort(smatrix, decreasing = FALSE)))
+sort.abun <- selected.sha[, rownames(as.matrix(multi.align))]
+resume <- as.data.frame(t(sort.abun))
+resume <- dplyr::mutate(resume, 
+                        Chanaral = rowSums(resume[1:12]),
+                        Flamenco = rowSums(resume[13:24]), 
+                        Huasco = rowSums(resume[25:36]), 
+                        PtaChoros = rowSums(resume[37:41]), 
+                        Quintero = rowSums(resume[42:51]), 
+                        LasCruces = rowSums(resume[52:63])
+                        ) %>% as.data.frame()
+selective <- resume[,-c(1:63)] %>% t() %>% as.data.frame()
+norm.hel <- heatmaply(normalize(decostand(selective, method = "hellinger")), 
+                      Colv = clust, 
+                      Rowv = NA, 
+                      main = "Selected Shared PPE ASVs across all sites clustered by maximum likelihood", 
+                      margins = c(50,50,70,0), 
+                      grid_gap = 1, 
+                      width = 1920, 
+                      height = 1080, 
+                      subplot_heights = c(0.35, 0.65), 
+                      color = viridis(n = 256, 
+                                      alpha = 1, 
+                                      begin = 0, 
+                                      end = 1, 
+                                      option = "rocket")
+                      )
+saveWidget(norm.hel, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/selected_hellinger_normalized_heatmap_rocket.html")
+```

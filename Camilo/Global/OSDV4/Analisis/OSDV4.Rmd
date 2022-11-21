@@ -229,7 +229,7 @@ dev.off()
 ```
 
 
-```{r}
+```{r, echo=TRUE,message=FALSE,warning=FALSE,include=FALSE}
 rltv.div <- rltv.abun
 rltv.div <- add_column(rltv.div, Sample = rownames(rltv.div), .before = "Metazoa", .name_repair = "minimal")
 rltv.div$Sample <- factor(rltv.div$Sample, levels = rltv.div$Sample)
@@ -237,20 +237,20 @@ div.long <- reshape2::melt(rltv.div, id.vars = "Sample", variable.name = "Phylum
 div <- ggplot(div.long, aes(x = Sample, y = value, fill = Phylum)) + 
   geom_bar(position = "fill", stat = "identity") + 
   scale_fill_viridis(discrete = TRUE,
-                     direction = -1, 
-                     option = "mako") + 
+                     direction = 1, 
+                     option = "viridis") + 
   theme_ipsum()
 div.legend <- cowplot::get_legend(div)
 div <- div + theme(legend.position = "none")
 ggsave(plot = div, 
        filename = "Fig_4_OSDV4_Phylum_Relative_Abundance.png", 
-       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/", 
        width = 35, 
        height = 21, 
        dpi = 300)
 ggsave(ggpubr::as_ggplot(div.legend), 
        filename = "Fig_4_legend.png", 
-       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/")
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/")
 g <- ggplot_build(div)
 list <- unique(g$data[[1]]["fill"])
 list <- list$fill
@@ -407,6 +407,27 @@ OSD143 <- ppe.at %>%
   dplyr::filter(OSD143 >= 1)
 #we can use de corresponding sequences to extract abundance and taxonomic assignation for theses ASV
 st1.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(OSD143$Seq))
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste("OSD_V4", ppe.taxa$ASV, ppe.taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(ppe.taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/ORS_PPE_ASV.fasta")
+#Align sequences with MUSCLE5
+```
+
+
+```{r}
+ORSX <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/orsx_multialign.fasta", format = "fasta")
+orsx.mstring <- as(ORSX, "DNAStringSet")
+BrowseSeqs(orsx.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/orsx_multialign.html")
+masked <- maskGaps(x = ORSX, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/Masked_ORSX.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/masked_orsx.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
 ```
 
 
@@ -1038,6 +1059,19 @@ mskd <- as(masked, "DNAStringSet")
 BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S021_OSD132/Masked_Shared_OSD132_PPE_ASV_multiple_alignment.html")
 consensusViews(masked)
 writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/S021_OSD132/masked_shared_osd132_align.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
+
+```{r}
+osd.rcc.sha <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD_V4/osd_sha_rcc_alignment.fasta", format = "fasta")
+ors.mstring <- as(osd.rcc.sha, "DNAStringSet")
+BrowseSeqs(ors.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD_V4/ORS_multiple_alignment.html")
+masked <- maskGaps(x = osd.rcc.sha, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD_V4/Masked_ORS_Multi_Alignment.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSD_V4/masked_ors_multialignment.fasta", format = "fasta")
 #Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
 ```
 
