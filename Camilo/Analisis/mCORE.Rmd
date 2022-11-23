@@ -573,6 +573,11 @@ sha.abun <- dplyr::select(ppe.asv, all_of(shared$Seq))
 write.csv2(sha.abun, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Shared_PPE_CORE_ASV_Abundance.csv")
 sha.taxa <- dplyr::filter(ppe.taxa, ppe.taxa$Seq %in% all_of(shared$Seq))
 write.csv2(sha.taxa, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Shared_PPE_CORE_TAXA.csv")
+elisa <- sha.taxa %>% dplyr::filter(Genus == "Ostreococcus" | Genus == "Micromonas")
+elisa.taxa <- elisa
+write.csv2(elisa.taxa, "/Documents/GitHub/CORE/Camilo/Otros/Elisa_taxa.csv")
+elisa.abun <- dplyr::select(sha.abun, all_of(elisa.taxa$Seq))
+write.csv2(elisa.abun, "/Documents/GitHub/CORE/Camilo/Otros/elisa_abundance.csv")
 ```
 
 
@@ -581,11 +586,34 @@ nms <- paste(sha.taxa$ASV, sha.taxa$Species, sep = "_")
 fasta <- data.frame(names = nms, sequences = all_of(sha.taxa$Seq))
 seqRFLP::dataframe2fas(fasta, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Shared_PPE_ASV_CORE.fasta")
 #Align sequences with MUSCLE5
+nasa <- paste(elisa.taxa$ASV, elisa.taxa$Species, sep = "_")
+efasta <- data.frame(names = nasa, seuences = all_of(elisa.taxa$Seq))
+seqRFLP::dataframe2fas(efasta, "/Documents/GitHub/CORE/Camilo/Otros/nasa.fasta")
 ```
 
 
 ```{r}
 alignment <- "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/Alignment/shared_alignment.fasta"
+dbConn <- dbConnect(SQLite(), ":memory:")
+Seqs2DB(alignment, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, 
+                         method = "ML", 
+                         showPlot = TRUE, 
+                         type = "dendrogram", 
+                         myXStringSet = consensus, 
+                         processors = NULL, 
+                         verbose = TRUE)
+dbDisconnect(dbConn)
+#Selected model was TN93+G4
+```
+
+
+```{r}
+alignment <- "/Documents/GitHub/CORE/Camilo/Otros/nasa_malign.fasta"
 dbConn <- dbConnect(SQLite(), ":memory:")
 Seqs2DB(alignment, type = "FASTA", dbFile = dbConn, "")
 x <- dbGetQuery(dbConn, "select description from Seqs")$description
@@ -637,6 +665,39 @@ norm.hel <- heatmaply(normalize(decostand(sort.abun, method = "hellinger")),
                                       option = "rocket")
                       )
 saveWidget(norm.hel, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/hellinger_normalized_heatmap_rocket.html")
+```
+
+
+```{r}
+enasa <- elisa.abun
+colnames(enasa) <- nasa
+multi.align <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Otros/nasa_malign.fasta", format = "fasta")
+multi.string <- as(multi.align, "DNAStringSet")
+BrowseSeqs(multi.string, htmlFile = "/Documents/GitHub/CORE/Camilo/Otros/nasa_multiple_alignment.html")
+smatrix <- as.matrix(multi.align) %>% rownames() %>% as.vector()
+print(all(colnames(shasv)%in%gtools::mixedsort(smatrix, decreasing = FALSE)))
+sort.enasa <- enasa[, rownames(as.matrix(multi.align))]
+write.csv2(sort.enasa, "/Documents/GitHub/CORE/Camilo/Otros/sorted_elisa_abundance.csv")
+msort.enasa <- read.csv("/Documents/GitHub/CORE/Camilo/Otros/msorted_elisa_abundance.csv", 
+                        header = TRUE, 
+                        sep = ";", 
+                        skip = 0, 
+                        fill = TRUE, 
+                        row.names = 1)
+enasa.hel <- heatmaply(normalize(decostand(msort.enasa, method = "hellinger")), 
+                       Colv = clust, 
+                       Rowv = NA, 
+                       margins = c(50,50,70,0), 
+                       grid_gap = 1, 
+                       width = 1920, 
+                       height = 1080, 
+                       color = viridis(n = 256, 
+                                       alpha = 1, 
+                                       begin = 0, 
+                                       end = 1, 
+                                       option = "mako")
+                       )
+saveWidget(enasa.hel, file = "/Documents/GitHub/CORE/Camilo/Otros/elisa_heatmap.html")
 ```
 
 
