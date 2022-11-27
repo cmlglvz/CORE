@@ -129,6 +129,23 @@ write.csv2(Phylum, "Phylum_OSDV4_Abundance_and_color.csv")
 ```
 
 
+```{r}
+filum <- Tax.sum(mV4, mTAXA, 5) %>% as.data.frame()
+filum <- filum[,-3]
+colnames(filum)[c(5,23)] <- c("A","B")
+filum <- mutate(filum, 
+                Cryptophyta = rowSums(filum[c(5,23)]))
+filum <- filum[,-c(5,23)]
+filum <- as.data.frame(t(filum))
+filum <- mutate(filum, 
+                Total = rowSums(filum[c(1:21)]),
+                .after = "OSD132")
+filum <- filum[order(filum$Total, decreasing = TRUE),]
+write.csv2(filum, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSDV4_Corrected_Phylum_Abundance.csv")
+```
+
+
+
 ```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
 png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_2_Contribution_Distribution_Phylum_OSDV4.png", width = 17, height = 15, units = "in", res = 600)
 treemap::treemap(read.csv("Phylum_OSDV4_Abundance_and_color.csv", 
@@ -429,6 +446,19 @@ consensusViews(masked)
 writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/masked_orsx.fasta", format = "fasta")
 #Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
 ```
+
+```{r}
+ORSZ <- readDNAMultipleAlignment("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/orsz_v1_maligned.fasta", format = "fasta")
+orsz.mstring <- as(ORSZ, "DNAStringSet")
+BrowseSeqs(orsz.mstring, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/orsz_v1_maligned.html")
+masked <- maskGaps(x = ORSZ, min.fraction = 0.3, min.block.width = 4)
+mskd <- as(masked, "DNAStringSet")
+BrowseSeqs(myXStringSet = mskd, htmlFile = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/Masked_ORSZ.html")
+consensusViews(masked)
+writeXStringSet(mskd, filepath = "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/masked_orsz.fasta", format = "fasta")
+#Externally perform the phylogenetic analysis (MEGA or whatever tool you like)
+```
+
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
