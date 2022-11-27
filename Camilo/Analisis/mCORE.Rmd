@@ -282,6 +282,29 @@ write.csv2(Phylum, "Phylum_CORE_Abundance_and_color.csv")
 ```
 
 
+```{r}
+filum <- Tax.sum(mCORE, mTAXA, 5) %>% as.data.frame()
+filum <- filum[,-22]
+colnames(filum)[c(6,13)] <- c("A","B")
+filum <- mutate(filum, 
+                Cryptophyta = rowSums(filum[c(6,13)]))
+filum <- filum[,-c(6,13)]
+filum <- as.data.frame(t(filum))
+filum <- mutate(filum, 
+                Chanaral = rowSums(filum[c(1:12)]), 
+                Flamenco = rowSums(filum[c(13:24)]),
+                Huasco = rowSums(filum[c(25:36)]),
+                Pta.Choros = rowSums(filum[c(37:41)]),
+                Quintero = rowSums(filum[c(42:51)]),
+                LasCruces = rowSums(filum[c(52:63)]),
+                Total = rowSums(filum[c(1:63)]),
+                .after = "L4A18")
+filum <- filum[order(filum$Total, decreasing = TRUE),]
+write.csv2(filum, "/Documents/GitHub/CORE/Camilo/Analisis/HCS_Corrected_Phylum_Abundance.csv")
+```
+
+
+
 ```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
 png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Fig_4_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
 treemap::treemap(read.csv("Phylum_CORE_Abundance_and_color.csv", 
