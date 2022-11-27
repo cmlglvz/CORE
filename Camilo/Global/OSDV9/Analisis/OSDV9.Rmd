@@ -135,6 +135,29 @@ write.csv2(rltv.abun, "OSDV9_Relative_Abundance_dataframe.csv")
 
 
 ```{r}
+filum <- Tax.sum(mV9, mTAXA, 5) %>% as.data.frame()
+colnames(filum)[c(17,50:72)] <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X") 
+filum <- mutate(filum, 
+                Unclassified = rowSums(filum[c(17,50:72)])
+                )
+filum <- filum[,-c(17,50:72)]
+colnames(filum)[c(5,9,26,36)] <- c("A","B","C","D")
+filum <- mutate(filum, 
+                Haptophyta = rowSums(filum[c(5,36)]), 
+                Cryptophyta = rowSums(filum[c(9,26)])
+                )
+filum <- filum[,-c(5,9,26,36)]
+filum <- as.data.frame(t(filum))
+filum <- mutate(filum, 
+                Total = rowSums(filum[c(1:24)]), 
+                .after = "OSD159")
+filum <- filum[order(filum$Total, decreasing = TRUE),]
+write.csv2(filum, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_Phylum_Abundance.csv")
+```
+
+
+
+```{r}
 rltv.div <- rltv.abun
 colnames(rltv.div)[c(17,50:72)] <- c(str_glue("Un0{1:9}"), str_glue("Un{10:24}"))
 rltv.div <- mutate(rltv.div, Unclassified = rowSums(rltv.div[c(17,50:72)]))
