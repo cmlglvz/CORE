@@ -28,25 +28,21 @@ library(hrbrthemes)
 ## Importe de datos
 ```{r dataframes, echo=TRUE, message=TRUE, warning=TRUE, include=TRUE}
 #Tabla abundancia de ASV
-CORE <- read.csv("seqtab_nonchim.csv", 
+CORE <- read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/seqtab_nonchim.csv", 
                  header = TRUE, 
                  sep = ";", 
                  skip = 0, 
                  row.names = 1)
-
 CORE <- apply(CORE, 2, function(x) as.numeric(as.integer(x))) %>% as.data.frame()
 samples <- c("TARA109", "TARA102", "TARA076", "TARA078", "TARA082", "TARA007", "TARA011", "TARA022", "TARA025", "TARA026", "TARA030", "TARA031", "TARA032", "TARA067", "TARA066", "TARA065", "TARA064", "TARA052", "TARA036", "TARA041", "TARA042")
 rownames(CORE) <- samples
-write.csv2(CORE, "CORE_TARAV9.csv")
+write.csv2(CORE, "/Documents/GitHub/CORE/Camilo/Global/TARA/TARA.csv")
 
-TAXA <- read.csv("taxa.csv", 
+TAXA <- read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/taxa.csv", 
                  header = TRUE, 
                  sep = ";", 
-                 skip = 0) %>% 
-  dplyr::rename(Seq = X) %>% 
-  add_column(ASV = c(str_glue("ASV000{1:9}"),str_glue("ASV00{10:99}"),str_glue("ASV0{100:999}"),str_glue("ASV{1000:9999}"),str_glue("ASV{10000:28672}")), .after = "Seq")
-rownames(TAXA) <- TAXA[, 1]
-write.csv2(TAXA, "TAXA.csv")
+                 skip = 0, 
+                 row.names = 1)
 print(all(colnames(CORE)%in%rownames(TAXA)))
 ```
 
@@ -57,10 +53,10 @@ print(all(colnames(CORE)%in%rownames(TAXA)))
 non.assigned <- TAXA[rowSums(is.na(TAXA[, c(3,4)])) > 0, ]
 NASeq <- non.assigned[,1]
 sTAXA <- TAXA[!(row.names(TAXA) %in% all_of(NASeq)), ]
-write.csv2(sTAXA, "selected_TAXA.csv")
-sCORE <- select(CORE, -all_of(NASeq))
-print(all(colnames(sCORE)%in%rownames(sTAXA)))
-write.csv2(sCORE, "selected_CORE_ASV.csv")
+write.csv2(sTAXA, "/Documents/GitHub/CORE/Camilo/Global/TARA/selected_TAXA.csv")
+sTARA <- select(CORE, -all_of(NASeq))
+print(all(colnames(sTARA)%in%rownames(sTAXA)))
+write.csv2(sTARA, "/Documents/GitHub/CORE/Camilo/Global/TARA/selected_TARA.csv")
 ```
 
 
@@ -81,6 +77,7 @@ composite <- inner_join(Union, sTAXA, by = "Seq") %>% relocate(ASV, .after = Seq
 rownames(composite) <- all_of(composite[,1])
 write.csv2(composite, "composite.csv")
 ```
+
 
 
 ## Preparacion UpSet
@@ -111,6 +108,7 @@ print(all(colnames(PPE.asv)%in%rownames(PPE.taxa)))
 
 ```
 
+
 ## UpSet para "todas" las ASV
 ```{r complete, echo=TRUE, message=TRUE, warning=TRUE}
 aus.pres <- read.csv("Ausencia_Presencia_sCORE.csv", 
@@ -135,6 +133,7 @@ dev.off()
 ```
 
 
+
 ## Preparacion UpSet PPE
 ```{r preparation, echo=TRUE, message=TRUE, warning=TRUE}
 asv.ppe <- PPE.composite[, 2]
@@ -146,6 +145,7 @@ AP.PPE <- decostand(AP.PPE, method = "pa")
 AP.PPE <- add_column(AP.PPE, Seq = all_of(ppe.edited$Seq), .before = "TARA109")
 write.csv2(AP.PPE, "Ausencia_Presencia_PPEsCORE.csv")
 ```
+
 
 
 ## UpSet para PPE
@@ -170,6 +170,7 @@ upset(PPE.auspres,
 dev.off()
 
 ```
+
 
 
 ## Mapa sitio de muestreo
@@ -239,6 +240,7 @@ saveWidget(stationsmap, file = "mapa.html")
 
 
 
+
 ## Agrupar ASV por clasificacion taxonomica
 ```{r clustering, echo=TRUE, message=TRUE, warning=TRUE}
 #Esta es la funcion que dejo el Benja en el github del lab
@@ -256,61 +258,22 @@ Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
   colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
   invisible((y))
 }
-Phylum <- Tax.sum(sCORE, sTAXA, 5) %>% 
-  t() %>% 
-  as.data.frame() %>% 
-  mutate(Color = c("#440154", "#4E0066", "#007F5F", "#359548", "#20A387", "#FFBE17", "#6AAB30", "#1C3B74", "#83E377", "#BACC0C", "#FA8072", "#F97100", "#FFBE17", "#F94144", "#FA776B", "#95D840", "#F8417D", "#F95C74", "#ACDD3C", "#FB9C70", "#C5DBEA", "#000000", "#8BB7D4", "#5193BE", "#00609F", "#AA006A", "#023E8A", "#0B0B30", "#000078", "#9B2226", "#161664", "#FF0000", "#17315F", "#CC0000", "#4E1114", "#DEB1FB"))
-write.csv2(Phylum, "phylum_color_CORE.csv")
-Phylum.Total <- mutate(Phylum,
-                 Cha = rowSums(Phylum[1:12]), 
-                 Fla = rowSums(Phylum[13:24]), 
-                 Hu = rowSums(Phylum[25:36]), 
-                 Pc = rowSums(Phylum[37:41]), 
-                 Qin = rowSums(Phylum[42:51]), 
-                 LC = rowSums(Phylum[52:63]), 
-                 Total = rowSums(Phylum[1:63]), 
-                 .after = "L4A18") %>% 
-  as.data.frame()
-write.csv2(Phylum.Total, "phylum_color_total_CORE.csv")
-png("Contribution_Distribution_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
-treemap(read.csv("phylum_color_total_CORE.csv", 
-                 header = TRUE, 
-                 sep = ";", 
-                 dec = ".", 
-                 skip = 0), 
-        index = "X", 
-        vSize = "Total", 
-        type = "color",
-        vColor = "Color", 
-        position.legend = "none", 
-        fontsize.labels = 20,
-        fontsize.title = 30,
-        title = "Distribution and contribution of total ASV",
-        title.legend = NA,
-        border.col = NA
-)
-dev.off()
-png("Treemap_Phylum_Total_Legend.png", width = 10, height = 7, units = 'in', res = 600)
-plot.new()
-par(mar = c(0,0,0,0), oma = c(0,0,0,0))
-legend("center", 
-       legend = read.csv("phylum_color_total_CORE.csv", 
-                         header = TRUE, 
-                         sep = ";", 
-                         dec = ".", 
-                         skip = 0)[,1], 
-       cex = 1.2, 
-       ncol = 1, 
-       fill = Phylum.Total$Color, 
-       x.intersp = 0.3, 
-       xjust = 0.3, 
-       yjust = 0.5, 
-       y.intersp = 1, 
-       bty = "n", 
-       adj = 0, 
-       text.width = 0.3, 
-       pt.cex = 0.3)
-dev.off()
+
+Phylum <- Tax.sum(sTARA, sTAXA, 5) %>% as.data.frame()
+Phylum <- Phylum[,-11]
+colnames(Phylum)[c(7,10,13,30,31,33,36,41)] <- c("A", "B", "C", "D", "E", "F", "G", "H")
+Phylum <- mutate(Phylum, 
+                 Cryptophyta = rowSums(Phylum[c(10,36)]), 
+                 Streptophyta = rowSums(Phylum[c(33,41)]), 
+                 Haptophyta = rowSums(Phylum[c(13,31)]), 
+                 Chlorophyta = rowSums(Phylum[c(7,30)])
+                 )
+Phylum <- Phylum[,-c(7,10,13,30,31,33,36,41)]
+Phylum <- as.data.frame(t(Phylum))
+Phylum <- mutate(Phylum, Total = rowSums(Phylum[c(1:21)]), .after = "TARA042")
+Phylum <- Phylum[order(Phylum$Total, decreasing = TRUE),]
+
+
 #Sólo PPE
 PhyPPE <- read.csv("phylum_color_total_CORE.csv", 
                    header = TRUE, 
@@ -333,6 +296,172 @@ treemap(PhyPPE,
         border.col = NA
 )
 dev.off()
+```
+
+
+```{r}
+rltv.Otu.Table <- function(x) {
+  x.Data.rltv <- NULL
+  for (i in 1:dim(x)[1]) {
+    x.Data.rltv <- rbind(x.Data.rltv, x[i,]/apply(x, 1, function(x) sum(x))[i])
+  }
+  rownames(x.Data.rltv) <- rownames(x)
+  invisible(x.Data.rltv)
+}
+
+phyl <- Phylum[,-22] %>% t() %>% as.data.frame()
+rltv.abun <- rltv.Otu.Table(phyl) %>% as.data.frame()
+write.csv2(rltv.abun, "/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_Relative_Abundance.csv")
+```
+
+
+```{r}
+rltv <- rltv.abun
+rltv <- add_column(rltv, Sample = rownames(rltv), .before = "Metazoa", .name_repair = "minimal")
+rltv$Sample <- factor(rltv$Sample, levels = rltv$Sample)
+div.long <- reshape2::melt(rltv, id.vars = "Sample", variable.name = "Phylum")
+div <- ggplot(div.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_viridis(discrete = TRUE,
+                     direction = 1, 
+                     option = "viridis") + 
+  theme_ipsum()
+div.legend <- cowplot::get_legend(div)
+div <- div + theme(legend.position = "none")
+ggsave(plot = div, 
+       filename = "Fig_1_TARA_Phylum_Relative_Abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/", 
+       width = 35, 
+       height = 21, 
+       dpi = 300)
+ggsave(ggpubr::as_ggplot(div.legend), 
+       filename = "Fig_1_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/")
+g <- ggplot_build(div)
+list <- unique(g$data[[1]]["fill"])
+list <- list$fill
+```
+
+
+```{r}
+PhyCol <- mutate(Phylum,
+                 Color = c("#440154", "#460B5E", "#481568", "#481D6F", "#482677", "#472F7D", "#453781", "#423F85", "#3F4788", "#3D4E8A", 
+                           "#39558C", "#56C667", "#32648E", "#306A8E", "#2D718E", "#2A778E", "#287D8E", "#25838E", "#238A8D", "#21908C", 
+                           "#1F968B", "#1E9D89", "#20A386", "#23A983", "#29AF7F", "#B8DE29", "#3CBC75", "#48C16E", "#365D8D", "#64CB5F", 
+                           "#74D055", "#84D44B", "#94D840", "#A6DB35", "#32B67A", "#CAE11F", "#DCE318", "#EDE51B", "#FDE725"), 
+                 .after = "Total")
+write.csv2(PhyCol, "/Documents/GitHub/CORE/Camilo/Global/TARA/Phylum_TARA_Abundance_and_Color.csv")
+
+png("/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/Fig_2_Contribution_Distribution_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
+treemap(read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/Phylum_TARA_Abundance_and_Color.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 dec = ".", 
+                 skip = 0), 
+        index = "X", 
+        vSize = "Total", 
+        type = "color",
+        vColor = "Color", 
+        position.legend = "none", 
+        fontsize.labels = 20,
+        fontsize.title = 30,
+        title = "Contribution of total ASV",
+        title.legend = NA,
+        border.col = NA
+)
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/Fig_2_Legend.png", width = 10, height = 7, units = 'in', res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/Phylum_TARA_Abundance_and_Color.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = Phylum$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r}
+div.2 <- ggplot(div.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_manual(values = PhyCol$Color) + 
+  theme_ipsum()
+div.legend <- cowplot::get_legend(div.2)
+div.2 <- div.2 + theme(legend.position = "none")
+ggsave(plot = div.2, 
+       filename = "Fig_3_TARA_Phylum_Relative_Abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/", 
+       width = 35, 
+       height = 21, 
+       dpi = 300)
+ggsave(ggpubr::as_ggplot(div.legend), 
+       filename = "Fig_3_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/")
+```
+
+
+```{r}
+PPE <- PhyCol[c(4,7,12,13,23,26),]
+write.csv2(PPE, "/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_PPE_Abundance_and_Color.csv")
+
+png("/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/Fig_4_Contribution_Distribution_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
+treemap(read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_PPE_Abundance_and_Color.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 dec = ".", 
+                 skip = 0), 
+        index = "X", 
+        vSize = "Total", 
+        type = "color",
+        vColor = "Color", 
+        position.legend = "none", 
+        fontsize.labels = 20,
+        fontsize.title = 30,
+        title = "Contribution of PPE ASV",
+        title.legend = NA,
+        border.col = NA
+)
+dev.off()
+
+ppe <- PPE[,-c(22,23)] %>% t() %>% as.data.frame()
+rltv.ppe <- rltv.Otu.Table(ppe) %>% as.data.frame()
+write.csv2(rltv.ppe, "/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_PPE_Relative_Abundance.csv")
+```
+
+
+```{r}
+pperel <- add_column(rltv.ppe, Sample = rownames(rltv.ppe), .before = "Ochrophyta", .name_repair = "minimal")
+pperel$Sample <- factor(pperel$Sample, levels = pperel$Sample)
+pperel.l <- reshape2::melt(pperel, id.vars = "Sample", variable.name = "Phylum")
+div.3 <- ggplot(pperel.l, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_manual(values = PPE$Color) + 
+  theme_ipsum()
+div.legend <- cowplot::get_legend(div)
+div <- div + theme(legend.position = "none")
+ggsave(plot = div, 
+       filename = "Fig_1_TARA_Phylum_Relative_Abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/", 
+       width = 35, 
+       height = 21, 
+       dpi = 300)
+ggsave(ggpubr::as_ggplot(div.legend), 
+       filename = "Fig_1_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/")
 ```
 
 
