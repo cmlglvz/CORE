@@ -352,8 +352,16 @@ PhyCol <- mutate(Phylum,
                  .after = "Total")
 write.csv2(PhyCol, "/Documents/GitHub/CORE/Camilo/Global/TARA/Phylum_TARA_Abundance_and_Color.csv")
 
-png("/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/Fig_2_Contribution_Distribution_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
-treemap(read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/Phylum_TARA_Abundance_and_Color.csv", 
+cPhylum <- mutate(Phylum,
+                 Color = c("#440154","#46095D","#26818E","#471164","#48196B","#24AA83","#3F4889","#4CC26C","#414287","#38B977",
+                           "#482778","#63CB5F","#34618D","#1FA088","#453581","#443C84","#29AF7F","#2D718E","#21A585","#472E7C",
+                           "#41BD72","#30B47C","#21908C","#7CD250","#6FCF57","#99D83E","#8AD647","#482071","#375B8D","#39558C",
+                           "#E2E418","#A7DB35","#57C666","#1E9B8A","#3C4F8A","#297B8E","#B6DE2A","#C4E021","#25858E"), 
+                 .after = "Total")
+write.csv2(cPhylum, "/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_Phylum_Abundance_and_Color.csv")
+
+png("/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/Fig_5_Contribution_Distribution_Corrected_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
+treemap(read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_Phylum_Abundance_and_Color.csv", 
                  header = TRUE, 
                  sep = ";", 
                  dec = ".", 
@@ -375,14 +383,14 @@ png("/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/Fig_2_Legend.png", width 
 plot.new()
 par(mar = c(0,0,0,0), oma = c(0,0,0,0))
 legend("center", 
-       legend = read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/Phylum_TARA_Abundance_and_Color.csv", 
+       legend = read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_Phylum_Abundance_and_Color.csv", 
                          header = TRUE, 
                          sep = ";", 
                          dec = ".", 
                          skip = 0)[,1], 
        cex = 1.2, 
        ncol = 1, 
-       fill = Phylum$Color, 
+       fill = cPhylum$Color, 
        x.intersp = 0.3, 
        xjust = 0.3, 
        yjust = 0.5, 
@@ -415,10 +423,10 @@ ggsave(ggpubr::as_ggplot(div.legend),
 
 
 ```{r}
-PPE <- PhyCol[c(4,7,12,13,23,26),]
+PPE <- cPhylum[c(4,7,12,13,23,26),]
 write.csv2(PPE, "/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_PPE_Abundance_and_Color.csv")
 
-png("/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/Fig_4_Contribution_Distribution_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
+png("/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/Fig_6_Contribution_Distribution_Phylum_Total_ASV.png", width = 17, height = 15, units = 'in', res = 600)
 treemap(read.csv("/Documents/GitHub/CORE/Camilo/Global/TARA/TARA_PPE_Abundance_and_Color.csv", 
                  header = TRUE, 
                  sep = ";", 
@@ -451,16 +459,16 @@ div.3 <- ggplot(pperel.l, aes(x = Sample, y = value, fill = Phylum)) +
   geom_bar(position = "fill", stat = "identity") + 
   scale_fill_manual(values = PPE$Color) + 
   theme_ipsum()
-div.legend <- cowplot::get_legend(div)
-div <- div + theme(legend.position = "none")
-ggsave(plot = div, 
-       filename = "Fig_1_TARA_Phylum_Relative_Abundance.png", 
+div.legend <- cowplot::get_legend(div.3)
+div.3 <- div.3 + theme(legend.position = "none")
+ggsave(plot = div.3, 
+       filename = "Fig_7_TARA_Phylum_Relative_Abundance.png", 
        path = "/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/", 
        width = 35, 
        height = 21, 
        dpi = 300)
 ggsave(ggpubr::as_ggplot(div.legend), 
-       filename = "Fig_1_legend.png", 
+       filename = "Fig_7_legend.png", 
        path = "/Documents/GitHub/CORE/Camilo/Global/TARA/Figuras/")
 ```
 
