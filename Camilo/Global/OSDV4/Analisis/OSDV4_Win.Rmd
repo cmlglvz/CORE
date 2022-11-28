@@ -142,13 +142,18 @@ filum <- mutate(filum,
                 .after = "OSD132")
 filum <- filum[order(filum$Total, decreasing = TRUE),]
 write.csv2(filum, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSDV4_Corrected_Phylum_Abundance.csv")
+filum <- mutate(filum, 
+                Color = c("#440154","#46095D","#471164","#63CB5F","#482778","#34618D","#414287","#443C84","#3F4889","#38B977",
+                          "#1FA088","#24AA83","#453581","#21908C","#2F6C8E","#21A585","#472E7C","#FDE725","#6FCF57","#29AF7F",
+                          "#26818E","#39558C","#99D83E","#B6DE2A","#A7DB35","#E2E418","#482071"), 
+                .after = "Total")
+write.csv2(filum, "/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSDV4_Corrected_Phylum_Abundance_and_Color.csv")
 ```
 
 
-
 ```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
-png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_2_Contribution_Distribution_Phylum_OSDV4.png", width = 17, height = 15, units = "in", res = 600)
-treemap::treemap(read.csv("Phylum_OSDV4_Abundance_and_color.csv", 
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_8_Contribution_Distribution_Phylum_OSDV4.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSDV4_Corrected_Phylum_Abundance_and_Color.csv", 
                           header = TRUE, 
                           sep = ";", 
                           dec = ".", 
@@ -166,18 +171,18 @@ treemap::treemap(read.csv("Phylum_OSDV4_Abundance_and_color.csv",
                  )
 dev.off()
 
-png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_2_Legend.png", width = 10, height = 7, units = "in", res = 600)
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Figuras/Fig_8_Legend.png", width = 10, height = 7, units = "in", res = 600)
 plot.new()
 par(mar = c(0,0,0,0), oma = c(0,0,0,0))
 legend("center", 
-       legend = read.csv("Phylum_OSDV4_Abundance_and_color.csv", 
+       legend = read.csv("/Documents/GitHub/CORE/Camilo/Global/OSDV4/Analisis/OSDV4_Corrected_Phylum_Abundance_and_Color.csv", 
                          header = TRUE, 
                          sep = ";", 
                          dec = ".", 
                          skip = 0)[,1], 
        cex = 1.2, 
        ncol = 1, 
-       fill = Phylum$Color, 
+       fill = filum$Color, 
        x.intersp = 0.3, 
        xjust = 0.3, 
        yjust = 0.5, 
@@ -243,6 +248,11 @@ legend("center",
        text.width = 0.1, 
        pt.cex = 0.1)
 dev.off()
+```
+
+```{r}
+crltv <- filum[,-c(25,26)] %>%  as.data.frame() 
+crltc <- rltv.Otu.Table(crltv) %>% as.data.frame()
 ```
 
 
