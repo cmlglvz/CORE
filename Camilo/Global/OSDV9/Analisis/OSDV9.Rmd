@@ -82,14 +82,19 @@ par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 0, 0, 0))
 rarecurve(x = mV9, col = "blue", lwd = 2, las = 1, label = TRUE, step = 10, cex = 0.5)
 dev.off()
 
-rareV9 <- as.data.frame(rrarefy(mV9, rrfy[1]))
-write.csv2(rareV9, file = "Rarefacted_filt_OSDV9_ASV_Abundance.csv")
+rV9 <- as.data.frame(rrarefy(mV9, rare.all[1]))
+write.csv2(rV9, file = "Rarefacted_filt_OSDV9_ASV_Abundance.csv")
+
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/Figura_2_rarecurve_rV9.png", width = 12, height = 6, units = "in", res = 600)
+par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 0, 0, 0))
+rarecurve(x = rV9, col = "darkgreen", lwd = 2, las = 1, label = TRUE, step = 10, cex = 0.5)
+dev.off()
 ```
 
 
 #Unify abundance and taxonomic dataframes
 ```{r}
-Union <- as.data.frame(t(mV9))
+Union <- as.data.frame(t(rV9))
 Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "OSD002")
 Union <- mutate(Union, Total = rowSums(Union[2:25])                )
 ATs <- inner_join(Union, mTAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
@@ -135,65 +140,146 @@ write.csv2(rltv.abun, "OSDV9_Relative_Abundance_dataframe.csv")
 
 
 ```{r}
-filum <- Tax.sum(mV9, mTAXA, 5) %>% as.data.frame()
-colnames(filum)[c(17,50:72)] <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X") 
-filum <- mutate(filum, 
-                Unclassified = rowSums(filum[c(17,50:72)])
+Phylum <- Tax.sum(rV9, mTAXA, 5) %>% as.data.frame()
+colnames(Phylum)[c(17,50:72)] <- c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X") 
+Phylum <- mutate(Phylum, 
+                Unclassified = rowSums(Phylum[c(17,50:72)])
                 )
-filum <- filum[,-c(17,50:72)]
-colnames(filum)[c(5,9,26,36)] <- c("A","B","C","D")
-filum <- mutate(filum, 
-                Haptophyta = rowSums(filum[c(5,36)]), 
-                Cryptophyta = rowSums(filum[c(9,26)])
+Phylum <- Phylum[,-c(17,50:72)]
+colnames(Phylum)[c(5,9,26,36)] <- c("A","B","C","D")
+Phylum <- mutate(Phylum, 
+                Haptophyta = rowSums(Phylum[c(5,36)]), 
+                Cryptophyta = rowSums(Phylum[c(9,26)])
                 )
-filum <- filum[,-c(5,9,26,36)]
-filum <- as.data.frame(t(filum))
-filum <- mutate(filum, 
-                Total = rowSums(filum[c(1:24)]), 
-                .after = "OSD159")
-filum <- filum[order(filum$Total, decreasing = TRUE),]
-write.csv2(filum, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_Phylum_Abundance.csv")
+Phylum <- Phylum[,-c(5,9,26,36)]
+Phylum <- as.data.frame(t(Phylum))
+Phylum <- mutate(Phylum, 
+                 Total = rowSums(Phylum[c(1:24)]), 
+                 .after = "OSD159")
+Phylum <- Phylum[order(Phylum$Total, decreasing = TRUE),]
+write.csv2(Phylum, "OSDV9_Rarefacted_Corrected_Phylum_Abundance.csv")
+```
+
+
+```{r,warning=FALSE,message=FALSE}
+cPhylum <- Phylum %>% dplyr::mutate(Color = c(), 
+                                    .after = "Total")
+write.csv2(cPhylum, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_Phylum_Abundance_and_Color.csv")
 ```
 
 
 ```{r}
-rltv <- filum[,-25] %>% t() %>% as.data.frame() %>% rltv.Otu.Table() %>% as.data.frame()
-write.csv2(rltv, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_Relative_Phylum_Abundance.csv")
+colored <- Phylum %>% dplyr::mutate(Color = c("#440154","#46095D","#471164","#48196B","#63CB5F","#482778","#3F4889","#453581","#34618D","#472E7C", 
+                                              "#414287","#3C4F8A","#39558C","#375B8D","#443C84","#21908C","#2D718E","#2F6C8E","#2A768E","#FDE725",
+                                              "#228B8D","#26818E","#25858E","#31668E","#1F958B","#1E9B8A","#1FA088","#21A585","#24AA83","#38B977", 
+                                              "#29AF7F","#30B47C","#41BD72","#4CC26C","#482071","#57C666","#6FCF57","#99D83E","#8AD647","#B6DE2A",
+                                              "#D3E21B","#A7DB35","#E2E418","#7CD250","#C4E021","#F0E51C","#297B8E"), 
+                                    .after = "Total")
+write.csv2(colored, "OSDV9_rarefacted_color_corrected_Phylum_Abundance_and_color.csv")
+```
 
+
+```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/Figura_3_OSDV9_rarefacted_Corrected_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("OSDV9_rarefacted_color_corrected_Phylum_Abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Total", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of rarefacted ASV at phylum level for OSD V9", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/Figura_3_Legend.png", width = 10, height = 7, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("OSDV9_rarefacted_color_corrected_Phylum_Abundance_and_color.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = colored$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r}
+rltv <- Phylum[,-25] %>% t() %>% as.data.frame() %>% rltv.Otu.Table() %>% as.data.frame()
+write.csv2(rltv, "OSDV9_Rarefacted_Corrected_Relative_Phylum_Abundance.csv")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
 rltv <- add_column(rltv, Sample = rownames(rltv), .before = "Metazoa", .name_repair = "minimal")
 rltv$Sample <- factor(rltv$Sample, levels = rltv$Sample)
 div.long <- reshape2::melt(rltv, id.vars = "Sample", variable.name = "Phylum")
 div <- ggplot(div.long, aes(x = Sample, y = value, fill = Phylum)) + 
   geom_bar(position = "fill", stat = "identity") + 
-  scale_fill_viridis(discrete = TRUE,
-                     direction = 1, 
-                     option = "viridis") + 
-  theme_ipsum()
+  labs(x = "OSD Stations", y = "Relative Abundance", title = "Relative ASV abundance at phylum level for rarefacted OSD V9 dataset") +
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 40, plot_title_size = 40) + 
+  theme(legend.position = "right", legend.direction = "vertical")
 div.legend <- cowplot::get_legend(div)
 div <- div + theme(legend.position = "none")
 ggsave(plot = div, 
-       filename = "Fig_5_OSDV9_Corrected_Relative_Phylum_Abundance.png", 
+       filename = "Figura_X_OSDV9_rarefacted_corrected_relative_phylum_abundance.png", 
        path = "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/", 
-       width = 35, 
-       height = 21, 
-       dpi = 300)
+       width = 35,
+       height = 21,
+       dpi = 600)
 ggsave(ggpubr::as_ggplot(div.legend), 
-       filename = "Fig_5_legend.png", 
-       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/")
-g <- ggplot_build(div)
-list <- unique(g$data[[1]]["fill"])
-list <- list$fill
+       filename = "Figura_4_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/", 
+       width = 15,
+       height = 15,
+       dpi = 600)
 ```
 
 
-```{r,warning=FALSE,message=FALSE}
-cPhylum <- filum %>% dplyr::mutate(Color = c("#440154","#46095D","#471164","#48196B","#63CB5F","#482778","#3F4889","#453581","#34618D","#414287",
-                                             "#472E7C","#3C4F8A","#39558C","#375B8D","#443C84","#21908C","#2F6C8E","#2D718E","#2A768E","#FDE725",
-                                             "#26818E","#25858E","#228B8D","#31668E","#1F958B","#1E9B8A","#1FA088","#21A585","#24AA83","#29AF7F",
-                                             "#30B47C","#38B977","#41BD72","#4CC26C","#57C666","#482071","#6FCF57","#7CD250","#8AD647","#99D83E",
-                                             "#A7DB35","#B6DE2A","#C4E021","#D3E21B","#E2E418","#F0E51C","#297B8E"), 
-                                   .after = "Total")
-write.csv2(cPhylum, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_Phylum_Abundance_and_Color.csv")
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+ppe <- cPhylum[c(3,5,7,9,16,40),] %>% as.data.frame()
+write.csv2(cPPE, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_PPE_Abundance.csv")
+crltv <- cPPE[,-c(25,26)] %>% t() %>% as.data.frame() %>% rltv.Otu.Table() %>% as.data.frame()
+write.csv2(crltv, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_PPE_Relative_Abundance.csv")
+
+crltv <- add_column(crltv, Sample = rownames(crltv), .before = "Ochrophyta", .name_repair = "minimal")
+crltv$Sample <- factor(crltv$Sample, levels = crltv$Sample)
+cdiv.long <- reshape2::melt(crltv, id.vars = "Sample", variable.name = "Phylum")
+div.3 <- ggplot(cdiv.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  scale_fill_manual(values = cPPE$Color) + 
+  theme_ipsum()
+cdiv.legend <- cowplot::get_legend(div.3)
+div.3 <- div.3 + theme(legend.position = "none")
+ggsave(plot = div.3, 
+       filename = "Fig_8_OSDV9_Corrected_PPE_Relative_Abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/", 
+       width = 35, 
+       height = 21, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(cdiv.legend), 
+       filename = "Fig_8_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/")
 ```
 
 
@@ -268,50 +354,6 @@ write.csv2(Phylum, "Phylum_OSDV9_Abundance_and_color.csv")
 ```
 
 
-```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
-png("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/Fig_7_Corrected_Contribution_Distribution_Phylum_OSDV9.png", width = 17, height = 15, units = "in", res = 600)
-treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_Phylum_Abundance_and_Color.csv", 
-                          header = TRUE, 
-                          sep = ";", 
-                          dec = ".", 
-                          skip = 0), 
-                 index = "X", 
-                 vSize = "Total", 
-                 type = "color", 
-                 vColor = "Color", 
-                 position.legend = "none", 
-                 fontsize.labels = 20, 
-                 fontsize.title = 30, 
-                 title = "ASV contribution at phylum level", 
-                 title.legend = NA, 
-                 border.col = NA
-                 )
-dev.off()
-
-png("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/Fig_7_Legend.png", width = 10, height = 7, units = "in", res = 600)
-plot.new()
-par(mar = c(0,0,0,0), oma = c(0,0,0,0))
-legend("center", 
-       legend = read.csv("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_Phylum_Abundance_and_Color.csv", 
-                         header = TRUE, 
-                         sep = ";", 
-                         dec = ".", 
-                         skip = 0)[,1], 
-       cex = 1.2, 
-       ncol = 1, 
-       fill = cPhylum$Color, 
-       x.intersp = 0.3, 
-       xjust = 0.3, 
-       yjust = 0.5, 
-       y.intersp = 1, 
-       bty = "n", 
-       adj = 0, 
-       text.width = 0.3, 
-       pt.cex = 0.3)
-dev.off()
-```
-
-
 ```{r}
 png("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/Fig_4_OSDV9_Relative_Abundance.png", width = 30, height = 11, units = "in", res = 600)
 par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
@@ -351,29 +393,81 @@ dev.off()
 
 
 ```{r}
-cPPE <- cPhylum[c(3,5,7,9,16,40),] %>% as.data.frame()
-write.csv2(cPPE, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_PPE_Abundance.csv")
-crltv <- cPPE[,-c(25,26)] %>% t() %>% as.data.frame() %>% rltv.Otu.Table() %>% as.data.frame()
-write.csv2(crltv, "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Analisis/OSDV9_Corrected_PPE_Relative_Abundance.csv")
+cppe <- colored[c(3,5,7,9,16,38),] %>% as.data.frame()
+write.csv2(cppe, "OSDV9_rarefacted_color_corrected_ppe_phylum_abundance.csv")
+```
 
+
+```{r}
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/Figura_5_OSDV9_rarefacted_corrected_contribution_distribution_PPE_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("OSDV9_rarefacted_color_corrected_ppe_phylum_abundance.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Total", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of rarefacted PPE ASV at phylum level for OSD V9", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/Figura_5_Legend.png", width = 10, height = 7, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("OSDV9_rarefacted_color_corrected_ppe_phylum_abundance.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = cppe$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+crltv <- cppe[,-c(25,26)] %>% t() %>% as.data.frame() %>% rltv.Otu.Table() %>% as.data.frame()
+write.csv2(crltv, "OSDV9_rarefacted_color_corrected_ppe_relative_abundance.csv")
 crltv <- add_column(crltv, Sample = rownames(crltv), .before = "Ochrophyta", .name_repair = "minimal")
 crltv$Sample <- factor(crltv$Sample, levels = crltv$Sample)
-cdiv.long <- reshape2::melt(crltv, id.vars = "Sample", variable.name = "Phylum")
-div.3 <- ggplot(cdiv.long, aes(x = Sample, y = value, fill = Phylum)) + 
+clong <- reshape2::melt(crltv, id.vars = "Sample", variable.name = "Phylum")
+cdiv <- ggplot(clong, aes(x = Sample, y = value, fill = Phylum)) + 
   geom_bar(position = "fill", stat = "identity") + 
-  scale_fill_manual(values = cPPE$Color) + 
-  theme_ipsum()
-cdiv.legend <- cowplot::get_legend(div.3)
-div.3 <- div.3 + theme(legend.position = "none")
-ggsave(plot = div.3, 
-       filename = "Fig_8_OSDV9_Corrected_PPE_Relative_Abundance.png", 
+  labs(x = "OSD Stations", y = "Relative Abundance", title = "Relative PPE ASV abundance at phylum level for rarefacted OSD V9 dataset") +
+  scale_fill_manual(values = cppe$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 40, plot_title_size = 40) + 
+  theme(legend.position = "right", legend.justification = "center")
+clegend <- cowplot::get_legend(cdiv)
+cdiv <- cdiv + theme(legend.direction = "vertical", legend.position = "none")
+ggsave(plot = cdiv, 
+       filename = "Figura_6_OSDV9_rarefacted_corrected_ppe_relative_phylum_abundance.png", 
        path = "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/", 
-       width = 35, 
-       height = 21, 
+       width = 35,
+       height = 21,
        dpi = 600)
-ggsave(ggpubr::as_ggplot(cdiv.legend), 
-       filename = "Fig_8_legend.png", 
-       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/")
+ggsave(ggpubr::as_ggplot(clegend), 
+       filename = "Figura_6_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Global/OSDV9/Figuras/", 
+       width = 15,
+       height = 15,
+       dpi = 600)
 ```
 
 

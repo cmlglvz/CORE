@@ -24,6 +24,199 @@ library(viridis)
 ```
 
 
+```{r}
+stationsmap <- leaflet() %>% 
+  addTiles() %>% 
+  setView(lng = -23.86725804882807, lat = 12.726777153022745, zoom = 2.5) %>% 
+  addProviderTiles("Stamen.TonerBackground") %>% 
+  addCircleMarkers(lng = -70.667222, lat = -26.224278, color = "#FF8811", radius = 8, opacity = 1, label = "Chanaral") %>% 
+  addCircleMarkers(lng = -70.7, lat = -26.548611, color = "#F4D06F", radius = 8, opacity = 1, label = "Flamenco") %>% 
+  addCircleMarkers(lng = -71.210278, lat = -28.336944, color = "#392F5A", radius = 8, opacity = 1, label = "Huasco") %>% 
+  addCircleMarkers(lng = -71.4975, lat = -29.223333, color = "#403286", radius = 8, opacity = 1, label = "Punta de Choros") %>% 
+  addCircleMarkers(lng = -71.519083, lat = -32.7555, color = "#18E0BD", radius = 8, opacity = 1, label = "Quintero") %>% 
+  addCircleMarkers(lng = -71.624688, lat = -33.500600, color = "#80EB9F", radius = 8, opacity = 1, label = "Las Cruces") %>% 
+  addMeasure(position = "bottomright", primaryLengthUnit = "kilometers") %>% 
+  addScaleBar(position = "bottomleft")
+saveWidget(stationsmap, file = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_37_HCS_mapa.html")
+```
+
+
+```{r}
+stationsmap <- leaflet() %>% 
+  addTiles() %>% 
+  setView(lng = -23.86725804882807, lat = 12.726777153022745, zoom = 2.5) %>% 
+  addProviderTiles("Stamen.TonerBackground") %>% 
+  addCircleMarkers(lng = -70.667222, lat = -26.224278, color = "#FF8811", radius = 5, opacity = 1, label = "Chanaral") %>% 
+  addCircleMarkers(lng = -70.7, lat = -26.548611, color = "#F4D06F", radius = 5, opacity = 1, label = "Flamenco") %>% 
+  addCircleMarkers(lng = -71.210278, lat = -28.336944, color = "#392F5A", radius = 5, opacity = 1, label = "Huasco") %>% 
+  addCircleMarkers(lng = -71.4975, lat = -29.223333, color = "#403286", radius = 5, opacity = 1, label = "Punta de Choros") %>% 
+  addCircleMarkers(lng = -71.519083, lat = -32.7555, color = "#18E0BD", radius = 5, opacity = 1, label = "Quintero") %>% 
+  addCircleMarkers(lng = -71.624688, lat = -33.500600, color = "#80EB9F", radius = 5, opacity = 1, label = "Las Cruces") %>% 
+  addCircleMarkers(lng = -3.93800, lat = 48.77800, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_002") %>% 
+  addCircleMarkers(lng = 7.9, lat = 54.18194, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_003") %>% 
+  addCircleMarkers(lng = 3.14, lat = 42.49, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_014") %>% 
+  addCircleMarkers(lng = 5.1746, lat = 43.22639, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_022") %>% 
+  addCircleMarkers(lng = 23.2538, lat = 59.8822, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_030") %>% 
+  addCircleMarkers(lng = -80.09315, lat = 26.10293, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_037") %>% 
+  addCircleMarkers(lng = -79.89954, lat = 32.7524, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_039") %>% 
+  addCircleMarkers(lng = 13.33189, lat = 45.325568, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_049") %>% 
+  addCircleMarkers(lng = -69.6409, lat = 43.8444, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_054") %>% 
+  addCircleMarkers(lng = -69.5781, lat = 43.8604, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_055") %>% 
+  addCircleMarkers(lng = -79.16763,	lat = 33.32306, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_060") %>% 
+  addCircleMarkers(lng = 10, lat = 54.8333, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_072") %>% 
+  addCircleMarkers(lng = 12.935,	lat = 43.9475, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_076") %>% 
+  addCircleMarkers(lng = 13.0731, lat = 43.8514, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_077") %>% 
+  addCircleMarkers(lng = -20.30430, lat = 74.31000, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_080") %>% 
+  addCircleMarkers(lng = 13.71003, lat = 45.70092, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_099") %>% 
+  addCircleMarkers(lng = 32.954, lat = 32.822, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_123") %>% 
+  addCircleMarkers(lng = 135.12083, lat = 34.32444, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_124") %>% 
+  addCircleMarkers(lng = 34.843, lat = 32.0694, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_132") %>% 
+  addCircleMarkers(lng = 5.11504, lat = 60.16121, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_141") %>% 
+  addCircleMarkers(lng = -81.01667, lat = 31.98282, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_143") %>% 
+  addCircleMarkers(lng = -8.00000, lat = 79.00000, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_146") %>% 
+  addCircleMarkers(lng = -54.266, lat = -34.616, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_149") %>% 
+  addCircleMarkers(lng = -54.2752, lat = -34.666, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_150") %>% 
+  addCircleMarkers(lng = -63.6403, lat = 44.6936, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_152") %>% 
+  addCircleMarkers(lng = -4.552, lat = 48.359, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_159") %>%
+  addMeasure(position = "bottomright", primaryLengthUnit = "kilometers") %>% 
+  addScaleBar(position = "bottomleft")
+saveWidget(stationsmap, file = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_38_HCS_OSD_mapa.html")
+```
+
+
+```{r}
+stationsmap <- leaflet() %>% 
+  addTiles() %>% 
+  setView(lng = -23.86725804882807, lat = 12.726777153022745, zoom = 2.5) %>% 
+  addProviderTiles("Stamen.TonerBackground") %>% 
+  addCircleMarkers(lng = -70.667222, lat = -26.224278, color = "#FF8811", radius = 5, opacity = 1, label = "Chanaral") %>% 
+  addCircleMarkers(lng = -70.7, lat = -26.548611, color = "#F4D06F", radius = 5, opacity = 1, label = "Flamenco") %>% 
+  addCircleMarkers(lng = -71.210278, lat = -28.336944, color = "#392F5A", radius = 5, opacity = 1, label = "Huasco") %>% 
+  addCircleMarkers(lng = -71.4975, lat = -29.223333, color = "#403286", radius = 5, opacity = 1, label = "Punta de Choros") %>% 
+  addCircleMarkers(lng = -71.519083, lat = -32.7555, color = "#18E0BD", radius = 5, opacity = 1, label = "Quintero") %>% 
+  addCircleMarkers(lng = -71.624688, lat = -33.500600, color = "#80EB9F", radius = 5, opacity = 1, label = "Las Cruces") %>% 
+  addCircleMarkers(lng = -3.93800, lat = 48.77800, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_002") %>% 
+  addCircleMarkers(lng = 7.9, lat = 54.18194, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_003") %>% 
+  addCircleMarkers(lng = 3.14, lat = 42.49, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_014") %>% 
+  addCircleMarkers(lng = 5.1746, lat = 43.22639, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_022") %>% 
+  addCircleMarkers(lng = 23.2538, lat = 59.8822, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_030") %>% 
+  addCircleMarkers(lng = -80.09315, lat = 26.10293, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_037") %>% 
+  addCircleMarkers(lng = -79.89954, lat = 32.7524, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_039") %>% 
+  addCircleMarkers(lng = 13.33189, lat = 45.325568, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_049") %>% 
+  addCircleMarkers(lng = -69.6409, lat = 43.8444, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_054") %>% 
+  addCircleMarkers(lng = -69.5781, lat = 43.8604, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_055") %>% 
+  addCircleMarkers(lng = -79.16763,	lat = 33.32306, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_060") %>% 
+  addCircleMarkers(lng = 10, lat = 54.8333, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_072") %>% 
+  addCircleMarkers(lng = 12.935,	lat = 43.9475, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_076") %>% 
+  addCircleMarkers(lng = 13.0731, lat = 43.8514, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_077") %>% 
+  addCircleMarkers(lng = -20.30430, lat = 74.31000, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_080") %>% 
+  addCircleMarkers(lng = 13.71003, lat = 45.70092, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_099") %>% 
+  addCircleMarkers(lng = 32.954, lat = 32.822, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_123") %>% 
+  addCircleMarkers(lng = 135.12083, lat = 34.32444, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_124") %>% 
+  addCircleMarkers(lng = 34.843, lat = 32.0694, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_132") %>% 
+  addCircleMarkers(lng = 5.11504, lat = 60.16121, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_141") %>% 
+  addCircleMarkers(lng = -81.01667, lat = 31.98282, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_143") %>% 
+  addCircleMarkers(lng = -8.00000, lat = 79.00000, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_146") %>% 
+  addCircleMarkers(lng = -54.266, lat = -34.616, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_149") %>% 
+  addCircleMarkers(lng = -54.2752, lat = -34.666, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_150") %>% 
+  addCircleMarkers(lng = -63.6403, lat = 44.6936, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_152") %>% 
+  addCircleMarkers(lng = -4.552, lat = 48.359, color = "#BACC0C", radius = 5, opacity = 1, label = "OSD_159") %>% 
+  addCircleMarkers(lng = -6.5669, lat = 36.5533, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_004") %>% 
+  addCircleMarkers(lng = 1.9378, lat = 37.051, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_007") %>% 
+  addCircleMarkers(lng = 2.7996, lat = 41.6686, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_011") %>% 
+  addCircleMarkers(lng = 17.4155, lat = 39.8386, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_022") %>% 
+  addCircleMarkers(lng = 17.9348, lat = 42.4552, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_024") %>% 
+  addCircleMarkers(lng = 19.3905, lat = 39.3888, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_025") %>% 
+  addCircleMarkers(lng = 20.1705, lat = 38.4761, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_026") %>% 
+  addCircleMarkers(lng = 32.898, lat = 33.9179, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_030") %>% 
+  addCircleMarkers(lng = 34.835, lat = 27.16, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_031") %>% 
+  addCircleMarkers(lng = 37.2183, lat = 23.36, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_032") %>% 
+  addCircleMarkers(lng = 39.8567, lat = 18.4417, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_034") %>% 
+  addCircleMarkers(lng = 63.5047, lat = 20.8183, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_036") %>% 
+  addCircleMarkers(lng = 69.9776, lat = 14.6059, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_041") %>% 
+  addCircleMarkers(lng = 73.8955, lat = 6.0001, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_042") %>% 
+  addCircleMarkers(lng = 53.9801, lat = -16.957, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_052") %>% 
+  addCircleMarkers(lng = 37.9889, lat = -29.5019, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_064") %>% 
+  addCircleMarkers(lng = 26.2868, lat = -35.1728, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_065") %>% 
+  addCircleMarkers(lng = 17.9189, lat = -34.9449, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_066") %>% 
+  addCircleMarkers(lng = 17.7103, lat = -32.2401, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_067") %>% 
+  addCircleMarkers(lng = -35.1803, lat = -20.9354, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_076") %>% 
+  addCircleMarkers(lng = -43.2899, lat = -30.1367, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_078") %>% 
+  addCircleMarkers(lng = -58.2902, lat = -47.1863, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_082") %>% 
+  addCircleMarkers(lng = -85.1545, lat = -5.2529, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_102") %>% 
+  addCircleMarkers(lng = -84.5766, lat = 1.9928, color = "#F8417D", radius = 5, opacity = 1, label = "TARA_109") %>% 
+  addMeasure(position = "bottomright", primaryLengthUnit = "kilometers") %>% 
+  addScaleBar(position = "bottomleft")
+saveWidget(stationsmap, file = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_40_HCS_OSD_TARA_mapa.html")
+```
+
+
+
+```{r}
+stationsmap <- leaflet() %>% 
+  addTiles() %>% 
+  setView(lng = -23.86725804882807, lat = 12.726777153022745, zoom = 2.5) %>% 
+  addProviderTiles("Stamen.TonerBackground") %>% 
+  addCircleMarkers(lng = -70.667222, lat = -26.224278, color = "#FF8811", radius = 3.5, opacity = 1, label = "Chanaral") %>% 
+  addCircleMarkers(lng = -70.7, lat = -26.548611, color = "#F4D06F", radius = 3.5, opacity = 1, label = "Flamenco") %>% 
+  addCircleMarkers(lng = -71.210278, lat = -28.336944, color = "#392F5A", radius = 3.5, opacity = 1, label = "Huasco") %>% 
+  addCircleMarkers(lng = -71.4975, lat = -29.223333, color = "#403286", radius = 3.5, opacity = 1, label = "Punta de Choros") %>% 
+  addCircleMarkers(lng = -71.519083, lat = -32.7555, color = "#18E0BD", radius = 3.5, opacity = 1, label = "Quintero") %>% 
+  addCircleMarkers(lng = -71.624688, lat = -33.500600, color = "#80EB9F", radius = 3.5, opacity = 1, label = "Las Cruces") %>% 
+  addCircleMarkers(lng = -6.5669, lat = 36.5533, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_004") %>% 
+  addCircleMarkers(lng = 1.9378, lat = 37.051, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_007") %>% 
+  addCircleMarkers(lng = 2.7996, lat = 41.6686, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_011") %>% 
+  addCircleMarkers(lng = 17.4155, lat = 39.8386, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_022") %>% 
+  addCircleMarkers(lng = 17.9348, lat = 42.4552, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_024") %>% 
+  addCircleMarkers(lng = 19.3905, lat = 39.3888, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_025") %>% 
+  addCircleMarkers(lng = 20.1705, lat = 38.4761, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_026") %>% 
+  addCircleMarkers(lng = 32.898, lat = 33.9179, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_030") %>% 
+  addCircleMarkers(lng = 34.835, lat = 27.16, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_031") %>% 
+  addCircleMarkers(lng = 37.2183, lat = 23.36, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_032") %>% 
+  addCircleMarkers(lng = 39.8567, lat = 18.4417, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_034") %>% 
+  addCircleMarkers(lng = 63.5047, lat = 20.8183, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_036") %>% 
+  addCircleMarkers(lng = 69.9776, lat = 14.6059, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_041") %>% 
+  addCircleMarkers(lng = 73.8955, lat = 6.0001, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_042") %>% 
+  addCircleMarkers(lng = 53.9801, lat = -16.957, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_052") %>% 
+  addCircleMarkers(lng = 37.9889, lat = -29.5019, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_064") %>% 
+  addCircleMarkers(lng = 26.2868, lat = -35.1728, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_065") %>% 
+  addCircleMarkers(lng = 17.9189, lat = -34.9449, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_066") %>% 
+  addCircleMarkers(lng = 17.7103, lat = -32.2401, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_067") %>% 
+  addCircleMarkers(lng = -35.1803, lat = -20.9354, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_076") %>% 
+  addCircleMarkers(lng = -43.2899, lat = -30.1367, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_078") %>% 
+  addCircleMarkers(lng = -58.2902, lat = -47.1863, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_082") %>% 
+  addCircleMarkers(lng = -85.1545, lat = -5.2529, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_102") %>% 
+  addCircleMarkers(lng = -84.5766, lat = 1.9928, color = "#F8417D", radius = 3.5, opacity = 1, label = "TARA_109") %>% 
+  addCircleMarkers(lng = -3.9375, lat = 48.7778, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_002") %>% 
+  addCircleMarkers(lng = 7.9, lat = 54.18194, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_003") %>% 
+  addCircleMarkers(lng = 3.14, lat = 42.49, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_014") %>% 
+  addCircleMarkers(lng = 5.1746, lat = 43.22639, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_022") %>% 
+  addCircleMarkers(lng = 23.2538, lat = 59.8822, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_030") %>% 
+  addCircleMarkers(lng = -80.09315, lat = 26.10293, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_037") %>% 
+  addCircleMarkers(lng = -79.89954, lat = 32.7524, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_039") %>% 
+  addCircleMarkers(lng = 13.33189, lat = 45.325568, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_049") %>% 
+  addCircleMarkers(lng = -69.6409, lat = 43.8444, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_054") %>% 
+  addCircleMarkers(lng = -69.5781, lat = 43.8604, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_055") %>% 
+  addCircleMarkers(lng = -79.16763,	lat = 33.32306, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_060") %>% 
+  addCircleMarkers(lng = 10, lat = 54.8333, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_072") %>% 
+  addCircleMarkers(lng = 12.935,	lat = 43.9475, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_076") %>% 
+  addCircleMarkers(lng = 13.0731, lat = 43.8514, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_077") %>% 
+  addCircleMarkers(lng = 13.71003, lat = 45.70092, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_099") %>% 
+  addCircleMarkers(lng = 32.954, lat = 32.822, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_123") %>% 
+  addCircleMarkers(lng = 34.843, lat = 32.0694, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_132") %>% 
+  addCircleMarkers(lng = 5.11504, lat = 60.16121, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_141") %>% 
+  addCircleMarkers(lng = -81.01667, lat = 31.98282, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_143") %>% 
+  addCircleMarkers(lng = -54.266, lat = -34.616, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_149") %>% 
+  addCircleMarkers(lng = -54.2752, lat = -34.666, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_150") %>% 
+  addCircleMarkers(lng = -63.6403, lat = 44.6936, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_152") %>% 
+  addCircleMarkers(lng = -4.552, lat = 48.359, color = "#BACC0C", radius = 3.5, opacity = 1, label = "OSD_159") %>% 
+  addMeasure(position = "bottomright", primaryLengthUnit = "kilometers") %>% 
+  addScaleBar(position = "bottomleft")
+saveWidget(stationsmap, file = "mapa.html")
+```
+
+
+
 ```{r dataframes, echo=TRUE, message=TRUE, warning=TRUE}
 CORE <- read.csv("/Users/Artemis/Documents/GitHub/CORE/Camilo/DADA2/seqtab_nonchim.csv", 
                  header = TRUE, 
@@ -80,9 +273,9 @@ rare.all <- sort(rowSums(mCORE)) #To identify the sample with the smallest numbe
 rrfy <- rarefy(mCORE, rare.all[1]) #rarefaction use the smallest number of observations per sample to extrapolate the expected number if all other samples only had that number of observations
 rrfy #Gives an "expected" rarefied number of species (not observations) if only "rare.all[1]" individuals were present per sample
 
-png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Rarecurve_mCORE.png", width = 12, height = 6, units = "in", res = 300)
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_1_rarecurve_mCORE.png", width = 12, height = 6, units = "in", res = 600)
 par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 0, 0, 0))
-rarecurve(x = mCORE, col = "blue", lwd = 2, las = 1, label = TRUE, step = 10, cex = 0.5)
+rarecurve(x = mCORE, col = "orange", lwd = 2, las = 1, label = TRUE, step = 10, cex = 0.5)
 dev.off()
 
 rareCORE <- as.data.frame(rrarefy(mCORE, rrfy[1]))
@@ -95,12 +288,12 @@ write.csv2(rareCORE, file = "Rarefacted_filt_CORE_ASV_Abundance.csv")
 Union <- as.data.frame(t(mCORE))
 Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "C1A17")
 Union <- mutate(Union, 
-                Cha = rowSums(Union[2:13]), 
-                Fla = rowSums(Union[14:25]), 
-                Hu = rowSums(Union[26:37]), 
-                Pc = rowSums(Union[38:42]), 
-                Qin = rowSums(Union[43:52]), 
-                LC = rowSums(Union[53:64]), 
+                Chanaral = rowSums(Union[2:13]), 
+                Flamenco = rowSums(Union[14:25]), 
+                Huasco = rowSums(Union[26:37]), 
+                Pta.Choros = rowSums(Union[38:42]), 
+                Quintero = rowSums(Union[43:52]), 
+                LasCruces = rowSums(Union[53:64]), 
                 Total = rowSums(Union[2:64])
                 )
 ATs <- inner_join(Union, mTAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
@@ -130,11 +323,11 @@ aus.pres <- read.csv("Absence_Presence_CORE.csv",
                      dec = ".", 
                      skip = 0)
 
-png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Complete_UpSet.png", width = 50, height = 23, units = "in", res = 300)
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_2_Complete_UpSet.png", width = 50, height = 23, units = "in", res = 600)
 upset(aus.pres, 
       nsets = 6, 
       nintersects = NA, 
-      sets = c("Qin", "LC", "Pc", "Hu", "Fla", "Cha"), 
+      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"), 
       empty.intersections = "on", 
       keep.order = TRUE, 
       point.size = 3.5, 
@@ -149,42 +342,28 @@ dev.off()
 
 #Shorter UpSet
 ```{r Shorter, echo=TRUE,message=TRUE,warning=TRUE}
-png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Shorter_UpSet.png", width = 40, height = 21, units = "in", res = 600)
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_3_Shorter_UpSet.png", width = 40, height = 21, units = "in", res = 600)
 upset(aus.pres, 
       nsets = 6,
       nintersects = NA, 
-      sets = c("Qin", "LC", "Pc", "Hu", "Fla", "Cha"), 
-      intersections = list("Qin", "LC", "Pc", "Hu", "Fla", "Cha", 
-                           list("Cha", "Fla"), 
-                           list("Fla", "Hu"), 
-                           list("LC", "Qin"), 
-                           list("Hu", "LC"), 
-                           list("Cha", "Hu"), 
-                           list("Cha", "Qin"), 
-                           list("Pc", "LC"), 
-                           list("Hu", "Pc"), 
-                           list("Fla", "Qin"), 
-                           list("Hu", "Qin"), 
-                           list("Fla", "LC"), 
-                           list("Cha", "LC"), 
-                           list("Pc", "Qin"), 
-                           list("Fla", "Pc"), 
-                           list("Cha", "Pc"), 
-                           list("Cha", "Fla", "Hu"), 
-                           list("Hu", "Pc", "LC"), 
-                           list("Fla", "Hu", "Qin"), 
-                           list("Cha", "Fla", "Qin"), 
-                           list("Fla", "Hu", "Pc"), 
-                           list("Hu", "LC", "Qin"), 
-                           list("Cha", "Fla", "Pc"), 
-                           list("Cha", "Fla", "Hu", "Qin"), 
-                           list("Cha", "Fla", "Hu", "Pc"), 
-                           list("Cha", "Fla", "Hu", "LC"), 
-                           list("Fla", "Hu", "LC", "Qin"), 
-                           list("Cha", "Fla", "Qin", "LC"), 
-                           list("Cha", "Fla", "Hu", "Qin", "LC"), 
-                           list("Cha", "Fla", "Hu", "Pc", "Qin"), 
-                           list("Cha", "Fla", "Hu", "Pc", "LC")
+      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"), 
+      intersections = list("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral", 
+                           list("Chanaral", "Flamenco"), 
+                           list("Huasco", "Pta.Choros"), 
+                           list("Quintero", "LasCruces"), 
+                           list("Chanaral", "Huasco"), 
+                           list("Chanaral", "Quintero"),
+                           list("Huasco", "Quintero"),
+                           list("Flamenco", "Pta.Choros"),
+                           list("Flamenco", "LasCruces"),
+                           list("Pta.Choros", "LasCruces"),
+                           list("Quintero", "LasCruces"),
+                           list("Chanaral", "Huasco", "Quintero"), 
+                           list("Flamenco", "Pta.Choros", "LasCruces"),
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"),  
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "LasCruces"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces")
                            ),
       empty.intersections = "on", 
       keep.order = TRUE, 
@@ -201,43 +380,162 @@ dev.off()
 #Selected UpSet
 ```{r Selected, echo=TRUE, message=TRUE, warning=TRUE}
 #Modify this according to selected intersections from previous UpSet
-png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Selected_UpSet.png", width = 30, height = 15, units = "in", res = 300)
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_4_shorter_UpSet_color_coded.png", width = 40, height = 17, units = "in", res = 600)
 upset(aus.pres, 
       nsets = 6,
       nintersects = NA, 
-      sets = c("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), 
-      intersections = list("Qin", "LC", "Pc", "Hu", "Fla", "Cha", 
-                           list("Cha", "Fla"), 
-                           list("Hu", "Pc"), 
-                           list("Qin", "LC"), 
-                           list("Fla", "Pc"), 
-                           list("Cha", "Hu", "Qin"), 
-                           list("Fla", "Pc", "LC"), 
-                           list("Cha", "Fla", "Qin", "LC"), 
-                           list("Hu", "Pc", "Qin", "LC"), 
-                           list("Cha", "Fla", "Hu", "Pc"), 
-                           list("Cha", "Fla", "Hu", "Pc", "LC"), 
-                           list("Cha", "Fla", "Hu", "Pc", "Qin"), 
-                           list("Cha", "Fla", "Hu", "Pc", "LC", "Qin")
+      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"), 
+      intersections = list("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral", 
+                           list("Chanaral", "Flamenco"), 
+                           list("Huasco", "Pta.Choros"), 
+                           list("Quintero", "LasCruces"), 
+                           list("Chanaral", "Huasco"), 
+                           list("Chanaral", "Quintero"),
+                           list("Huasco", "Quintero"),
+                           list("Flamenco", "Pta.Choros"),
+                           list("Flamenco", "LasCruces"),
+                           list("Pta.Choros", "LasCruces"),
+                           list("Quintero", "LasCruces"),
+                           list("Chanaral", "Huasco", "Quintero"), 
+                           list("Flamenco", "Pta.Choros", "LasCruces"),
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"),  
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "LasCruces"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces")
                            ),
       empty.intersections = "on", 
       keep.order = TRUE, 
       query.legend = "top", 
-      queries = list(list(query = intersects, params = "Cha", color = "#E94144", active = TRUE, query.name = "Unique Chañaral ASV"), 
-                     list(query = intersects, params = "Fla", color = "#F3722C", active = TRUE, query.name = "Unique Flamenco ASV"), 
-                     list(query = intersects, params = "Hu", color = "#F8961E", active = TRUE, query.name = "Unique Huasco ASV"), 
-                     list(query = intersects, params = "Pc", color = "#F9C74F", active = TRUE, query.name = "Unique Punta Choros ASV"), 
-                     list(query = intersects, params = "LC", color = "#43AA8B", active = TRUE, query.name = "Unique Las Cruces ASV"), 
-                     list(query = intersects, params = "Qin", color = "#577590", active = TRUE, query.name = "Unique Quintero ASV"), 
-                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc"), color = "#16DB93", active = TRUE, query.name = "Metal axis shared ASV"), 
-                     list(query = intersects, params = list("Cha", "Fla", "Hu", "Pc", "LC", "Qin"), color = "#FF0000", active = TRUE, query.name = "Total shared ASV")
+      queries = list(list(query = intersects, params = "Chanaral", color = "#FF8811", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Flamenco", color = "#F4D06F", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Huasco", color = "#392F5A", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pta.Choros", color = "#403286", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "Quintero", color = "#18E0BD", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = "LasCruces", color = "#80EB9F", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces"), color = "#EF233C", active = TRUE, query.name = "Total ASV shared")
                      ), 
       point.size = 3.5, 
       line.size = 1.5, 
-      text.scale = 2, 
+      text.scale = 3, 
       mainbar.y.label = "Sites Intersections", 
       sets.x.label = "ASV per sampling site")
 dev.off()
+```
+
+
+```{r}
+shared <- aus.pres %>% dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta.Choros == 1 & Quintero == 1 & LasCruces == 1)
+shared.asv <- dplyr::select(mCORE, all_of(shared$Seq))
+write.csv2(shared.asv, "Shared_ASV_abundance.csv")
+```
+
+
+```{r}
+chanaral <- aus.pres %>% dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+cha.asv <- dplyr::select(mCORE, all_of(chanaral$Seq))
+write.csv2(cha.asv, "Chanaral_unique_ASV_abundance.csv")
+```
+
+
+```{r}
+flamenco <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+fla.asv <- dplyr::select(mCORE, all_of(flamenco$Seq))
+write.csv2(fla.asv, "Flamenco_unique_ASV_abundance.csv")
+```
+
+
+```{r}
+huasco <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+hu.asv <- dplyr::select(mCORE, all_of(huasco$Seq))
+write.csv2(hu.asv, "Huasco_unique_ASV_abundance.csv")
+```
+
+
+```{r}
+choros <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 1 & Quintero == 0 & LasCruces == 0)
+pch.asv <- dplyr::select(mCORE, all_of(choros$Seq))
+write.csv2(pch.asv, "Punta_Choros_unique_ASV_abundance.csv")
+```
+
+
+```{r}
+quintero <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 1 & LasCruces == 0)
+qin.asv <- dplyr::select(mCORE, all_of(quintero$Seq))
+write.csv2(qin.asv, "Quintero_unique_ASV_abundance.csv")
+```
+
+
+```{r}
+cruces <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 1)
+lc.asv <- dplyr::select(mCORE, all_of(cruces$Seq))
+write.csv2(lc.asv, "Las_Cruces_unique_ASV_abundance.csv")
+```
+
+
+```{r}
+rest <- dplyr::select(mCORE, -all_of(shared$Seq)) %>% 
+  dplyr::select(-all_of(chanaral$Seq)) %>% 
+  dplyr::select(-all_of(flamenco$Seq)) %>% 
+  dplyr::select(-all_of(huasco$Seq)) %>% 
+  dplyr::select(-all_of(choros$Seq)) %>% 
+  dplyr::select(-all_of(quintero$Seq)) %>% 
+  dplyr::select(-all_of(cruces$Seq))
+write.csv2(rest, "rest_ASV_abundance.csv")
+crest <- as.data.frame(t(rest))
+write.csv2(crest, "inverted_rest_ASV_abundance.csv")
+```
+
+
+```{r}
+detailed <- read.csv("detailed_total_ASV_abundance.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     dec = ".", 
+                     skip = 0,
+                     row.names = 1)
+detailed <- add_column(detailed, Site = rownames(detailed), .before = "Unique", .name_repair = "minimal")
+detailed$Site <- factor(detailed$Site, levels = detailed$Site)
+long <- reshape2::melt(detailed, id.vars = "Site", variable.name = "Type")
+```
+
+
+```{r}
+full <- as.data.frame(t(mCORE))
+full <- dplyr::mutate(full, 
+                      cha = rowSums(full[c(1:12)]),
+                      fla = rowSums(full[c(13:24)]),
+                      hu = rowSums(full[c(25:36)]),
+                      pc = rowSums(full[c(37:41)]),
+                      qin = rowSums(full[c(42:51)]),
+                      lc = rowSums(full[c(52:63)])
+                      )
+full <- full[,c(64:69)] %>% t() %>% as.data.frame()
+full <- dplyr::mutate(full, total = rowSums(full[c(1:5990)]))
+full <- full[,5991]
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+det <- ggplot(long, aes(x = Site, y = value, fill = Type)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "Sites", y = "Relative Abundance", title = "Relative contribution of each ASV type") + 
+  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) + 
+  theme_ipsum(base_size = 22, axis_title_size = 25, plot_title_size = 25) + 
+  theme(legend.position = "bottom", legend.direction = "horizontal")
+det.legend <- cowplot::get_legend(det)
+det <- det + theme(legend.position = "none")
+ggsave(plot = det, 
+       filename = "Figura_5_relative_contribution_ASV_type.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 12, 
+       height = 15, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(det.legend), 
+       filename = "Figura_5_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/",
+       width = 7,
+       height = 3,
+       dpi = 600)
 ```
 
 
@@ -259,55 +557,35 @@ Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
 ```
 
 
-```{r Phylum clustering, echo=TRUE,message=TRUE,warning=TRUE}
-Phylum <- Tax.sum(mCORE, mTAXA, 5) %>% 
-  t() %>% 
-  as.data.frame() %>% 
-  dplyr::mutate(Color = c("#440154", "#460C5F", "#481769", "#482071", "#482979", "#46337E", "#443B84", "#414487", "#3E4C8A", 
-                          "#3A548C", "#365C8D", "#33638D", "#306A8E", "#2C718E", "#2A788E", "#277F8E", "#24868E", "#228D8D", 
-                          "#20938C", "#1F9A8A", "#1FA187", "#22A884", "#28AE80", "#32B67A", "#3DBC74", "#4AC16D", "#59C864", 
-                          "#68CD5B", "#7AD151", "#8CD646", "#9FDA3A", "#B2DD2D", "#C5E021", "#D9E219", "#EBE51B", "#FDE725")
-                )
-Phylum <- dplyr::mutate(Phylum, 
-                        Chanaral = rowSums(Phylum[1:12]), 
-                        Flamenco = rowSums(Phylum[13:24]), 
-                        Huasco = rowSums(Phylum[25:36]), 
-                        Pta.Choros = rowSums(Phylum[37:41]), 
-                        Quintero = rowSums(Phylum[42:51]), 
-                        LasCruces = rowSums(Phylum[52:63]), 
-                        Total = rowSums(Phylum[1:63]), 
-                        .after = "L4A18")
-Phylum <- Phylum[order(Phylum$Total, decreasing = TRUE),]
-write.csv2(Phylum, "Phylum_CORE_Abundance_and_color.csv")
-```
-
-
 ```{r}
-filum <- Tax.sum(mCORE, mTAXA, 5) %>% as.data.frame()
-filum <- filum[,-22]
-colnames(filum)[c(6,13)] <- c("A","B")
-filum <- mutate(filum, 
-                Cryptophyta = rowSums(filum[c(6,13)]))
-filum <- filum[,-c(6,13)]
-filum <- as.data.frame(t(filum))
-filum <- mutate(filum, 
-                Chanaral = rowSums(filum[c(1:12)]), 
-                Flamenco = rowSums(filum[c(13:24)]),
-                Huasco = rowSums(filum[c(25:36)]),
-                Pta.Choros = rowSums(filum[c(37:41)]),
-                Quintero = rowSums(filum[c(42:51)]),
-                LasCruces = rowSums(filum[c(52:63)]),
-                Total = rowSums(filum[c(1:63)]),
-                .after = "L4A18")
-filum <- filum[order(filum$Total, decreasing = TRUE),]
-write.csv2(filum, "/Documents/GitHub/CORE/Camilo/Analisis/HCS_Corrected_Phylum_Abundance.csv")
+Phylum <- Tax.sum(mCORE, mTAXA, 5) %>% as.data.frame()
+Phylum <- Phylum[,-22]
+colnames(Phylum)[c(6,13)] <- c("A","B")
+Phylum <- mutate(Phylum, Cryptophyta = rowSums(Phylum[c(6,13)]))
+Phylum <- Phylum[,-c(6,13)] %>% t() %>% as.data.frame()
+Phylum <- mutate(Phylum, 
+                 Chanaral = rowSums(Phylum[c(1:12)]), 
+                 Flamenco = rowSums(Phylum[c(13:24)]), 
+                 Huasco = rowSums(Phylum[c(25:36)]), 
+                 Pta.Choros = rowSums(Phylum[c(37:41)]), 
+                 Quintero = rowSums(Phylum[c(42:51)]), 
+                 LasCruces = rowSums(Phylum[c(52:63)]), 
+                 Total = rowSums(Phylum[c(1:63)]), 
+                 .after = "L4A18")
+Phylum <- Phylum[order(Phylum$Total, decreasing = TRUE),]
+write.csv2(Phylum, "HCS_total_phylum_abundance.csv")
+colored <- Phylum %>% dplyr::mutate(Color = c("#63CB5F","#472E7C","#46095D","#471164","#482778","#440154","#24AA83","#34618D","#38B977","#443C84",
+                                              "#3F4889","#99D83E","#414287","#453581","#8AD647","#21908C","#1FA088","#E2E418","#B6DE2A","#21A585", 
+                                              "#29AF7F","#6FCF57","#57C666","#26818E","#482071","#2D718E","#A7DB35","#25858E","#F0E51C","#375B8D", 
+                                              "#1E9B8A","#30B47C","#2F6C8E","#39558C"), 
+                                    .after = "Total")
+write.csv2(colored, "HCS_color_corrected_total_phylum_abundance_and_color.csv")
 ```
-
 
 
 ```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
-png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Fig_4_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
-treemap::treemap(read.csv("Phylum_CORE_Abundance_and_color.csv", 
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_6_HCS_total_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
                           header = TRUE, 
                           sep = ";", 
                           dec = ".", 
@@ -319,24 +597,24 @@ treemap::treemap(read.csv("Phylum_CORE_Abundance_and_color.csv",
                  position.legend = "none", 
                  fontsize.labels = 20, 
                  fontsize.title = 30, 
-                 title = "Sequence/ASV distribution and contribution", 
+                 title = "ASV contribution of total ASV at phylum level for all sites HCS", 
                  title.legend = NA, 
                  border.col = NA
                  )
 dev.off()
 
-png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Fig_4_Legend.png", width = 10, height = 7, units = "in", res = 600)
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_6_legend.png", width = 10, height = 7, units = "in", res = 600)
 plot.new()
 par(mar = c(0,0,0,0), oma = c(0,0,0,0))
 legend("center", 
-       legend = read.csv("Phylum_CORE_Abundance_and_color.csv", 
+       legend = read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
                          header = TRUE, 
                          sep = ";", 
                          dec = ".", 
                          skip = 0)[,1], 
        cex = 1.2, 
        ncol = 1, 
-       fill = Phylum$Color, 
+       fill = colored$Color, 
        x.intersp = 0.3, 
        xjust = 0.3, 
        yjust = 0.5, 
@@ -345,6 +623,160 @@ legend("center",
        adj = 0, 
        text.width = 0.3, 
        pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_7_HCS_Chanaral_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Chanaral", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of total ASV at phylum level for Chañaral", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_7_legend.png", width = 10, height = 7, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = colored$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_8_HCS_Flamenco_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Flamenco", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of total ASV at phylum level for Flamenco", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_9_HCS_Huasco_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Huasco", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of total ASV at phylum level for Huasco", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_10_HCS_Punta_Choros_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Pta.Choros", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of total ASV at phylum level for Punta de Choros", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_11_HCS_Quintero_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Quintero", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of total ASV at phylum level for Quintero", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_12_HCS_Las_Cruces_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "LasCruces", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of total ASV at phylum level for Las Cruces", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
 dev.off()
 ```
 
@@ -362,11 +794,384 @@ rltv.Otu.Table <- function(x) {
 
 
 ```{r}
-rltv.abun <- rltv.Otu.Table(Tax.sum(mCORE, mTAXA, 5)) %>% as.data.frame()
-write.csv2(rltv.abun, "CORE_Relative_Abundance_dataframe.csv")
+rltv <- Phylum[,-c(64:70)] %>% t() %>% rltv.Otu.Table() %>% as.data.frame()
+write.csv2(rltv, "HCS_total_ASV_relative_phylum_abundance_dataframe.csv")
+rltv <- add_column(rltv, Sample = rownames(rltv), .before = "Chlorophyta", .name_repair = "minimal")
+rltv$Sample <- factor(rltv$Sample, levels = rltv$Sample)
+long <- reshape2::melt(rltv, id.vars = "Sample", variable.name = "Phylum")
+cha.long <- reshape2::melt(rltv[c(1:12),], id.vars = "Sample", variable.name = "Phylum")
+fla.long <- reshape2::melt(rltv[c(13:24),], id.vars = "Sample", variable.name = "Phylum")
+hu.long <- reshape2::melt(rltv[c(25:36),], id.vars = "Sample", variable.name = "Phylum")
+pc.long <- reshape2::melt(rltv[c(37:41),], id.vars = "Sample", variable.name = "Phylum")
+qin.long <- reshape2::melt(rltv[c(42:51),], id.vars = "Sample", variable.name = "Phylum")
+lc.long <- reshape2::melt(rltv[c(52:63),], id.vars = "Sample", variable.name = "Phylum")
 ```
 
 
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+div <- ggplot(long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Relative abundance at phylum level for total ASV") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 40, plot_title_size = 40) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+legend <- cowplot::get_legend(div)
+div <- div + theme(legend.position = "none")
+ggsave(plot = div, 
+       filename = "Figura_13_HCS_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 35, 
+       height = 21, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(legend), 
+       filename = "Figura_13_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dcha <- ggplot(cha.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Total ASV Relative abundance at phylum level for Chañaral") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+cha.leg <- cowplot::get_legend(dcha)
+dcha <- dcha + theme(legend.position = "none")
+ggsave(plot = dcha, 
+       filename = "Figura_14_HCS_Chanaral_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(cha.leg), 
+       filename = "Figura_14_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dfla <- ggplot(fla.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Total ASV Relative abundance at phylum level for Flamenco") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+fla.leg <- cowplot::get_legend(dfla)
+dfla <- dfla + theme(legend.position = "none")
+ggsave(plot = dfla, 
+       filename = "Figura_15_HCS_Flamenco_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(fla.leg), 
+       filename = "Figura_15_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dhu <- ggplot(hu.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Total ASV Relative abundance at phylum level for Huasco") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+hu.leg <- cowplot::get_legend(dhu)
+dhu <- dhu + theme(legend.position = "none")
+ggsave(plot = dhu, 
+       filename = "Figura_16_HCS_Huasco_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(hu.leg), 
+       filename = "Figura_16_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dpc <- ggplot(pc.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Total ASV Relative abundance at phylum level for Punta de Choros") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 26) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+pc.leg <- cowplot::get_legend(dpc)
+dpc <- dpc + theme(legend.position = "none")
+ggsave(plot = dpc, 
+       filename = "Figura_17_HCS_Punta_Choros_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(pc.leg), 
+       filename = "Figura_17_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dqin <- ggplot(qin.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Total ASV Relative abundance at phylum level for Quintero") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+qin.leg <- cowplot::get_legend(dqin)
+dqin <- dqin + theme(legend.position = "none")
+ggsave(plot = dqin, 
+       filename = "Figura_18_HCS_Quintero_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(qin.leg), 
+       filename = "Figura_18_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dlc <- ggplot(lc.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Total ASV Relative abundance at phylum level for Las Cruces") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+lc.leg <- cowplot::get_legend(dlc)
+dlc <- dlc + theme(legend.position = "none")
+ggsave(plot = dlc, 
+       filename = "Figura_19_HCS_Las_Cruces_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(lc.leg), 
+       filename = "Figura_19_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+
+```{r}
+ppe.taxa <- dplyr::filter(mTAXA, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
+write.csv2(ppe.taxa, "HCS_PPE_TAXA.csv")
+ppe.asv <- select(mCORE, all_of(ppe.taxa$Seq))
+write.csv2(ppe.asv, "HCS_PPE_ASV_Abundance.csv")
+ppe.un <- as.data.frame(t(ppe.asv)) %>% dplyr::mutate(Seq = all_of(ppe.taxa$Seq), .before = "C1A17")
+ppe.un <- mutate(ppe.un, 
+                 Chanaral = rowSums(ppe.un[2:13]), 
+                 Flamenco = rowSums(ppe.un[14:25]), 
+                 Huasco = rowSums(ppe.un[26:37]), 
+                 Pta.Choros = rowSums(ppe.un[38:42]), 
+                 Quintero = rowSums(ppe.un[43:52]), 
+                 LasCruces = rowSums(ppe.un[53:64]), 
+                 Total = rowSums(ppe.un[2:64])
+                 )
+ppe.at <- inner_join(ppe.un, ppe.taxa, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(ppe.at) <- all_of(ppe.at[,1])
+write.csv2(ppe.at, "HCS_PPE_taxonomic_and_abundance_dataframe.csv")
+```
+
+
+```{r}
+verdes <- ppe.at[,2]
+vedited <- ppe.at[, -c(2,72:80)]
+rownames(vedited) <- verdes
+write.csv2(vedited, "HCS_PPE_edited_taxonomic_and_abundance.csv")
+ppe.apats <- vedited[,-1]
+ppe.apats <- vegan::decostand(ppe.apats, method = "pa") %>% add_column(Seq = all_of(vedited$Seq), .before = "C1A17")
+write.csv2(ppe.apats, "HCS_PPE_absence_presence_dataframe.csv")
+```
+
+
+#PPE UpSet
+```{r}
+aps.ppe <- read.csv2("HCS_PPE_absence_presence_dataframe.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     dec = ".", 
+                     skip = 0)
+
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_20_PPE_Complete_UpSet.png", width = 50, height = 23, units = "in", res = 600)
+upset(aps.ppe, 
+      nsets = 6, 
+      nintersects = NA, 
+      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"), 
+      empty.intersections = "on", 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 2, 
+      mainbar.y.label = "Sites intersections", 
+      sets.x.label = "ASV per sampling site"
+      )
+dev.off()
+```
+
+
+```{r}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_21_PPE_shorter_UpSet_color_coded.png", width = 30, height = 17, units = "in", res = 600)
+upset(aps.ppe, 
+      nsets = 6,
+      nintersects = NA, 
+      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"), 
+      intersections = list("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral", 
+                           list("Chanaral", "Flamenco"), 
+                           list("Huasco", "Pta.Choros"), 
+                           list("Quintero", "LasCruces"), 
+                           list("Chanaral", "Huasco"), 
+                           list("Chanaral", "Quintero"),
+                           list("Huasco", "Quintero"),
+                           list("Flamenco", "Pta.Choros"),
+                           list("Flamenco", "LasCruces"),
+                           list("Pta.Choros", "LasCruces"),
+                           list("Quintero", "LasCruces"),
+                           list("Chanaral", "Huasco", "Quintero"), 
+                           list("Flamenco", "Pta.Choros", "LasCruces"),
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"),  
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "LasCruces"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces")
+                           ),
+      empty.intersections = "on", 
+      keep.order = TRUE, 
+      query.legend = "top", 
+      queries = list(list(query = intersects, params = "Chanaral", color = "#FF8811", active = TRUE, query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, params = "Flamenco", color = "#F4D06F", active = TRUE, query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, params = "Huasco", color = "#392F5A", active = TRUE, query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, params = "Pta.Choros", color = "#403286", active = TRUE, query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, params = "Quintero", color = "#18E0BD", active = TRUE, query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, params = "LasCruces", color = "#80EB9F", active = TRUE, query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, params = list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces"), color = "#EF233C", active = TRUE, query.name = "PPE ASV shared")
+                     ), 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 3, 
+      mainbar.y.label = "Sites Intersections", 
+      sets.x.label = "PPE ASV per sampling site")
+dev.off()
+```
+
+
+```{r}
+shappe <- aps.ppe %>% dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta.Choros == 1 & Quintero == 1 & LasCruces == 1)
+shappe.asv <- dplyr::select(ppe.asv, all_of(shappe$Seq))
+write.csv2(shappe.asv, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared_PPE_ASV_abundance.csv")
+```
+
+
+```{r}
+chappe <- aps.ppe %>% dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+chappe.asv <- dplyr::select(ppe.asv, all_of(chappe$Seq))
+write.csv2(chappe.asv, "Chanaral_unique_PPE_ASV_abundance.csv")
+```
+
+
+```{r}
+flappe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+flappe.asv <- dplyr::select(ppe.asv, all_of(flappe$Seq))
+write.csv2(flappe.asv, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Flamenco_unique_PPE_ASV_abundance.csv")
+```
+
+
+```{r}
+huppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+huppe.asv <- dplyr::select(ppe.asv, all_of(huppe$Seq))
+write.csv2(huppe.asv, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Huasco_unique_PPE_ASV_abundance.csv")
+```
+
+
+```{r}
+choppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 1 & Quintero == 0 & LasCruces == 0)
+pchppe.asv <- dplyr::select(ppe.asv, all_of(choppe$Seq))
+write.csv2(pchppe.asv, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Punta_Choros_unique_PPE_ASV_abundance.csv")
+```
+
+
+```{r}
+qinppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 1 & LasCruces == 0)
+qinppe.asv <- dplyr::select(ppe.asv, all_of(qinppe$Seq))
+write.csv2(qinppe.asv, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Quintero_unique_PPE_ASV_abundance.csv")
+```
+
+
+```{r}
+lcppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 1)
+lcppe.asv <- dplyr::select(ppe.asv, all_of(lcppe$Seq))
+write.csv2(lcppe.asv, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Las_Cruces_unique_PPE_ASV_abundance.csv")
+```
+
+
+```{r}
+rest.ppe <- dplyr::select(ppe.asv, -all_of(shappe$Seq)) %>% 
+  dplyr::select(-all_of(chappe$Seq)) %>% 
+  dplyr::select(-all_of(flappe$Seq)) %>% 
+  dplyr::select(-all_of(huppe$Seq)) %>% 
+  dplyr::select(-all_of(choppe$Seq)) %>% 
+  dplyr::select(-all_of(qinppe$Seq)) %>% 
+  dplyr::select(-all_of(lcppe$Seq))
+write.csv2(rest.ppe, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/rest_PPE_ASV_abundance.csv")
+#crest.ppe <- as.data.frame(t(rest.ppe))
+#write.csv2(crest.ppe, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/inverted_rest_PPE_ASV_abundance.csv")
+```
+
+
+```{r}
+det.ppe <- read.csv("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/detailed_PPE_ASV_abundance.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     dec = ".", 
+                     skip = 0,
+                     row.names = 1)
+det.ppe <- add_column(det.ppe, Site = rownames(det.ppe), .before = "Unique", .name_repair = "minimal")
+det.ppe$Site <- factor(det.ppe$Site, levels = det.ppe$Site)
+lppe <- reshape2::melt(det.ppe, id.vars = "Site", variable.name = "Type")
+```
+
+
+```{r}
+fppe <- as.data.frame(t(ppe.asv))
+fppe <- dplyr::mutate(fppe, 
+                      cha = rowSums(fppe[c(1:12)]),
+                      fla = rowSums(fppe[c(13:24)]),
+                      hu = rowSums(fppe[c(25:36)]),
+                      pc = rowSums(fppe[c(37:41)]),
+                      qin = rowSums(fppe[c(42:51)]),
+                      lc = rowSums(fppe[c(52:63)])
+                      )
+fppe <- fppe[,c(64:69)] %>% t() %>% as.data.frame()
+fppe <- dplyr::mutate(fppe, total = rowSums(fppe[c(1:1643)]))
+fppe <- fppe[,1644]
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dppe <- ggplot(lppe, aes(x = Site, y = value, fill = Type)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "Sites", y = "Relative Abundance", title = "Relative contribution of each PPE ASV type") + 
+  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) + 
+  theme_ipsum(base_size = 22, axis_title_size = 25, plot_title_size = 25) + 
+  theme(legend.position = "bottom", legend.direction = "horizontal")
+dppe.leg <- cowplot::get_legend(dppe)
+dppe <- dppe + theme(legend.position = "none")
+ggsave(plot = dppe, 
+       filename = "Figura_22_relative_contribution_PPE_ASV_type.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 12, 
+       height = 15, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(dppe.leg), 
+       filename = "Figura_22_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/",
+       width = 7,
+       height = 3,
+       dpi = 600)
+```
+
+
+#Old relative abundance table
 ```{r}
 png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/Fig_5_CORE_Relative_Abundance.png", width = 30, height = 11, units = "in", res = 600)
 par(mar = c(5.1,4.1,4.1,2.1), oma = c(0,0,0,0))
@@ -408,130 +1213,347 @@ dev.off()
 
 
 ```{r}
-rltv.div <- rltv.abun
-rltv.div <- add_column(rltv.div, Sample = rownames(rltv.div), .before = "Chlorophyta", .name_repair = "minimal")
-rltv.div$Sample <- factor(rltv.div$Sample, levels = rltv.div$Sample)
-div.long <- reshape2::melt(rltv.div, id.vars = "Sample", variable.name = "Phylum")
-div <- ggplot(div.long, aes(x = Sample, y = value, fill = Phylum)) + 
+ppelum <- Tax.sum(ppe.asv, ppe.taxa, 5) %>% as.data.frame()
+colnames(ppelum)[c(3,5)] <- c("A","B")
+ppelum <- mutate(ppelum, Cryptophyta = rowSums(ppelum[c(3,5)]))
+ppelum <- ppelum[,-c(3,5)] %>% t() %>% as.data.frame()
+ppelum <- mutate(ppelum, 
+                 Chanaral = rowSums(ppelum[c(1:12)]), 
+                 Flamenco = rowSums(ppelum[c(13:24)]), 
+                 Huasco = rowSums(ppelum[c(25:36)]), 
+                 Pta.Choros = rowSums(ppelum[c(37:41)]), 
+                 Quintero = rowSums(ppelum[c(42:51)]), 
+                 LasCruces = rowSums(ppelum[c(52:63)]), 
+                 Total = rowSums(ppelum[c(1:63)]), 
+                 .after = "L4A18")
+ppelum <- ppelum[order(ppelum$Total, decreasing = TRUE),]
+write.csv2(ppelum, "HCS_PPE_phylum_abundance.csv")
+colppe <- ppelum %>% dplyr::mutate(Color = c("#63CB5F", "#471164", "#34618D", "#3F4889", "#99D83E", "#21908C"), 
+                                   .after = "Total")
+write.csv2(colppe, "/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv")
+```
+
+
+```{r phylum visualization, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_23_HCS_PPE_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Total", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of PPE ASV at phylum level for all sites HCS", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_23_legend.png", width = 10, height = 7, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv", 
+                         header = TRUE, 
+                         sep = ";", 
+                         dec = ".", 
+                         skip = 0)[,1], 
+       cex = 1.2, 
+       ncol = 1, 
+       fill = colppe$Color, 
+       x.intersp = 0.3, 
+       xjust = 0.3, 
+       yjust = 0.5, 
+       y.intersp = 1, 
+       bty = "n", 
+       adj = 0, 
+       text.width = 0.3, 
+       pt.cex = 0.3)
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_24_HCS_Chanaral_PPE_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Chanaral", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of PPE ASV at phylum level for Chañaral", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_25_HCS_Flamenco_PPE_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Flamenco", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of PPE ASV at phylum level for Flamenco", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_26_HCS_Huasco_PPE_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Huasco", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of PPE ASV at phylum level for Huasco", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_27_HCS_Punta_Choros_PPE_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Pta.Choros", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of PPE ASV at phylum level for Punta de Choros", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_28_HCS_Quintero_PPE_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Quintero", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of PPE ASV at phylum level for Quintero", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r, echo=TRUE,message=TRUE,warning=TRUE}
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_29_HCS_Las_Cruces_PPE_ASV_contribution_distribution_phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_color_corrected_PPE_phylum_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          dec = ".", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "LasCruces", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 20, 
+                 fontsize.title = 30, 
+                 title = "ASV contribution of PPE ASV at phylum level for Las Cruces", 
+                 title.legend = NA, 
+                 border.col = NA
+                 )
+dev.off()
+```
+
+
+```{r}
+rltv.ppe <- ppelum[,-c(64:70)] %>% t() %>% rltv.Otu.Table() %>% as.data.frame()
+write.csv2(rltv.ppe, "/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_PPE_ASV_relative_phylum_abundance_dataframe.csv")
+rltv.ppe <- add_column(rltv.ppe, Sample = rownames(rltv.ppe), .before = "Chlorophyta", .name_repair = "minimal")
+rltv.ppe$Sample <- factor(rltv.ppe$Sample, levels = rltv.ppe$Sample)
+ppe.long <- reshape2::melt(rltv.ppe, id.vars = "Sample", variable.name = "Phylum")
+chappe.long <- reshape2::melt(rltv.ppe[c(1:12),], id.vars = "Sample", variable.name = "Phylum")
+flappe.long <- reshape2::melt(rltv.ppe[c(13:24),], id.vars = "Sample", variable.name = "Phylum")
+huppe.long <- reshape2::melt(rltv.ppe[c(25:36),], id.vars = "Sample", variable.name = "Phylum")
+pcppe.long <- reshape2::melt(rltv.ppe[c(37:41),], id.vars = "Sample", variable.name = "Phylum")
+qinppe.long <- reshape2::melt(rltv.ppe[c(42:51),], id.vars = "Sample", variable.name = "Phylum")
+lcppe.long <- reshape2::melt(rltv.ppe[c(52:63),], id.vars = "Sample", variable.name = "Phylum")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+div.ppe <- ggplot(ppe.long, aes(x = Sample, y = value, fill = Phylum)) + 
   geom_bar(position = "fill", stat = "identity") + 
-  scale_fill_viridis(discrete = TRUE,
-                     direction = 1, 
-                     option = "viridis") + 
-  theme_ipsum()
-div.legend <- cowplot::get_legend(div)
-div <- div + theme(legend.position = "none")
-ggsave(plot = div, 
-       filename = "Fig_X_CORE_Phylum_Relative_Abundance.png", 
-       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/", 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Relative abundance at phylum level for PPE ASV") + 
+  scale_fill_manual(values = colppe$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 40, plot_title_size = 40) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+leg.ppe <- cowplot::get_legend(div.ppe)
+div.ppe <- div.ppe + theme(legend.position = "none")
+ggsave(plot = div.ppe, 
+       filename = "Figura_30_HCS_PPE_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
        width = 35, 
        height = 21, 
-       dpi = 300)
-ggsave(ggpubr::as_ggplot(div.legend), 
-       filename = "Fig_X_legend.png", 
-       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/")
-g <- ggplot_build(div)
-list <- unique(g$data[[1]]["fill"])
-list <- list$fill
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(leg.ppe), 
+       filename = "Figura_30_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
 ```
 
 
-```{r}
-ppe.taxa <- dplyr::filter(mTAXA,
-                          Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
-write.csv2(ppe.taxa, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/CORE_PPE_TAXA.csv")
-ppe.asv <- select(mCORE, all_of(ppe.taxa$Seq))
-write.csv2(ppe.asv, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/CORE_PPE_ASV_Abundance.csv")
-ppe.un <- as.data.frame(t(ppe.asv)) %>% dplyr::mutate(Seq = all_of(ppe.taxa$Seq), .before = "C1A17")
-ppe.un <- mutate(ppe.un, 
-                 Chanaral = rowSums(ppe.un[2:13]), 
-                 Flamenco = rowSums(ppe.un[14:25]), 
-                 Huasco = rowSums(ppe.un[26:37]), 
-                 Pta.Choros = rowSums(ppe.un[38:42]), 
-                 Quintero = rowSums(ppe.un[43:52]), 
-                 LasCruces = rowSums(ppe.un[53:64]), 
-                 Total = rowSums(ppe.un[2:64])
-                 )
-ppe.at <- inner_join(ppe.un, ppe.taxa, by = "Seq") %>% relocate(ASV, .after = Seq)
-rownames(ppe.at) <- all_of(ppe.at[,1])
-write.csv2(ppe.at, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Taxonomic_and_Abundance_PPE.csv")
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dcha.ppe <- ggplot(chappe.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "PPE ASV Relative abundance at phylum level for Chañaral") + 
+  scale_fill_manual(values = colppe$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+chappe.leg <- cowplot::get_legend(dcha.ppe)
+dcha.ppe <- dcha.ppe + theme(legend.position = "none")
+ggsave(plot = dcha.ppe, 
+       filename = "Figura_31_HCS_PPE_Chanaral_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(chappe.leg), 
+       filename = "Figura_31_legend.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
 ```
 
 
-```{r}
-verdes <- ppe.at[,2]
-vedited <- ppe.at[, -c(2,72:80)]
-rownames(vedited) <- verdes
-write.csv2(vedited, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/edited_taxonomic_and_abundance_PPE.csv")
-ppe.apats <- vedited[,-1]
-ppe.apats <- vegan::decostand(ppe.apats, method = "pa") %>% add_column(Seq = all_of(vedited$Seq), .before = "C1A17")
-write.csv2(ppe.apats, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Absence_Presence_PPE.csv")
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dfla.ppe <- ggplot(flappe.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "PPE ASV Relative abundance at phylum level for Flamenco") + 
+  scale_fill_manual(values = colppe$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+flappe.leg <- cowplot::get_legend(dfla.ppe)
+dfla.ppe <- dfla.ppe + theme(legend.position = "none")
+ggsave(plot = dfla.ppe, 
+       filename = "Figura_32_HCS_PPE_Flamenco_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
 ```
 
 
-#PPE UpSet
-```{r}
-aps.ppe <- read.csv2("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/Absence_Presence_PPE.csv", 
-                     header = TRUE, 
-                     sep = ";", 
-                     dec = ".", 
-                     skip = 0)
-
-png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Fig_6_Complete_PPE_UpSet.png", width = 50, height = 23, units = "in", res = 600)
-upset(aps.ppe, 
-      nsets = 6, 
-      nintersects = NA, 
-      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"), 
-      empty.intersections = "on", 
-      point.size = 3.5, 
-      line.size = 1.5, 
-      text.scale = 2, 
-      mainbar.y.label = "Sites intersections", 
-      sets.x.label = "ASV per sampling site"
-      )
-dev.off()
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dhu.ppe <- ggplot(huppe.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "PPE ASV Relative abundance at phylum level for Huasco") + 
+  scale_fill_manual(values = colppe$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+huppe.leg <- cowplot::get_legend(dhu.ppe)
+dhu.ppe <- dhu.ppe + theme(legend.position = "none")
+ggsave(plot = dhu.ppe, 
+       filename = "Figura_33_HCS_PPE_Huasco_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
 ```
 
 
-```{r}
-png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Fig_7_Selected_PPE_UpSet.png", width = 30, height = 13, units = "in", res = 300)
-upset(aps.ppe,
-      nsets = 6, 
-      nintersects = NA, 
-      sets = c("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces"), 
-      intersections = list("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral", 
-                           list("Chanaral", "Flamenco"), 
-                           list("Huasco", "Pta.Choros"), 
-                           list("Quintero", "LasCruces"), 
-                           list("Huasco", "LasCruces"),
-                           list("Chanaral", "Huasco"), 
-                           list("Chanaral", "Quintero"), 
-                           list("Flamenco", "Quintero"), 
-                           list("Pta.Choros", "LasCruces"), 
-                           list("Chanaral", "Flamenco", "Huasco"), 
-                           list("Huasco", "Pta.Choros", "LasCruces"), 
-                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"),
-                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero"), 
-                           list("Chanaral", "Flamenco", "Huasco", "Quintero", "LasCruces"), 
-                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces")
-                           ),
-      empty.intersections = "on", 
-      keep.order = TRUE, 
-      query.legend = "top", 
-      queries = list(list(query = intersects, params = "Chanaral", color = "#D47B2E", active = TRUE, query.name = "Unique Chañaral ASV"), 
-                     list(query = intersects, params = "Flamenco", color = "#F2C066", active = TRUE, query.name = "Unique Flamenco ASV"), 
-                     list(query = intersects, params = "Huasco", color = "#16387B", active = TRUE, query.name = "Unique Huasco ASV"), 
-                     list(query = intersects, params = "Pta.Choros", color = "#8BE2FC", active = TRUE, query.name = "Unique Punta Choros ASV"), 
-                     list(query = intersects, params = "Quintero", color = "#EC4E44", active = TRUE, query.name = "Unique Quintero ASV"), 
-                     list(query = intersects, params = "LasCruces", color = "#E96B67", active = TRUE, query.name = "Unique Las Cruces ASV"), 
-                     list(query = intersects, params = list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"), color = "#F1F500", active = TRUE, query.name = "Metal axis shared ASV"), 
-                     list(query = intersects, params = list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces"), color = "#007F5F", active = TRUE, query.name = "Total shared ASV")
-                     ), 
-      point.size = 3.5, 
-      line.size = 1.5, 
-      text.scale = 2, 
-      mainbar.y.label = "Sites Intersections", 
-      sets.x.label = "ASV per sampling site")
-dev.off()
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dpc.ppe <- ggplot(pcppe.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "PPE ASV Relative abundance at phylum level for Punta de Choros") + 
+  scale_fill_manual(values = colppe$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 26) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+pcppe.leg <- cowplot::get_legend(dpc.ppe)
+dpc.ppe <- dpc.ppe + theme(legend.position = "none")
+ggsave(plot = dpc.ppe, 
+       filename = "Figura_34_HCS_PPE_Punta_Choros_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dqin.ppe <- ggplot(qinppe.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "PPE ASV Relative abundance at phylum level for Quintero") + 
+  scale_fill_manual(values = colppe$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+qinppe.leg <- cowplot::get_legend(dqin.ppe)
+dqin.ppe <- dqin.ppe + theme(legend.position = "none")
+ggsave(plot = dqin.ppe, 
+       filename = "Figura_35_HCS_PPE_Quintero_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dlc.ppe <- ggplot(lcppe.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "PPE ASV Relative abundance at phylum level for Las Cruces") + 
+  scale_fill_manual(values = colppe$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+lcppe.leg <- cowplot::get_legend(dlc.ppe)
+dlc.ppe <- dlc.ppe + theme(legend.position = "none")
+ggsave(plot = dlc.ppe, 
+       filename = "Figura_36_HCS_PPE_Las_Cruces_phylum_relative_abundance.png", 
+       path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
 ```
 
 
@@ -1019,3 +2041,6 @@ norm.hel <- heatmaply(normalize(decostand(selective, method = "hellinger")),
                       )
 saveWidget(norm.hel, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagenes/PPE/Shared/selected_hellinger_normalized_heatmap_rocket.html")
 ```
+
+
+
