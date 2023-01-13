@@ -2043,4 +2043,23 @@ saveWidget(norm.hel, file = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Imagene
 ```
 
 
+```{r}
+pepe <- as.data.frame(t(pepe))
+pepo <- dplyr::mutate(pepe, 
+                      Chañaral = rowSums(pepe[1:12]), 
+                      Flamenco = rowSums(pepe[13:24]), 
+                      Huasco = rowSums(pepe[25:36]), 
+                      Pta.Choros = rowSums(pepe[37:41]), 
+                      Quintero = rowSums(pepe[42:51]), 
+                      Las_Cruces = rowSums(pepe[52:63]),
+                      Total = rowSums(pepe[1:63])
+                      ) %>% 
+  as.data.frame()
+write.csv2(pepo, "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_PPE_Size.csv")
+```
+
+
+```{r}
+
+```
 
