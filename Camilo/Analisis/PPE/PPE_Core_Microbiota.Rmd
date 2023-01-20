@@ -1,0 +1,293 @@
+---
+title: "PPE_Core_Microbiota"
+author: "Camilo Gálvez A."
+output: html_document
+---
+
+#libraries
+```{r libraries, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(data.table)
+library(Biostrings)
+library(DECIPHER)
+library(vegan)
+library(UpSetR)
+library(leaflet)
+library(dendextend)
+library(treemap)
+library(heatmaply)
+library(htmlwidgets)
+library(hrbrthemes)
+```
+
+#Import Datasets
+```{r datasets, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+HCS <- read.csv("Camilo/Analisis/Filtered_CORE_ASV_Abundance.csv", 
+                header = TRUE, 
+                sep = ";", 
+                dec = ".", 
+                skip = 0,
+                row.names = 1)
+TAXA <- read.csv("Camilo/Analisis/Filtered_CORE_TAXA.csv", 
+                 header = TRUE, 
+                 sep = ";", 
+                 skip = 0, 
+                 row.names = 1)
+
+print(all(colnames(HCS)%in%rownames(TAXA)))
+```
+
+#Taxonomy function
+```{r tax.sum, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else {
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+```
+
+#Relative abundance function
+```{r rltv fx, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+rltv.Otu.Table <- function(x) {
+  x.Data.rltv <- NULL
+  for (i in 1:dim(x)[1]) {
+    x.Data.rltv <- rbind(x.Data.rltv, x[i,]/apply(x, 1, function(x) sum(x))[i])
+  }
+  rownames(x.Data.rltv) <- rownames(x)
+  invisible(x.Data.rltv)
+}
+```
+
+#Selecting PPE ASV
+##TAXA
+```{r ppe taxa, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+ppe.taxa <- dplyr::filter(TAXA, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katblepharidophyta") #Used to be 1643, but without Rhodophyta now are 1428
+ppe.taxa <- dplyr::filter(ppe.taxa, Class != "Ulvophyceae") #Now we have 1345 different ASV
+write.csv2(ppe.taxa, "HCS_PPE_TAXA.csv")
+```
+
+##ASV Abundance
+```{r ppe asv, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+ppe.asv <- dplyr::select(HCS, all_of(ppe.taxa$Seq))
+write.csv2(ppe.asv, "HCS_PPE_ASV_Abundance.csv")
+```
+
+#Data joint
+```{r ppe joint, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+ppe.un <- as.data.frame(t(ppe.asv)) %>% dplyr::mutate(Seq = all_of(ppe.taxa$Seq), .before = "C1A17")
+ppe.un <- dplyr::mutate(ppe.un, 
+                        Chanaral = rowSums(ppe.un[c(2:13)]), 
+                        Flamenco = rowSums(ppe.un[c(14:25)]), 
+                        Huasco = rowSums(ppe.un[c(26:37)]), 
+                        Pta.Choros = rowSums(ppe.un[c(38:42)]), 
+                        Quintero = rowSums(ppe.un[c(43:52)]), 
+                        LasCruces = rowSums(ppe.un[c(53:64)]), 
+                        Total = rowSums(ppe.un[c(2:64)])
+                        )
+ppe.un <- dplyr::inner_join(ppe.un, ppe.taxa, by = "Seq") %>% dplyr::relocate(ASV, .after = Seq)
+rownames(ppe.un) <- dplyr::all_of(ppe.un[,1])
+write.csv2(ppe.un, "HCS_PPE_Taxonomic_And_Abundance.csv")
+```
+
+#UpSet plot
+##UpSet preparation
+```{r upset prep, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+verdes <- ppe.un[,2]
+vedited <- ppe.un[,-c(2,72:80)]
+rownames(vedited) <- verdes
+write.csv2(vedited, "HCS_PPE_edited_taxonomic_and_abundance.csv")
+#Dataframe de presencia-ausencia de ASV de PPE
+ppe.apats <- vedited[,-1]
+ppe.apats <- vegan::decostand(ppe.apats, method = "pa") %>% 
+  add_column(Seq = dplyr::all_of(vedited$Seq), 
+             .before = "C1A17")
+write.csv2(ppe.apats, "HCS_PPE_Absence_Presence.csv")
+```
+
+##PPE UpSet (According to previously plotted)
+```{r ppe upset, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+#Its easier for UpSetR re-reading the dataframe...
+aps.ppe <- read.csv("HCS_PPE_Absence_Presence.csv", header = TRUE, sep = ";", dec = ".", skip = 0)
+
+png("~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_21_PPE_UpSet.png", width = 30, height = 17, units = "in", res = 600)
+upset(aps.ppe, 
+      nsets = 6, 
+      nintersects = NA, 
+      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"), 
+      intersections = list("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral", 
+                           list("Chanaral", "Flamenco"), 
+                           list("Huasco", "Pta.Choros"), 
+                           list("Quintero", "LasCruces"), 
+                           list("Chanaral", "Huasco"), 
+                           list("Chanaral", "Quintero"), 
+                           list("Huasco", "Quintero"), 
+                           list("Flamenco", "Pta.Choros"), 
+                           list("Flamenco", "LasCruces"), 
+                           list("Pta.Choros", "LasCruces"), 
+                           list("Quintero", "LasCruces"), 
+                           list("Chanaral", "Huasco", "Quintero"), 
+                           list("Flamenco", "Pta.Choros", "LasCruces"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "LasCruces"), 
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces")
+                           ), 
+      empty.intersections = "on", 
+      keep.order = TRUE, 
+      query.legend = "top", 
+      queries = list(list(query = intersects, 
+                          params = "Chanaral", 
+                          color = "#FF8811", 
+                          active = TRUE, 
+                          query.name = "Unique Chañaral ASV"), 
+                     list(query = intersects, 
+                          params = "Flamenco", 
+                          color = "#F4D06F", 
+                          active = TRUE, 
+                          query.name = "Unique Flamenco ASV"), 
+                     list(query = intersects, 
+                          params = "Huasco", 
+                          color = "#392F5A", 
+                          active = TRUE, 
+                          query.name = "Unique Huasco ASV"), 
+                     list(query = intersects, 
+                          params = "Pta.Choros", 
+                          color = "#403286", 
+                          active = TRUE, 
+                          query.name = "Unique Punta Choros ASV"), 
+                     list(query = intersects, 
+                          params = "Quintero", 
+                          color = "#18E0BD", 
+                          active = T, 
+                          query.name = "Unique Quintero ASV"), 
+                     list(query = intersects, 
+                          params = "LasCruces", 
+                          color = "#80EB9F", 
+                          active = TRUE, 
+                          query.name = "Unique Las Cruces ASV"), 
+                     list(query = intersects, 
+                          params = list("Chanaral", 
+                                        "Flamenco", 
+                                        "Huasco", 
+                                        "Pta.Choros", 
+                                        "Quintero", 
+                                        "LasCruces"), 
+                          color="#EF233C", 
+                          active = TRUE, 
+                          query.name = "Shared PPE ASV")
+                     ), 
+      point.size = 3.5, 
+      line.size = 1.5, 
+      text.scale = 3, 
+      mainbar.y.label = "Sites intersections", 
+      sets.x.label = "PPE ASV per sampling site")
+dev.off()
+```
+
+#PPE ASV type identification (shared, unique and other)
+##ASV per site
+###Chañaral
+```{r cha ppe, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+chappe <- aps.ppe %>% dplyr::filter(Chanaral == 1)
+chappe.asv <- dplyr::select(ppe.asv, all_of(chappe$Seq))
+write.csv2(chappe.asv, "HCS_Chanaral_PPE_ASV_Abundance.csv")
+```
+
+###Flamenco
+```{r fla pee, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+flappe <- aps.ppe %>% dplyr::filter(Flamenco == 1)
+flappe.asv <- dplyr::select(ppe.asv, all_of(flappe$Seq))
+write.csv2(flappe.asv, "HCS_Flamenco_PPE_ASV_Abundance.csv")
+```
+###Huasco
+```{r hu ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+huppe <- aps.ppe %>% dplyr::filter(Huasco == 1)
+huppe.asv <- dplyr::select(ppe.asv, all_of(huppe$Seq))
+write.csv2(huppe.asv, "HCS_Huasco_PPE_ASV_Abundance.csv")
+```
+
+###Punta de Choros
+```{r pch ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+pchppe <- aps.ppe %>% dplyr::filter(Pta.Choros == 1)
+pchppe.asv <- dplyr::select(ppe.asv, all_of(pchppe$Seq))
+write.csv2(pchppe.asv, "HCS_Pta_Choros_PPE_ASV_Abundance.csv")
+```
+
+###Quintero
+```{r qin ppe, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+qinppe <- aps.ppe %>% dplyr::filter(Quintero == 1)
+qinppe.asv <- dplyr::select(ppe.asv, all_of(qinppe$Seq))
+write.csv2(qinppe.asv, "HCS_Quintero_PPE_ASV_Abundance.csv")
+```
+
+###Las Cruces
+```{r lc ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+lcppe <- aps.ppe %>% dplyr::filter(LasCruces == 1)
+lcppe.asv <- dplyr::select(ppe.asv, all_of(lcppe$Seq))
+write.csv2(lcppe.asv, "HCS_Las_Cruces_PPE_ASV_Abundance.csv")
+```
+
+##Shared
+```{r shared ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+shappe <- aps.ppe %>% dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta.Choros == 1 & Quintero == 1 & LasCruces == 1)
+shappe.asv <- dplyr::select(ppe.asv, all_of(shappe$Seq))
+write.csv2(shappe.asv, "Shared_HCS_PPE_ASV_Abundance.csv")
+```
+
+##Unique
+###Chañaral
+```{r uni cha ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+u.chappe <- aps.ppe %>% dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+u.chappe.asv <- dplyr::select(chappe.asv, all_of(u.chappe$Seq))
+write.csv2(u.chappe.asv, "HCS_Unique_Chanaral_PPE_ASV_Abundance.csv")
+```
+
+###Flamenco
+```{r uni fla ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+u.flappe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+u.flappe.asv <- dplyr::select(flappe.asv, all_of(u.flappe$Seq))
+write.csv2(u.flappe.asv, "HCS_Unique_Flamenco_PPE_ASV_Abundance.csv")
+```
+
+###Huasco
+```{r uni hu ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+u.huppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
+u.huppe.asv <- dplyr::select(huppe.asv, all_of(u.huppe$Seq))
+write.csv2(u.huppe.asv, "HCS_Unique_Huasco_PPE_ASV_Abundance.csv")
+```
+
+###Punta de Choros
+```{r uni pch ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+u.pchppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 1 & Quintero == 0 & LasCruces == 0)
+u.pchppe.asv <- dplyr::select(pchppe.asv, all_of(u.pchppe$Seq))
+write.csv2(u.pchppe.asv, "HCS_Unique_Pta_Choros_PPE_ASV_Abundance.csv")
+```
+
+###Quintero
+```{r uni qin ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+u.qinppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 1 & LasCruces == 0)
+u.qinppe.asv <- dplyr::select(qinppe.asv, all_of(u.qinppe$Seq))
+write.csv2(u.qinppe.asv, "HCS_Unique_Quintero_PPE_ASV_Abundance.csv")
+```
+
+###Las Cruces
+```{r uni lc ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+u.lcppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 1)
+u.lcppe.asv <- dplyr::select(lcppe.asv, all_of(u.lcppe$Seq))
+write.csv2(u.lcppe.asv, "HCS_Las_Cruces_PPE_ASV_Abundance.csv")
+```
+
+##Other intersections
+```{r other ppe, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+
+```
+
