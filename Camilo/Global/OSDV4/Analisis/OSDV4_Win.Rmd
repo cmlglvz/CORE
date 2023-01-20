@@ -88,6 +88,14 @@ write.csv2(rV4, file = "rarefacted_filt_OSDV4_ASV_abundance.csv")
 
 #Unify abundance and taxonomic dataframes
 ```{r}
+PreU <- as.data.frame(t(OSDV4))
+PreU <- mutate(PreU, Seq = all_of(rownames(PreU)), .before = "OSD143")
+PreU <- mutate(PreU, Total = rowSums(PreU[2:22]))
+pre.ats <- inner_join(PreU, TAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(pre.ats) <- all_of(pre.ats[,1])
+write.csv2(pre.ats, "original_unfiltered_taxonomic_and_abundance_OSDV4.csv")
+osd <- pre.ats %>% dplyr::filter(OSD159 > 0)
+
 Union <- as.data.frame(t(rV4))
 Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "OSD143")
 Union <- mutate(Union, Total = rowSums(Union[2:22])                )
