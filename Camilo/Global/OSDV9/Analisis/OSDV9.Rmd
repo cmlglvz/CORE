@@ -94,6 +94,14 @@ dev.off()
 
 #Unify abundance and taxonomic dataframes
 ```{r}
+PreU <- as.data.frame(t(OSDV9))
+PreU <- mutate(PreU, Seq = all_of(rownames(PreU)), .before = "OSD002")
+PreU <- mutate(PreU, Total = rowSums(PreU[2:25]))
+pre.ats <- inner_join(PreU, TAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(pre.ats) <- all_of(pre.ats[,1])
+write.csv2(pre.ats, "Original_Unfiltered_Unrarefied_Taxonomic_And_Abundance_OSDV9.csv")
+osd <- pre.ats %>% dplyr::filter(OSD159 > 0)
+
 Union <- as.data.frame(t(rV9))
 Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "OSD002")
 Union <- mutate(Union, Total = rowSums(Union[2:25])                )
