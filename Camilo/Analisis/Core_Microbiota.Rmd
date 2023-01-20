@@ -13,7 +13,6 @@ library(DECIPHER)
 library(vegan)
 library(UpSetR)
 library(leaflet)
-library(dendextend)
 library(treemap)
 library(viridis)
 library(heatmaply)
@@ -492,5 +491,457 @@ write.csv2(as.data.frame(t(pre.rest.qin)), "Original_Unfiltered_Other_Quintero_H
 #Las Cruces
 pre.rest.lc <- dplyr::select(pre.lc.asv, -all_of(pre.sha$Seq)) %>% dplyr::select(-all_of(u.pre.lc$Seq))
 write.csv2(as.data.frame(t(pre.rest.lc)), "Original_Unfiltered_Other_Las_Cruces_HCS_ASV_Abundance.csv")
+```
+
+#Total ASV abundances
+```{r}
+full <- as.data.frame(t(mCORE))
+full <- dplyr::mutate(full, 
+                      cha = rowSums(full[c(1:12)]), 
+                      fla = rowSums(full[c(13:24)]), 
+                      hu = rowSums(full[c(25:36)]), 
+                      pc = rowSums(full[c(37:41)]), 
+                      qin = rowSums(full[c(42:51)]), 
+                      lc = rowSums(full[c(52:63)])
+                      )
+full <- full[,c(64:69)] %>% t() %>% as.data.frame()
+full <- dplyr::mutate(full, total = rowSums(full[c(1:5990)]))
+full <- full[,5991]
+```
+
+#Detailed ASVs
+To differentiate between types of ASV
+```{r detailed, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+detailed <- read.csv("detailed_total_ASV_abundance.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     dec = ".", 
+                     skip = 0, 
+                     row.names = 1)
+detailed <- add_column(detailed, Site = rownames(detailed), .before = "Unique", .name_repair = "minimal")
+detailed$Site <- factor(detailed$Site, levels = detailed$Site)
+long <- reshape2::melt(detailed, id.vars = "Site", variable.name = "Type")
+```
+
+#Relative Abundance for ASV types
+```{r, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+det <- ggplot(long, 
+              aes(x = Site, 
+                  y = value, 
+                  fill = Type)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "Sites", 
+       y = "Relative Abundance", 
+       title = "Relative contribution of each ASV type") + 
+  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) + 
+  theme_ipsum(base_size = 22, 
+              axis_title_size = 25, 
+              plot_title_size = 25) + 
+  theme(legend.position = "bottom", legend.direction = "horizontal")
+det.legend <- cowplot::get_legend(det)
+det <- det + 
+  theme(legend.position = "none")
+ggsave(plot = det, 
+       filename = "Figura_5_relative_contribution_ASV_type.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 12, 
+       height = 15, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(det.legend), 
+       filename = "Figura_5_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 7, 
+       height = 3, 
+       dpi = 600)
+```
+
+#Static map
+```{r static, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+mapping <- read.csv("Mapping_Data.csv", 
+                    header = TRUE, 
+                    sep = ";", 
+                    dec = ",", 
+                    skip = 0, 
+                    row.names = 1)
+world <- map_data("world")
+Worldo <- filter(world, region != "Antarctica") %>% fortify()
+map_v1 <- ggplot() + 
+  geom_map(data = Worldo, 
+           map = Worldo, 
+           aes(long, 
+               lat, 
+               map_id = region)
+           ) + 
+  geom_point(data = mapping, 
+             aes(Longitude, 
+                 Latitude, 
+                 color = Color, 
+                 size = Total.ASV.Abundance), 
+             alpha = 1
+             ) + 
+  theme_bw() + 
+  theme(legend.position = "none")
+
+ggsave(plot = map_v1, 
+       filename = "mapa_primera_version.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/", 
+       limitsize = FALSE, 
+       width = 27, 
+       height = 15, 
+       dpi = 600)
+```
+
+#Taxonomy function
+```{r tax.sum, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else {
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+```
+
+#Abundance at selected taxonomy level: Phylum
+```{r}
+Phylum <- Tax.sum(mCORE, mTAXA, 5) %>% as.data.frame()
+Phylum <- Phylum[,-22]
+colnames(Phylum)[c(6,13)] <- c("A","B")
+Phylum <- mutate(Phylum, Cryptophyta = rowSums(Phylum[c(6,13)]))
+Phylum <- Phylum[,-c(6,13)] %>% t() %>% as.data.frame()
+Phylum <- dplyr::mutate(Phylum, 
+                        Chanaral = rowSums(Phylum[c(1:12)]), 
+                        Flamenco = rowSums(Phylum[c(13:24)]), 
+                        Huasco = rowSums(Phylum[c(25:36)]), 
+                        Pta.Choros = rowSums(Phylum[c(37:41)]), 
+                        Quintero = rowSums(Phylum[c(42:51)]), 
+                        LasCruces = rowSums(Phylum[c(52:63)]), 
+                        Total = rowSums(Phylum[c(1:63)]), 
+                        .after = "L4A18")
+Phylum <- Phylum[order(Phylum$Total, decreasing = TRUE),]
+write.csv2(Phylum, "HCS_total_phylum_abundance.csv")
+colored <- Phylum %>% dplyr::mutate(Color = c("#63CB5F", "#472E7C", "#46095D", "#471164", "#482778", "#440154", "#24AA83", 
+                                              "#34618D", "#38B977", "#443C84", "#3F4889", "#99D83E", "#414287", "#453581", 
+                                              "#8AD647", "#21908C", "#1FA088", "#E2E418", "#B6DE2A", "#21A585", "#29AF7F", 
+                                              "#6FCF57", "#57C666", "#26818E", "#482071", "#2D718E", "#A7DB35", "#25858E", 
+                                              "#F0E51C", "#375B8D", "#1E9B8A", "#30B47C", "#2F6C8E", "#39558C"), 
+                                    .after = "Total")
+#These colours were previously selected according to the dataset with most phylums assigned to it (OSDV9 and TARA)
+write.csv2(colored, "HCS_color_corrected_total_phylum_abundance_and_color.csv")
+```
+
+#Contribution and distribution of ASV at selected taxonomic level: phylum
+##Total Contribution and distribution of ASV
+```{r total treemap,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_6_HCS_total_ASV_contribution_distribution_phylum.png", 
+    width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", header = TRUE, sep = ";", dec = ".", skip = 0), 
+                 index = "X", vSize = "Total", type = "color", vColor = "Color", position.legend = "none", 
+                 fontsize.labels = 20, fontsize.title = 30, title = "ASV contribution of total ASV at phylum level for all sites HCS", 
+                 title.legend = NA, border.col = NA)
+dev.off()
+
+#Respective legend
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_6_legend.png", width = 10, height = 7, units = "in", res = 600)
+plot.new()
+par(mar = c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", 
+       legend = read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", header = TRUE, sep = ";", skip = 0)[,1],
+       cex = 1.2, ncol = 1, fill = colored$Color, x.intersp = 0.3, xjust = 0.3, yjust = 0.5, y.intersp = 1, bty = "n", adj = 0, 
+       text.width = 0.3, pt.cex = 0.3)
+dev.off()
+```
+
+##Chañaral
+```{r treemap chanaral,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_7_HCS_Chanaral_ASV_contribution_distribution_phylum.png", 
+    width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", header = TRUE, sep = ";", dec = ".", skip = 0), 
+                 index = "X", vSize = "Chanaral", type = "color", vColor = "Color", position.legend = "none", 
+                 fontsize.labels = 20, fontsize.title = 30, title = "ASV contribution of total ASV at phylum level for Chañaral", 
+                 title.legend = NA, border.col = NA)
+dev.off()
+```
+
+##Flamenco
+```{r treemap flamenco,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_8_HCS_Flamenco_ASV_contribution_distribution_phylum.png", 
+    width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", header = TRUE, sep = ";", dec = ".", skip = 0), 
+                 index = "X", vSize = "Flamenco", type = "color", vColor = "Color", position.legend = "none", 
+                 fontsize.labels = 20, fontsize.title = 30, title = "ASV contribution of total ASV at phylum level for Flamenco", 
+                 title.legend = NA, border.col = NA)
+dev.off()
+```
+
+##Huasco
+```{r treemap huasco,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_9_HCS_Huasco_ASV_contribution_distribution_phylum.png", 
+    width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", header = TRUE, sep = ";", dec = ".", skip = 0), 
+                 index = "X", vSize = "Huasco", type = "color", vColor = "Color", position.legend = "none", 
+                 fontsize.labels = 20, fontsize.title = 30, title = "ASV contribution of total ASV at phylum level for Huasco", 
+                 title.legend = NA, border.col = NA)
+dev.off()
+```
+
+##Punta de Choros
+```{r treemap pta. choros, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_10_HCS_Pta_Choros_ASV_contribution_distribution_phylum.png", 
+    width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", header = TRUE, sep = ";", dec = ".", skip = 0), 
+                 index = "X", vSize = "Pta.Choros", type = "color", vColor = "Color", position.legend = "none", 
+                 fontsize.labels = 20, fontsize.title = 30, title = "ASV contribution of total ASV at phylum level for Punta de Choros",
+                 title.legend = NA, border.col = NA)
+dev.off()
+```
+
+##Quintero
+```{r treemap quintero, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_11_HCS_Quintero_ASV_contribution_distribution_phylum.png", 
+    width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", header = TRUE, sep = ";", dec = ".", skip = 0), 
+                 index = "X", vSize = "Quintero", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20,
+                 fontsize.title = 30, title = "ASV contribution of total ASV at phylum level for Quintero", 
+                 title.legend = NA, border.col = NA)
+dev.off()
+```
+
+##Las Cruces
+```{r treemap las cruces, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_12_HCS_Las_Cruces_ASV_contribution_distribution_phylum.png", 
+    width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_color_corrected_total_phylum_abundance_and_color.csv", header = TRUE, sep = ";", dec = ".", skip = 0), 
+                 index = "X", vSize = "LasCruces", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20,
+                 fontsize.title = 30, title = "ASV contribution of total ASV at phylum level for Las Cruces", 
+                 title.legend = NA, border.col = NA)
+dev.off()
+```
+
+#Relative abundance function
+```{r}
+rltv.Otu.Table <- function(x) {
+  x.Data.rltv <- NULL
+  for (i in 1:dim(x)[1]) {
+    x.Data.rltv <- rbind(x.Data.rltv, x[i,]/apply(x, 1, function(x) sum(x))[i])
+  }
+  rownames(x.Data.rltv) <- rownames(x)
+  invisible(x.Data.rltv)
+}
+```
+
+#Relative abundance at a selected taxonomic level: Phylum
+```{r}
+rltv <- Phylum[, -c(64:70)] %>% t() %>% rltv.Otu.Table() %>% as.data.frame()
+write.csv2(rltv, "HCS_total_ASV_relative_phylum_abundance_dataframe.csv")
+rltv <- add_column(rltv, Sample = rownames(rltv), .before = "Chlorophyta", .name_repair = "minimal")
+rltv$Sample <- factor(rltv$Sample, levels = rltv$Sample)
+long <- reshape2::melt(rltv, id.vars = "Sample", variable.name = "Phylum")
+
+#For Chañaral
+cha.long <- reshape2::melt(rltv[c(1:12),], id.vars = "Sample", variable.name = "Phylum")
+#Flamenco
+fla.long <- reshape2::melt(rltv[c(13:24),], id.vars = "Sample", variable.name = "Phylum")
+#Huasco
+hu.long <- reshape2::melt(rltv[c(25:36),], id.vars = "Sample", variable.name = "Phylum")
+#Punta de Choros
+pch.long <- reshape2::melt(rltv[c(37:41),], id.vars = "Sample", variable.name = "Phylum")
+#Quintero
+qin.long <- reshape2::melt(rltv[c(42:51),], id.vars = "Sample", variable.name = "Phylum")
+#Las Cruces
+lc.long <- reshape2::melt(rltv[c(52:63),], id.vars = "Sample", variable.name = "Phylum")
+```
+
+#Plotting relative abundance (new way)
+##Complete
+```{r complete rltv,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+div <- ggplot(long, aes(x=Sample,
+                        y=value, 
+                        fill=Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x="HCS Sites", 
+       y="Relative Abundance", 
+       title = "Relative abundance at phylum level for total filtered ASV") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, 
+              axis_col = "#000000", 
+              axis_title_size = 40, 
+              plot_title_size = 40) + 
+  theme(legend.position = "right", 
+        legend.direction = "vertical")
+legend <- cowplot::get_legend(div)
+div <- div + theme(legend.position = "none")
+ggsave(plot = div, 
+       filename = "Figura_13_HCS_phylum_relative_abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 35, 
+       height = 21, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(legend), 
+       filename = "Figura_13_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+##Chanaral
+```{r chanaral rltv,echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+dcha <- ggplot(cha.long, 
+               aes(x = Sample, 
+                   y = value, 
+                   fill = Phylum)) + 
+  geom_bar(position = "fill", 
+           stat = "identity") + 
+  labs(x = "HCS Sites", 
+       y = "Relaive abundance", 
+       title = "Total ASV relative abundance at phylum level for Chañaral") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, 
+              axis_col = "#000000", 
+              axis_title_size = 30, 
+              plot_title_size = 30) + 
+  theme(legend.position = "right", 
+        legend.direction = "vertical")
+cha.leg <- cowplot::get_legend(dcha)
+dcha <- dcha + theme(legend.position = "none")
+ggsave(plot = dcha,
+       filename = "Figura_14_HCS_Chanaral_phylum_relative_abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(cha.leg), 
+       filename = "Figura_14_legend.png",
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+##Flamenco
+```{r flamenco rltv, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+dfla <- ggplot(fla.long, 
+               aes(x = Sample, 
+                   y = value, 
+                   fill = "Phylum")) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", 
+       y = "Relative Abundance", 
+       title = "Total ASV relative abundance at phylum level for Flamenco") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, 
+              axis_col = "#000000", 
+              axis_title_size = 30, 
+              plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+fla.leg <- cowplot::get_legend(dfla)
+ggsave(plot = dfla, 
+       filename = "Figura_15_HCS_Flamenco_phylum_relative_abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(fla.leg), 
+       filename = "Figura_15_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+##Huasco
+```{r huasco rltv, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+dhu <- ggplot(hu.long, 
+              aes(x = Sample, 
+                  y = value, 
+                  fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", 
+       y = "Relative abundance", 
+       title = "Total ASV relative abundance at phylum level for Huasco") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, 
+              axis_col = "#000000", 
+              axis_title_size = 30, 
+              plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+hu.leg <- cowplot::get_legend(dhu)
+dhu <- dhu + theme(legend.position = "none")
+ggsave(plot = dhu, 
+       filename = "Figura_16_HCS_Huasco_phylum_relative_abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/",
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(hu.leg), 
+       filename = "Figura_16_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+##Punta de Choros
+```{r pta. choros rltv, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+dpch <- ggplot(pch.long, 
+               aes(x = Sample, 
+                   y = value, 
+                   fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", 
+       y = "Relative Abundance", 
+       title = "Total ASV relative abundance at phylum level for Punta de Choros") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, 
+              axis_col = "#000000", 
+              axis_title_size = 30, 
+              plot_title_size = 26) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+pch.leg <- cowplot::get_legend(dpch)
+ggsave(plot = dpch, 
+       filename = "Figura_17_HCS_Punta_Choros_phylum_relative_abundance.png",
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17,
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(pch.leg), 
+       filename = "Figura_17_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+##Quintero
+```{r quintero rltv, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
+dqin <- ggplot(qin.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Total ASV relative abundance at phylum level for Quintero") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+qin.leg <- cowplot::get_legend(dqin)
+ggsave(plot = dqin, 
+       filename = "Figura_18_HCS_Quintero_phylum_relative_abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(qin.leg), 
+       filename = "Figura_18_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+##Las Cruces
+```{r las cruces rltv, echo=FALSE,warning=FALSE,message=FALSE,include=FALSE}
+dlc <- ggplot(lc.long, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative Abundance", title = "Total ASV relative abundance at phylum level for Las Cruces") + 
+  scale_fill_manual(values = colored$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+lc.leg <- cowplot::get_legend(dlc)
+ggsave(plot = dlc, 
+       filename = "Figura_19_HCS_Las_Cruces_phylum_relative_abundance.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", 
+       width = 15, 
+       height = 17, 
+       dpi = 600)
+ggsave(ggpubr::as_ggplot(lc.leg), 
+       filename = "Figura_19_legend.png", 
+       path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
 ```
 
