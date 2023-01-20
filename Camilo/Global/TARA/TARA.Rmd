@@ -85,6 +85,22 @@ dev.off()
 
 ## Union de tablas
 ```{r union, echo=TRUE, message=TRUE, warning=TRUE}
+PreU <- as.data.frame(t(CORE))
+PreU <- mutate(PreU, Seq = all_of(rownames(PreU)), .before = "TARA109")
+PreU <- mutate(PreU, 
+               CEPO = rowSums(PreU[2:3]), 
+               SWAO = rowSums(PreU[4:6]), 
+               MS = rowSums(PreU[7:12]), 
+               RS = rowSums(PreU[13:14]), 
+               SWIO = rowSums(PreU[15:19]), 
+               NEAS = rowSums(PreU[20:22]), 
+               Total = rowSums(PreU[2:22])
+               )
+pre.comp <- inner_join(PreU, TAXA, by = "Seq") %>% relocate(ASV, .after = Seq)
+rownames(pre.comp) <- all_of(pre.comp[,1])
+write.csv2(pre.comp, "original_unfiltered_composite.csv")
+tara <- pre.comp %>% dplyr::filter(TARA007 > 0)
+
 Union <- as.data.frame(t(sCORE))
 Union <- mutate(Union, Seq = all_of(rownames(Union)), .before = "TARA109")
 Union <- mutate(Union, 
