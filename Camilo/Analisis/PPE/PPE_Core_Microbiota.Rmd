@@ -72,6 +72,8 @@ rltv.Otu.Table <- function(x) {
 ```{r ppe taxa, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 ppe.taxa <- dplyr::filter(TAXA, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katblepharidophyta") #Used to be 1643, but without Rhodophyta now are 1428
 ppe.taxa <- dplyr::filter(ppe.taxa, Class != "Ulvophyceae") #Now we have 1345 different ASV
+#Getting rid off the "macro" ASV
+ppe.taxa <- dplyr::filter(ppe.taxa, Family != "Phaeophyceae_XX") #1281 ASV
 write.csv2(ppe.taxa, "HCS_PPE_TAXA.csv")
 ```
 
@@ -286,8 +288,22 @@ u.lcppe.asv <- dplyr::select(lcppe.asv, all_of(u.lcppe$Seq))
 write.csv2(u.lcppe.asv, "HCS_Las_Cruces_PPE_ASV_Abundance.csv")
 ```
 
-##Other intersections
+##Other "intersections"
 ```{r other ppe, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+others <- dplyr::select(HCS, -all_of(shappe$Seq)) %>% 
+  dplyr::select(-all_of(u.chappe$Seq)) %>% 
+  dplyr::select(-all_of(u.flappe$Seq)) %>% 
+  dplyr::select(-all_of(u.huppe$Seq)) %>% 
+  dplyr::select(-all_of(u.pchppe$Seq)) %>% 
+  dplyr::select(-all_of(u.qinppe$Seq)) %>% 
+  dplyr::select(-all_of(u.lcppe$Seq))
+write.csv2(others, "HCS_Others_PPE_ASV_Abundance")
+srehto <- as.data.frame(t(others))
+write.csv2(srehto, "HCS_Inverted_Others_PPE_ASV_Abundance.csv")
+```
+
+##Managing the different PPE ASV type abundances
+```{r}
 
 ```
 
