@@ -1,0 +1,33 @@
+---
+title: "Shared_Core_Microbiota"
+author: "Camilo Gálvez A."
+output: html_document
+---
+
+#Libraries
+```{r libraries, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(Biostrings)
+library(DECIPHER)
+library(vegan)
+library(htmlwidgets)
+```
+
+#Dataset importation
+```{r datasets, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+Shared <- read.csv(file = "~/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared_HCS_PPE_ASV_Abundance.csv", header = TRUE, sep = ";", skip = 0, row.names = 1) %>% t() %>% as.data.frame()
+
+Taxa <- read.csv(file = "~/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_PPE_TAXA.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
+Taxa <- Taxa[Taxa$Seq%in%colnames(all_of(Shared)),]
+```
+
+#Creating FASTA for Shared PPE ASV
+```{r fasta, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+nms <- paste(Taxa$ASV, Taxa$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(Taxa$Seq))
+seqRFLP::dataframe2fas(fasta, "~/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/HCS_Shared_PPE_ASV.fasta")
+```
+
+Consider doing a multiple alignment externally with whichever software you fancy. We use *MUSCLE5* <https://www.drive5.com/muscle/> by Robert Edgar. If you have more than 1000 sequences you can choose the *Super5 algorithm* <https://drive5.com/muscle5/manual/cmd_super5.html> 
+
+#Import multiple alignment
