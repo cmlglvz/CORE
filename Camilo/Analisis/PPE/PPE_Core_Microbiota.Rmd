@@ -70,17 +70,30 @@ rltv.Otu.Table <- function(x) {
 #Selecting PPE ASV
 ##TAXA
 ```{r ppe taxa, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-ppe.taxa <- dplyr::filter(TAXA, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katblepharidophyta") #Used to be 1643, but without Rhodophyta now are 1428
-ppe.taxa <- dplyr::filter(ppe.taxa, Class != "Ulvophyceae") #Now we have 1345 different ASV
-#Getting rid off the "macro" ASV
-ppe.taxa <- dplyr::filter(ppe.taxa, Family != "Phaeophyceae_XX") #1281 ASV
+manual <- c("ASV0066", "ASV0089", "ASV0100", "ASV0282", "ASV0291", "ASV0361", "ASV0364", "ASV0410", "ASV0417", "ASV0443", "ASV0483", "ASV0516", "ASV0521", "ASV0547", "ASV0577", "ASV0584", "ASV0617", "ASV0664", "ASV0670", "ASV0736", "ASV0739", "ASV0746", "ASV0752", "ASV0788", "ASV0811", "ASV0851", "ASV0877", "ASV0893", "ASV0897", "ASV0905", "ASV0914", "ASV0922", "ASV0997", "ASV1006", "ASV1007", "ASV1012", "ASV1023", "ASV1059", "ASV1089", "ASV1095", "ASV1108", "ASV1117", "ASV1129", "ASV1152", "ASV1178", "ASV1179", "ASV1200", "ASV1231", "ASV1241", "ASV1252", "ASV1312", "ASV1316", "ASV1332", "ASV1370", "ASV1381", "ASV1382", "ASV1387", "ASV1429", "ASV1485", "ASV1496", "ASV1504", "ASV1527", "ASV1548", "ASV1554", "ASV1577", "ASV1578", "ASV1586", "ASV1587", "ASV1613", "ASV1643", "ASV1644", "ASV1694", "ASV1695", "ASV1707", "ASV1712", "ASV1715", "ASV1736", "ASV1754", "ASV1760", "ASV1786", "ASV1801", "ASV1830", "ASV1831", "ASV1841", "ASV1868", "ASV1889", "ASV1916", "ASV1956", "ASV1992", "ASV1993", "ASV2020", "ASV2071", "ASV2072", "ASV2087", "ASV2100", "ASV2101", "ASV2116", "ASV2117", "ASV2133", "ASV2135", "ASV2167", "ASV2168", "ASV2200", "ASV2201", "ASV2254", "ASV2258", "ASV2267", "ASV2274", "ASV2275", "ASV2306", "ASV2346", "ASV2360", "ASV2424", "ASV2441", "ASV2456", "ASV2478", "ASV2481", "ASV2498", "ASV2540", "ASV2546", "ASV2580", "ASV2640", "ASV2641", "ASV2643", "ASV2644", "ASV2676", "ASV2680", "ASV2700", "ASV2716", "ASV2724", "ASV2736", "ASV2739", "ASV2750", "ASV2794", "ASV2845", "ASV2882", "ASV2887", "ASV2915", "ASV2916", "ASV2963", "ASV2964", "ASV2981", "ASV3004", "ASV3005", "ASV3008", "ASV3009", "ASV3012", "ASV3029", "ASV3103", "ASV3126", "ASV3136", "ASV3157", "ASV3162", "ASV3168", "ASV3178", "ASV3188", "ASV3190", "ASV3226", "ASV3264", "ASV3266", "ASV3267", "ASV3281", "ASV3283", "ASV3322", "ASV3361", "ASV3377", "ASV3391", "ASV3392", "ASV3400", "ASV3446", "ASV3469", "ASV3480", "ASV3502", "ASV3507", "ASV3510", "ASV3546", "ASV3551", "ASV3583", "ASV3584", "ASV3585", "ASV3594", "ASV3620", "ASV3632", "ASV3680", "ASV3689", "ASV3718", "ASV3723", "ASV3728", "ASV3731", "ASV3809", "ASV3822", "ASV3828", "ASV3830", "ASV3878", "ASV3943", "ASV3947", "ASV3948", "ASV3958", "ASV4006", "ASV4013", "ASV4029", "ASV4103", "ASV4104", "ASV4142", "ASV4146", "ASV4164", "ASV4196", "ASV4202", "ASV4207", "ASV4208", "ASV4232", "ASV4235", "ASV4283", "ASV4288", "ASV4290", "ASV4382", "ASV4408", "ASV4462", "ASV4472", "ASV4475", "ASV4480", "ASV4498", "ASV4500", "ASV4512", "ASV4557", "ASV4573", "ASV4640", "ASV4659", "ASV4663", "ASV4683", "ASV4706", "ASV4726", "ASV4738", "ASV4763", "ASV4784", "ASV4785", "ASV4786", "ASV4855", "ASV4858", "ASV4867", "ASV4893", "ASV4894", "ASV4939", "ASV4978", "ASV5014", "ASV5015", "ASV5068", "ASV5087", "ASV5101", "ASV5106", "ASV5124", "ASV5144", "ASV5161", "ASV5169", "ASV5204", "ASV5207", "ASV5232", "ASV5240", "ASV5244", "ASV5258", "ASV5261", "ASV5298", "ASV5351", "ASV5371", "ASV5448", "ASV5465", "ASV5489", "ASV5547", "ASV5548", "ASV5552", "ASV5575", "ASV5580", "ASV5583", "ASV5590", "ASV5603", "ASV5607", "ASV5608", "ASV5609", "ASV5651", "ASV5666", "ASV5669", "ASV5680", "ASV5693", "ASV5699", "ASV5715", "ASV5717", "ASV5759", "ASV5760", "ASV5763", "ASV5834", "ASV5864", "ASV5876", "ASV5877", "ASV5879", "ASV5880", "ASV5946", "ASV5959", "ASV6038", "ASV6063", "ASV6068", "ASV6076", "ASV6089", "ASV6091", "ASV6131", "ASV6148", "ASV6152", "ASV6156", "ASV6170", "ASV6171")
+mnl <- dplyr::filter(TAXA, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta" | Division == "Rhodophyta")
+mnl <- mnl[!mnl$ASV%in%manual,]
+
+ppe.taxa <- dplyr::filter(TAXA, Division == "Chlorophyta" | Division == "Ochrophyta" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Katablepharidophyta") #Used to be 1643, but without Rhodophyta now are 1457
+
+checkeo <- mnl[!mnl$Seq%in%ppe.taxa$Seq,]
+unique(checkeo$Division)
+
+Ulvophyceae <- dplyr::filter(ppe.taxa, Class == "Ulvophyceae")
+ppe.taxa <- ppe.taxa[!ppe.taxa$Seq%in%Ulvophyceae$Seq,]
+Phaeox <- dplyr::filter(ppe.taxa, Family == "Phaeophyceae_XX")
+ppe.taxa <- ppe.taxa[!ppe.taxa$Seq%in%Phaeox$Seq,]
+nas <- c("ASV1889", "ASV2087", "ASV2275", "ASV4290", "ASV4382", "ASV4472", "ASV4978", "ASV5068", "ASV5330")
+ppe.taxa <- ppe.taxa[!ppe.taxa$ASV%in%nas,]
 write.csv2(ppe.taxa, "HCS_PPE_TAXA.csv")
+
+ppe.dif <- mnl[!mnl$ASV%in%ppe.taxa$ASV,]
 ```
 
 ##ASV Abundance
 ```{r ppe asv, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 ppe.asv <- dplyr::select(HCS, all_of(ppe.taxa$Seq))
-write.csv2(ppe.asv, "HCS_PPE_ASV_Abundance.csv")
+write.csv2(as.data.frame(t(ppe.asv)), "HCS_PPE_ASV_Abundance.csv")
 ```
 
 #Data joint
@@ -210,6 +223,7 @@ flappe <- aps.ppe %>% dplyr::filter(Flamenco == 1)
 flappe.asv <- dplyr::select(ppe.asv, all_of(flappe$Seq))
 write.csv2(flappe.asv, "HCS_Flamenco_PPE_ASV_Abundance.csv")
 ```
+
 ###Huasco
 ```{r hu ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 huppe <- aps.ppe %>% dplyr::filter(Huasco == 1)
@@ -242,7 +256,10 @@ write.csv2(lcppe.asv, "HCS_Las_Cruces_PPE_ASV_Abundance.csv")
 ```{r shared ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 shappe <- aps.ppe %>% dplyr::filter(Chanaral == 1 & Flamenco == 1 & Huasco == 1 & Pta.Choros == 1 & Quintero == 1 & LasCruces == 1)
 shappe.asv <- dplyr::select(ppe.asv, all_of(shappe$Seq))
-write.csv2(shappe.asv, "Shared_HCS_PPE_ASV_Abundance.csv")
+write.csv2(as.data.frame(t(shappe.asv)), "Shared_HCS_PPE_ASV_Abundance.csv")
+lusha <- shappe.asv
+colnames(lusha) <- shappe$X
+write.csv2(lusha, "HCS_Shared_PPE_ASV_Abundance_Network_Analysis.csv")
 ```
 
 ##Unique
@@ -250,60 +267,329 @@ write.csv2(shappe.asv, "Shared_HCS_PPE_ASV_Abundance.csv")
 ```{r uni cha ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 u.chappe <- aps.ppe %>% dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
 u.chappe.asv <- dplyr::select(chappe.asv, all_of(u.chappe$Seq))
-write.csv2(u.chappe.asv, "HCS_Unique_Chanaral_PPE_ASV_Abundance.csv")
+write.csv2(as.data.frame(t(u.chappe.asv[c(1:12),])), "HCS_Unique_Chanaral_PPE_ASV_Abundance.csv")
+lucha <- u.chappe.asv
+colnames(lucha) <- u.chappe$X
+write.csv2(lucha[c(1:12),], "HCS_Unique_Chanaral_PPE_ASV_Abundance_Network_Analysis.csv")
 ```
 
 ###Flamenco
 ```{r uni fla ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 u.flappe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
 u.flappe.asv <- dplyr::select(flappe.asv, all_of(u.flappe$Seq))
-write.csv2(u.flappe.asv, "HCS_Unique_Flamenco_PPE_ASV_Abundance.csv")
+write.csv2(as.data.frame(t(u.flappe.asv[c(13:24),])), "HCS_Unique_Flamenco_PPE_ASV_Abundance.csv")
+lufla <- u.flappe.asv
+colnames(lufla) <- u.flappe$X
+write.csv2(lufla[c(13:24),], "HCS_Unique_Flamenco_PPE_ASV_Abundance_Network_Analysis.csv")
 ```
 
 ###Huasco
 ```{r uni hu ppe, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 u.huppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
 u.huppe.asv <- dplyr::select(huppe.asv, all_of(u.huppe$Seq))
-write.csv2(u.huppe.asv, "HCS_Unique_Huasco_PPE_ASV_Abundance.csv")
+write.csv2(as.data.frame(t(u.huppe.asv[c(25:36),])), "HCS_Unique_Huasco_PPE_ASV_Abundance.csv")
+luhu <- u.huppe.asv
+colnames(luhu) <- u.huppe$X
+write.csv2(luhu[c(25:36),], "HCS_Unique_Huasco_PPE_ASV_Abundance_Network_Analysis.csv")
 ```
 
 ###Punta de Choros
 ```{r uni pch ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 u.pchppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 1 & Quintero == 0 & LasCruces == 0)
 u.pchppe.asv <- dplyr::select(pchppe.asv, all_of(u.pchppe$Seq))
-write.csv2(u.pchppe.asv, "HCS_Unique_Pta_Choros_PPE_ASV_Abundance.csv")
+write.csv2(as.data.frame(t(u.pchppe.asv[c(37:41),])), "HCS_Unique_Pta_Choros_PPE_ASV_Abundance.csv")
+lupch <- u.pchppe.asv
+colnames(lupch) <- u.pchppe$X
+write.csv2(lupch[c(37:41),], "HCS_Unique_Punta_Choros_PPE_ASV_Abundance_Network_Analysis.csv")
 ```
 
 ###Quintero
 ```{r uni qin ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 u.qinppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 1 & LasCruces == 0)
 u.qinppe.asv <- dplyr::select(qinppe.asv, all_of(u.qinppe$Seq))
-write.csv2(u.qinppe.asv, "HCS_Unique_Quintero_PPE_ASV_Abundance.csv")
+write.csv2(as.data.frame(t(u.qinppe.asv[c(42:51),])), "HCS_Unique_Quintero_PPE_ASV_Abundance.csv")
+luqin <- u.qinppe.asv
+colnames(luqin) <- u.qinppe$X
+write.csv2(luqin[c(42:51),], "HCS_Unique_Quintero_PPE_ASV_Abundance_Network_Analysis.csv")
 ```
 
 ###Las Cruces
 ```{r uni lc ppe, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 u.lcppe <- aps.ppe %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 1)
 u.lcppe.asv <- dplyr::select(lcppe.asv, all_of(u.lcppe$Seq))
-write.csv2(u.lcppe.asv, "HCS_Las_Cruces_PPE_ASV_Abundance.csv")
+write.csv2(as.data.frame(t(u.lcppe.asv[c(52:63),])), "HCS_Las_Cruces_PPE_ASV_Abundance.csv")
+lulc <- u.lcppe.asv
+colnames(lulc) <- u.lcppe$X
+write.csv2(lulc[c(52:63),], "HCS_Unique_Las_Cruces_PPE_ASV_Abundance_Network_Analysis.csv")
 ```
 
 ##Other "intersections"
 ```{r other ppe, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
-others <- dplyr::select(HCS, -all_of(shappe$Seq)) %>% 
-  dplyr::select(-all_of(u.chappe$Seq)) %>% 
+others <- dplyr::select(ppe.asv, -all_of(u.chappe$Seq)) %>% 
   dplyr::select(-all_of(u.flappe$Seq)) %>% 
   dplyr::select(-all_of(u.huppe$Seq)) %>% 
   dplyr::select(-all_of(u.pchppe$Seq)) %>% 
   dplyr::select(-all_of(u.qinppe$Seq)) %>% 
-  dplyr::select(-all_of(u.lcppe$Seq))
-write.csv2(others, "HCS_Others_PPE_ASV_Abundance")
+  dplyr::select(-all_of(u.lcppe$Seq)) %>% 
+  dplyr::select(-all_of(shappe$Seq)) %>% 
+  t() %>% as.data.frame()
+others <- dplyr::mutate(others, Total = rowSums(others[c(1:63)]))
+colSums(others)
+write.csv2(others, "HCS_Others_PPE_ASV_Abundance.csv")
 srehto <- as.data.frame(t(others))
 write.csv2(srehto, "HCS_Inverted_Others_PPE_ASV_Abundance.csv")
+luothers <- dplyr::filter(ppe.taxa, Seq %in% rownames(others)) #Change name object
+print(all(rownames(others)%in%rownames(luothers))) #Sanity check (?)
+lthrs <- as.data.frame(t(others))
+colnames(lthrs) <- luothers$ASV
+write.csv2(lthrs, "HCS_Others_PPE_ASV_Abundance_Network_Analysis.csv")
 ```
 
 ##Managing the different PPE ASV type abundances
-```{r}
+Compared to previous versions now we have *106* Shared ASV for HCS
+Total abundance of shared PPE ASV = *1090199*
+Chañaral shared PPE ASV abundance = *118891*
+Flamenco shared PPE ASV abundance = *126983*
+Huasco shared PPE ASV abundance = *424576*
+Punta de Choros shared PPE ASV abundance = *119076*
+Quintero shared PPE ASV abundance = *74844*
+Las Cruces shared PPE ASV abundance = *225829*
 
+###Total PPE ASV Abundances
+```{r total ppe, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+total <- as.data.frame(t(ppe.asv))
+total <- dplyr::mutate(total, 
+                       cha = rowSums(total[c(1:12)]), 
+                       fla = rowSums(total[c(13:24)]), 
+                       hu = rowSums(total[c(25:36)]), 
+                       pc = rowSums(total[c(37:41)]), 
+                       qin = rowSums(total[c(42:51)]), 
+                       lc = rowSums(total[c(52:63)])
+                       )
+full <- total[,c(64:69)] %>% t() %>% as.data.frame()
+full <- dplyr::mutate(full, total = rowSums(full[c(1:1322)]))
+full <- full[,1323]
+full
 ```
+
+###Detailed PPE ASV
+```{r detailed ppe, echo=FALSE,message=FALSE,warning=FALSE,echo=FALSE}
+detailed <- read.csv("Detailed_HCS_PPE_ASV_Abundance.csv", 
+                     header = TRUE, 
+                     sep = ";", 
+                     skip = 0, 
+                     row.names = 1)
+detailed <- add_column(detailed, Site = rownames(detailed), .before = "Unique", .name_repair = "minimal")
+detailed$Site <- factor(detailed$Site, levels = detailed$Site)
+long <- reshape2::melt(detailed, id.vars = "Site", variable.name = "Type")
+long <- long[-c(19:24),]
+```
+
+####Relative abundance for PPE ASV types
+```{r rel abun type, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+det <- ggplot(long, aes(x = Site, y = value, fill = Type)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "Sites", y = "Relative reads abundance", title = "Relative reads contribution of each PPE ASV type") + 
+  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) + 
+  theme_ipsum(base_size = 22, axis_title_size = 25, plot_title_size = 25) + 
+  theme(legend.position = "bottom", legend.direction = "horizontal")
+det.legend <- cowplot::get_legend(det)
+det <- det + theme(legend.position = "none")
+ggsave(plot = det, filename = "Figura_22_relative_contribution_PPE_ASV_type.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 12, height = 15, dpi = 600)
+ggsave(ggpubr::as_ggplot(det.legend), filename = "Figura_22_legend.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", dpi = 600)
+```
+
+#Abundance
+##Abundance at Phylum level
+```{r phyl abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+phyl <- Tax.sum(ppe.asv, ppe.taxa, 5) %>% as.data.frame()
+colnames(phyl)[c(3,5)] <- c("A", "B")
+phyl <- dplyr::mutate(phyl, Cryptophyta = rowSums(phyl[c(3,5)]))
+phyl <- phyl[,-c(3,5)] %>% t() %>% as.data.frame()
+phyl <- dplyr::mutate(phyl, 
+                      Chanaral = rowSums(phyl[c(1:12)]), 
+                      Flamenco = rowSums(phyl[c(13:24)]), 
+                      Huasco = rowSums(phyl[c(25:36)]), 
+                      Pta.Choros = rowSums(phyl[c(37:41)]), 
+                      Quintero = rowSums(phyl[c(42:51)]), 
+                      Las.Cruces = rowSums(phyl[c(52:63)]), 
+                      Total = rowSums(phyl[c(1:63)]), 
+                      .after ="L4A18")
+phyl <- phyl[order(phyl$Total, decreasing = TRUE),]
+write.csv2(phyl, "HCS_PPE_ASV_Phylum_Abundance.csv")
+```
+
+###Adding colours
+```{r add color, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+Col <- phyl %>% dplyr::mutate(Color = c("#63CB5F", "#471164", "#34618D", "#3F4889", "#21908C"), 
+                              .after = "Total")
+write.csv2(Col, "HCS_Colored_PPE_ASV_Phylum_Abundance.csv")
+```
+
+##Contribution and distribution of PPE ASV at Phylum level
+###Total (all sites)
+```{r total ppe cont dist, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_23_HCS_PPE_ASV_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_Colored_PPE_ASV_Phylum_Abundance.csv", header = TRUE, sep = ";", skip = 0), index = "X", vSize = "Total", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20, fontsize.title = 30, title = "PPE ASV contribution at phylum level for all HCS sites", title.legend = NA, border.col = NA)
+dev.off()
+
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_23_Legend.png", width = 10, height = 7, units = "in", res = 600)
+plot.new()
+par(mar=c(0,0,0,0), oma = c(0,0,0,0))
+legend("center", legend = read.csv("HCS_Colored_PPE_ASV_Phylum_Abundance.csv", header = TRUE, sep = ";", skip = 0)[,1], cex = 1.2, ncol = 1, fill = Col$Color, x.intersp = 0.3, xjust = 0.3, yjust = 0.5, y.intersp = 1, bty = "n", adj = 0, text.width = 0.3, pt.cex = 0.3)
+dev.off()
+```
+
+###Chanaral
+```{r cha ppe cont dist, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_24_Chanaral_PPE_ASV_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_Colored_PPE_ASV_Phylum_Abundance.csv", header = TRUE, sep = ";", skip = 0), index = "X", vSize = "Chanaral", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20, fontsize.title = 30, title = "PPE ASV contribution at phylum level for Chanaral samples", title.legend = NA, border.col = NA)
+dev.off()
+```
+
+###Flamenco
+```{r fla ppe cont dist, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_25_Flamenco_PPE_ASV_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_Colored_PPE_ASV_Phylum_Abundance.csv", header = TRUE, sep = ";", skip = 0), index = "X", vSize = "Flamenco", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20, fontsize.title = 30, title = "PPE ASV contribution at phylum level for Flamenco samples", title.legend = NA, border.col = NA)
+dev.off()
+```
+
+###Huasco
+```{r hua ppe cont dist, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_26_Huasco_PPE_ASV_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_Colored_PPE_ASV_Phylum_Abundance.csv", header = TRUE, sep = ";", skip = 0), index = "X", vSize = "Huasco", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20, fontsize.title = 30, title = "PPE ASV contribution at phylum level for Huasco samples", title.legend = NA, border.col = NA)
+dev.off()
+```
+
+###Punta de Choros
+```{r pch ppe cont dist, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_27_Punta_Choros_PPE_ASV_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_Colored_PPE_ASV_Phylum_Abundance.csv", header = TRUE, sep = ";", skip = 0), index = "X", vSize = "Pta.Choros", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20, fontsize.title = 30, title = "PPE ASV contribution at phylum level for Punta de Choros samples", title.legend = NA, border.col = NA)
+dev.off()
+```
+
+###Quintero
+```{r qin ppe dont dist, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_28_Quintero_PPE_ASV_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_Colored_PPE_ASV_Phylum_Abundance.csv", header = TRUE, sep = ";", skip = 0), index = "X", vSize = "Quintero", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20, fontsize.title = 30, title = "PPE ASV contribution at phylum level for Quintero samples", title.legend = NA, border.col = NA)
+dev.off()
+```
+
+###Las Cruces
+```{r lcs ppe cont dist, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+png("/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_29_Las_Cruces_PPE_ASV_Contribution_Distribution_Phylum.png", width = 17, height = 15, units = "in", res = 600)
+treemap::treemap(read.csv("HCS_Colored_PPE_ASV_Phylum_Abundance.csv", header = TRUE, sep = ";", skip = 0), index = "X", vSize = "Las.Cruces", type = "color", vColor = "Color", position.legend = "none", fontsize.labels = 20, fontsize.title = 30, title = "PPE ASV contribution at phylum level for Las Cruces samples", title.legend = NA, border.col = NA)
+dev.off()
+```
+
+##Relative Abundance at phylum level
+```{r ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+rltv.ppe <- phyl[,-c(64:70)] %>% t() %>% rltv.Otu.Table() %>% as.data.frame()
+write.csv2(rltv.ppe, "HCS_PPE_ASV_Relative_Abundance.csv")
+rltv.ppe <- add_column(rltv.ppe, Sample = rownames(rltv.ppe), .before = "Chlorophyta", .name_repair = "minimal")
+rltv.ppe$Sample <- factor(rltv.ppe$Sample, levels = rltv.ppe$Sample)
+long.ppe <- reshape2::melt(rltv.ppe, id.vars = "Sample", variable.name = "Phylum")
+long.chappe <- reshape2::melt(rltv.ppe[c(1:12),], id.vars = "Sample", variable.name = "Phylum")
+long.flappe <- reshape2::melt(rltv.ppe[c(13:24),], id.vars = "Sample", variable.name = "Phylum")
+long.huappe <- reshape2::melt(rltv.ppe[c(25:36),], id.vars = "Sample", variable.name = "Phylum")
+long.pchppe <- reshape2::melt(rltv.ppe[c(37:41),], id.vars = "Sample", variable.name = "Phylum")
+long.qinppe <- reshape2::melt(rltv.ppe[c(42:51),], id.vars = "Sample", variable.name = "Phylum")
+long.lcsppe <- reshape2::melt(rltv.ppe[c(52:63),], id.vars = "Sample", variable.name = "Phylum")
+```
+
+###Plotting
+####All sites
+```{r all ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+div.ppe <- ggplot(long.ppe, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "Relative reads abundance at phylum level for total filtered ASV") + 
+  scale_fill_manual(values = Col$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 40, plot_title_size = 40) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+ppe.leg <- cowplot::get_legend(div.ppe)
+div.ppe <- div.ppe + theme(legend.position = "none")
+ggsave(plot = div.ppe, filename = "Figura_30_HCS_PPE_ASV_Phylum_Relative_Abundance.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 35, height = 21, dpi = 600)
+ggsave(ggpubr::as_ggplot(ppe.leg), filename = "Figura_30_legend.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+####Chanaral
+```{r cha ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+div.chappe <- ggplot(long.chappe, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Chañaral") + 
+  scale_fill_manual(values = Col$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+chappe.leg <- cowplot::get_legend(div.chappe)
+div.chappe <- div.chappe + theme(legend.position = "none")
+ggsave(plot = div.chappe, filename = "Figura_31_Chanaral_PPE_ASV_Phylum_Relative_Abundance.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 15, height = 17, dpi = 600)
+ggsave(ggpubr::as_ggplot(chappe.leg), filename = "Figura_31_Legend.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/")
+```
+
+####Flamenco
+```{r fla ppe rel abun, echo=FALSE, message=FALSE,warning=FALSE,include=FALSE}
+div.flappe <- ggplot(long.flappe, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Flamenco") + 
+  scale_fill_manual(values = Col$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+flappe.leg <- cowplot::get_legend(div.flappe)
+div.flappe <- div.flappe + theme(legend.position = "none")
+ggsave(plot = div.flappe, filename = "Figura_32_Flamenco_PPE_ASV_Phylum_Relative_Abundance.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 15, height = 17, dpi = 600)
+```
+
+####Huasco
+```{r hua ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+div.huappe <- ggplot(long.huappe, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Huasco") + 
+  scale_fill_manual(values = Col$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+huappe.leg <- cowplot::get_legend(div.huappe)
+div.huappe <- div.huappe + theme(legend.position = "none")
+ggsave(plot = div.huappe, filename = "Figura_33_Huasco_PPE_ASV_Phylum_Relative_Abundance.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 15, height = 17, dpi = 600)
+```
+
+####Punta de Choros
+```{r pch ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+div.pchppe <- ggplot(long.pchppe, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Punta de Choros") + 
+  scale_fill_manual(values = Col$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 26) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+pchppe.leg <- cowplot::get_legend(div.pchppe)
+div.pchppe <- div.pchppe + theme(legend.position = "none")
+ggsave(plot = div.pchppe, filename = "Figura_34_Punta_Choros_PPE_ASV_Phylum_Relative_Abundance.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 15, height = 17, dpi = 600)
+```
+
+####Quintero
+```{r qin ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+div.qinppe <- ggplot(long.qinppe, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Quintero") + 
+  scale_fill_manual(values = Col$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+qinppe.leg <- cowplot::get_legend(div.qinppe)
+div.qinppe <- div.qinppe + theme(legend.position = "none")
+ggsave(plot = div.qinppe, filename = "Figura_35_Quintero_PPE_ASV_Phylum_Relative_Abundance.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 15, height = 17, dpi = 600)
+```
+
+####Las Cruces
+```{r lcs ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+div.lcsppe <- ggplot(long.lcsppe, aes(x = Sample, y = value, fill = Phylum)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Las Cruces") + 
+  scale_fill_manual(values = Col$Color) + 
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+  theme(legend.position = "right", legend.direction = "vertical")
+lcsppe.leg <- cowplot::get_legend(div.lcsppe)
+div.lcsppe <- div.lcsppe + theme(legend.position = "none")
+ggsave(plot = div.lcsppe, filename = "Figura_36_Las_Cruces_PPE_ASV_Phylum_Relative_Abundance.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 15, height = 17, dpi = 600)
+```
+
+Valdrá la pena evaluar la abundancia relativa a nivel de clase u otro nivel menor?
 
