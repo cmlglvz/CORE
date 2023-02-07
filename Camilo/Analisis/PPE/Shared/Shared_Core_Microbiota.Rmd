@@ -10,6 +10,9 @@ library(tidyverse)
 library(Biostrings)
 library(DECIPHER)
 library(vegan)
+library(ggvegan)
+library(hrbrthemes)
+library(heatmaply)
 library(htmlwidgets)
 ```
 
@@ -19,6 +22,8 @@ Shared <- read.csv(file = "~/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared_HC
 
 Taxa <- read.csv(file = "~/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_PPE_TAXA.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
 Taxa <- Taxa[Taxa$Seq%in%colnames(all_of(Shared)),]
+Metal <- read.csv(file = "~/Documents/GitHub/CORE/Camilo/Analisis/PPE/HCS_Metal_Data.csv", header = TRUE, sep = ";", dec = ",", skip = 0, row.names = 1) %>% add_column(Samples = rownames(Shared), .before = "Label")
+Metal[,"Site"] <- as.factor(Metal[, "Site"])
 ```
 
 #Creating FASTA for Shared PPE ASV
@@ -30,4 +35,520 @@ seqRFLP::dataframe2fas(fasta, "~/Documents/GitHub/CORE/Camilo/Analisis/PPE/Share
 
 Consider doing a multiple alignment externally with whichever software you fancy. We use *MUSCLE5* <https://www.drive5.com/muscle/> by Robert Edgar. If you have more than 1000 sequences you can choose the *Super5 algorithm* <https://drive5.com/muscle5/manual/cmd_super5.html> 
 
-#Import multiple alignment
+#Dendrogram visualization
+```{r dendrogram, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
+malign <- "./HCS_Mult_Align.fasta"
+#Next codelines are from DECIPHER vignette
+dbConn <-dbConnect(SQLite(), ":memory:")
+Seqs2DB(malign, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- IdClusters(distance.matrix, method = "ML", showPlot = TRUE, type = "dendrogram", myXStringSet = consensus, processors = NULL, verbose = TRUE)
+#The selected model was TN93+G4
+dbDisconnect(dbConn)
+```
+
+##Editing dendrogram for posterior using
+```{r cluster, echo=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+clust <- as.dendrogram(as.hclust(dendrogram)) %>% dendextend::set("branches_lwd", 0.3) %>% dendextend::ladderize(right = TRUE) 
+plot(clust)
+#Take into consideration that we are going to "invert" this dendrogram when plotting with heatmap
+```
+
+#Heatmap
+```{r heatmap, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+abun <- Shared
+colnames(abun) <- nms
+maligned <- Biostrings::readDNAMultipleAlignment(malign, format = "fasta")
+#To further manipulation of every seq we convert the multiple alignment object to several strings
+mstring <- as(maligned, "DNAStringSet")
+#Now we create a single "interactive" file to check the alignment
+DECIPHER::BrowseSeqs(mstring, htmlFile = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_37_HCS_Shared_PPE_ASV_Multiple_Alignment.html")
+#Let's check if identifiers from fasta file and abundance table match
+smatrix <- as.matrix(maligned) %>% rownames() %>% as.vector()
+print(all(colnames(abun)%in%gtools::mixedsort(smatrix, decreasing = FALSE)))
+sort.abun <- abun[, rownames(as.matrix(maligned))]
+#We are ploting a heatmap taking the raw reads abundance and performing a hellinger transformation, then the relative read abundances will be normalized to identifying patterns of abundances that can be related to high concentrations of Fe and Cu
+hell <- vegan::decostand(sort.abun, method = "hellinger")
+heatmap <- heatmaply(normalize(hell), 
+                     Colv = clust,
+                     Rowv = NA, 
+                     main = "Shared HCS PPE ASVs across all sites clustered by maximum likelihood", 
+                     margins = c(50, 50, 70, 0), 
+                     grid_gap = 1, 
+                     width = 1920, 
+                     height = 1080, 
+                     subplot_heights = c(0.35, 0.65), 
+                     color = viridis(n = 256, 
+                                     alpha = 1, 
+                                     begin = 0, 
+                                     end = 1, 
+                                     option = "rocket")
+                     )
+#Here we are going to integrate the previously plotted dendrogram
+#You can do the same with rows attaching a SIMPER or any useful clustering plot
+
+saveWidget(heatmap, file = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_38_HCS_Shared_PPE_ASV_Heatmap.html")
+```
+
+#EXTRA
+For Multiple Alignment of ASV with other sequences like our RCC customized database you might want to mask gaps to make more sense of clusters. Here's an example with a previously multiple aligned RCC seqs and the 106 HCS shared PPE ASV using the *super5* algorithm of *MUSCLE5* due to being *1215* sequences
+```{r extra, echo=FALSE, message=TRUE, warning=TRUE, include=TRUE}
+rccsha <- "./Alignment/RCC_HCS_Mult_Align.afa"
+rcc.shared <- readDNAMultipleAlignment(rccsha, format = "fasta")
+rsmstring <- as(rcc.shared, "DNAStringSet")
+DECIPHER::BrowseSeqs(rsmstring, htmlFile = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_39_HCS_Shared_And_RCC_Aligned_Sequences.html")
+masked <- Biostrings::maskGaps(x = rcc.shared, min.fraction = 0.3, min.block.width = 4) #An alternative for this is MaskAlignment from DECIPHER package
+Biostrings::consensusViews(masked)
+mskd <- as(masked, "DNAStringSet")
+writeXStringSet(mskd, filepath = "./Alignment/Masked_Multiple_Alignment_RCC_Shared_HCS_PPE_ASV.fasta", format = "fasta")
+```
+
+#NMDS
+As we previously did, we will use the relative abundance of reads with the hellinger transformation.
+Then we set a seed in order to reproduce our results in the future.
+```{r nmds, echo=TRUE, message=FALSE, warning=FALSE, include=FALSE}
+dbc.hell <- vegan::vegdist(x = hell, method = "bray", diag = TRUE)
+write.csv2(as.matrix(dbc.hell), "HCS_Bray_Curtis_Dissimilarity_Distance_of_Hellinger_Shared_PPE_ASV.csv")
+set.seed(19910420)
+nmds <- metaMDS(comm = hell, distance = "bray", k = 2, trymax = 100, autotransform = FALSE)
+str(nmds)
+scrs <- vegan::scores(nmds)
+nmds$points
+plot(nmds)
+```
+
+##Plotting options
+###Option 1
+```{r nmds opt 1, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+lookup <- hell %>% add_column(Samples = rownames(hell), .before = "ASV0261_Aureococcus_anophagefferens")
+scrs$sites %>% as_tibble(rownames = "Samples") %>% inner_join(., Metal, by = "Samples") %>% ggplot(aes(x = NMDS1, y = NMDS2, color = Site)) + geom_point()
+```
+
+###Option 2
+```{r nmds opt 2, echo=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+fort <- fortify(nmds) #In order to do this you need the ggvegan package!
+fort <- add_column(fort, Site = c(rep("Chanaral", 12), 
+                                  rep("Flamenco", 12), 
+                                  rep("Huasco", 12), 
+                                  rep("Punta de Choros", 5), 
+                                  rep("Quintero", 10), 
+                                  rep("Las Cruces", 12), 
+                                  rep("", 106)
+                                  )
+                   )
+fort[,"Site"] <- as.factor(fort[,"Site"])
+fort.plot <- ggplot() + 
+  geom_point(data = subset(fort, Score == "sites"), 
+             mapping = aes(x = NMDS1, y = NMDS2), 
+             colour = "black", alpha = 0.5) + 
+  geom_segment(data = subset(fort, Score == "species"), 
+               mapping = aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2), 
+               arrow = arrow(length = unit(0.015, "npc"), type = "closed"), 
+               colour = "darkgray", size = 0.8) + 
+  geom_text(data = subset(fort, Score == "species"), #crudely push labels away
+            mapping = aes(label = Label, x = NMDS1 * 1.1, y = NMDS2 * 1.1)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.8, colour = "gray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.8, colour = "gray") + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
+fort.plot
+```
+
+###Option 3
+```{r nmds opt 3, echo=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+sitios <- c(rep("#FF8811", 12), rep("#F4D06F", 12), rep("#392F5A", 12), rep("#403286", 5), rep("#18E0BD", 10), rep("#80EB9F", 12))
+p1 <- ggplot() + 
+  geom_point(data = subset(fort, Score == "sites"), 
+             mapping = aes(x = NMDS1, y = NMDS2), 
+             colour = sitios, alpha = 0.5) + 
+  geom_segment(data = subset(fort, Score == "species"), 
+               mapping = aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2), 
+               arrow = arrow(length = unit(0.015, "npc"), type = "closed"), 
+               colour = "darkgray", size = 0, alpha = 0) + 
+  geom_text(data = subset(fort, Score == "species"), 
+            mapping = aes(label = Label, x = NMDS1 * 1.1, y = NMDS2 * 1.1), 
+            alpha = 0) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.8, colour = "gray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.8, colour = "gray") + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"), 
+        legend.position = "right")
+
+p2 <- ggplot() + 
+  geom_point(data = subset(fort, Score == "sites"), 
+             mapping = aes(x = NMDS1, y = NMDS2), 
+             colour = "black", alpha = 0) + 
+  geom_segment(data = subset(fort, Score == "species"), 
+               mapping = aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2), 
+               arrow = arrow(length = unit(0.015, "npc"), type = "closed"), 
+               colour = "darkgray", 
+               size = 0.8) + 
+  geom_text(data = subset(fort, Score == "species"), 
+            mapping = aes(label = Label, x = NMDS1 * 1.1, y = NMDS2 * 1.1)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.8, colour = "gray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.8, colour = "gray") + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
+
+ptot <- ggpubr::ggarrange(p1, p2, ncol = 1)
+ptot
+```
+
+###Option 4
+```{r nmds opt 4, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
+cupp <- scrs$sites %>% as_tibble(rownames = "Samples") %>% 
+  inner_join(., Metal, by = "Samples") %>% 
+  mutate(Cu.lvl = if_else(Copper < 4, "Lower", "Higher")) %>% as.data.frame()
+cupp[,"Cu.lvl"] <- as.factor(cupp[,"Cu.lvl"])
+write.csv2(cupp, "HCS_Metal_Environment_NMDS.csv")
+
+pcupp <- ggplot(cupp, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Chanaral" = 16, 
+                                "Flamenco" = 17, 
+                                "Huasco" = 15, 
+                                "Pta.Choros" = 18, 
+                                "Quintero" = 13, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  coord_fixed() + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pcupp.leg <- cowplot::get_legend(pcupp)
+pcupp <- pcupp + theme(legend.position = "none")
+ggsave(plot = pcupp, filename = "Figura_40_NMDS_Sites_Metal_Concentration.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 7, height = 8, dpi = 600, bg = "white")
+ggsave(ggpubr::as_ggplot(pcupp.leg) , filename = "Figura_40_legend.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", bg = "white")
+```
+
+####Without Chañaral
+```{r wo cha, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
+wocha <- cupp[-c(1:12),]
+pwocha <- ggplot(wocha, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-2, 1), breaks = seq(-2, 1, by = 0.5)) + ylim(-1, 1.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Flamenco" = 17, 
+                                "Huasco" = 15, 
+                                "Pta.Choros" = 18, 
+                                "Quintero" = 13, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pwocha
+pwocha.leg <- cowplot::get_legend(pwocha)
+pwocha <- pwocha + theme(legend.position = "none")
+ggsave(plot = pwocha, filename = "Figura_41_NMDS_Sites_Without_Chanaral_Metal_Concentration.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+ggsave(ggpubr::as_ggplot(pwocha.leg) , filename = "Figura_41_legend.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", bg = "white")
+```
+
+```{r}
+wosh <- cupp[-c(1:12,25:36,42:51),]
+pwosh <- ggplot(wosh, aes(x = NMDS1, y = NMDS2)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-1, 1), breaks = seq(-1, 1, by = 0.25)) + ylim(-1, 0.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Flamenco" = 17, 
+                                "Pta.Choros" = 18, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pwosh
+pwosh.leg <- cowplot::get_legend(pwosh)
+pwosh <- pwosh + theme(legend.position = "none")
+ggsave(plot = pwosh, filename = "Figura_50_NMDS_Reference_Sites.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+```
+
+```{r}
+wash <- cupp[c(1:12,25:36,42:51),]
+pwash <- ggplot(wash, aes(x = NMDS1, y = NMDS2)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-0.5, 0.5), breaks = seq(-0.5, 0.5, by = 0.2)) + ylim(-0.5, 1) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Chanaral" = 16, 
+                                "Huasco" = 15,  
+                                "Quintero" = 13), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pwash
+pwash.leg <- cowplot::get_legend(pwash)
+pwash <- pwash + theme(legend.position = "none")
+ggsave(plot = pwash, filename = "Figura_51_NMDS_Perturbed_Sites.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+```
+
+
+####Without Flamenco
+```{r wo fla, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
+wofla <- cupp[-c(13:24),]
+pwofla <- ggplot(wofla, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-0.5, 0.5), breaks = seq(-0.5, 0.5, by = 0.2)) + ylim(-0.5, 0.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Chanaral" = 16, 
+                                "Huasco" = 15, 
+                                "Pta.Choros" = 18, 
+                                "Quintero" = 13, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pwofla
+pwofla.leg <- cowplot::get_legend(pwofla)
+pwofla <- pwofla + theme(legend.position = "none")
+ggsave(plot = pwofla, filename = "Figura_42_NMDS_Sites_Without_Flamenco_Metal_Concentration.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+ggsave(ggpubr::as_ggplot(pwocha.leg) , filename = "Figura_42_legend.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", bg = "white")
+
+cmltv <- cupp[-c(1:24),]
+pcml <- ggplot(cmltv, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-2, 1), breaks = seq(-2, 1, by = 0.5)) + ylim(-1, 1.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Huasco" = 15, 
+                                "Pta.Choros" = 18, 
+                                "Quintero" = 13, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pcml
+```
+
+####Without Huasco
+```{r wo hua, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
+wohua <- cupp[-c(25:36),]
+pwohua <- ggplot(wohua, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-2, 1), breaks = seq(-2, 1, by = 0.5)) + ylim(-1, 1.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Chanaral" = 16, 
+                                "Flamenco" = 17, 
+                                "Pta.Choros" = 18, 
+                                "Quintero" = 13, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pwohua
+pwohua.leg <- cowplot::get_legend(pwohua)
+pwohua <- pwohua + theme(legend.position = "none")
+ggsave(plot = pwohua, filename = "Figura_43_NMDS_Sites_Without_Huasco_Metal_Concentration.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+
+cmltv <- cupp[-c(1:36),]
+pcml <- ggplot(cmltv, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-2, 1), breaks = seq(-2, 1, by = 0.5)) + ylim(-1, 1.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Pta.Choros" = 18, 
+                                "Quintero" = 13, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pcml
+
+#Only Huasco
+ohua <- cupp[c(25:36),]
+pohua <- ggplot(ohua, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Huasco" = 15), guide = guide_legend(order = 1)) + 
+  coord_fixed() +
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pohua
+pohua.leg <- cowplot::get_legend(pohua)
+pohua <- pohua + theme(legend.position = "none")
+ggsave(plot = pohua, filename = "Figura_47_NMDS_Sites_Only_Huasco_Metal_Concentration.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+```
+
+####Without Punta Choros
+```{r wo pch, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
+wopch <- cupp[-c(37:41),]
+pwopch <- ggplot(wopch, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-2, 1), breaks = seq(-2, 1, by = 0.5)) + ylim(-1, 1.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Chanaral" = 16, 
+                                "Flamenco" = 17, 
+                                "Huasco" = 15,  
+                                "Quintero" = 13, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pwopch
+pwopch.leg <- cowplot::get_legend(pwopch)
+pwopch <- pwofla + theme(legend.position = "none")
+ggsave(plot = pwofla, filename = "Figura_44_NMDS_Sites_Without_Punta_Choros_Metal_Concentration.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+ggsave(ggpubr::as_ggplot(pwocha.leg) , filename = "Figura_44_legend.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", bg = "white")
+
+cmltv <- cupp[-c(1:41),]
+pcml <- ggplot(cmltv, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-2, 1), breaks = seq(-2, 1, by = 0.5)) + ylim(-1, 1.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Quintero" = 13, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pcml
+```
+
+####Without Quintero
+```{r wo qin, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
+woqin <- cupp[-c(42:51),]
+pwoqin <- ggplot(woqin, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-2, 1), breaks = seq(-2, 1, by = 0.5)) + ylim(-1, 1.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Chanaral" = 16, 
+                                "Flamenco" = 17, 
+                                "Huasco" = 15, 
+                                "Pta.Choros" = 18, 
+                                "Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pwoqin
+pwoqin.leg <- cowplot::get_legend(pwoqin)
+pwoqin <- pwoqin + theme(legend.position = "none")
+ggsave(plot = pwoqin, filename = "Figura_45_NMDS_Sites_Without_Quintero_Metal_Concentration.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+
+cmltv <- cupp[-c(1:51),]
+pcml <- ggplot(cmltv, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Las.Cruces" = 14), guide = guide_legend(order = 1)) + 
+  coord_fixed() + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pcml
+```
+
+####Without Las Cruces
+```{r wo lcs, echo=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+wolcs <- cupp[-c(52:63),]
+pwolcs <- ggplot(wolcs, aes(x = NMDS1, y = NMDS2, shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_point(aes(shape = Site, size = Cu.lvl, colour = Iron)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, colour = "darkgray") + 
+  geom_text(mapping = aes(label = Samples, x = NMDS1 * 1.1, y = NMDS2 * 1.1), size = 3.5) + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-2, 1), breaks = seq(-2, 1, by = 0.5)) + ylim(-1, 1.5) + 
+  scale_color_viridis(alpha = 1, begin = 0, end = 1, direction = 1, discrete = FALSE, option = "inferno", guide = guide_colorbar(order = 3)) + 
+  scale_size_manual(values = c("Higher" = 3.6, "Lower" = 1.7), guide = guide_legend(order = 2)) + 
+  scale_shape_manual(values = c("Chanaral" = 16, 
+                                "Flamenco" = 17, 
+                                "Huasco" = 15, 
+                                "Pta.Choros" = 18, 
+                                "Quintero" = 13), guide = guide_legend(order = 1)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "#000000") + 
+  theme(legend.position = "right")
+pwolcs
+pwolcs.leg <- cowplot::get_legend(pwolcs)
+pwolcs <- pwolcs + theme(legend.position = "none")
+ggsave(plot = pwolcs, filename = "Figura_46_NMDS_Sites_Without_Flamenco_Metal_Concentration.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+```
+
+###Option 4 part B
+```{r nmds opt 4 b, echo=FALSE, message=FALSE, warning=FALSE, include=TRUE}
+fepp <- scrs$species %>% as_tibble(rownames = "Taxa") %>% as.data.frame()
+fepp <- fepp[c(7,9,14,26,32,36,38,41,44,46,49,50,61,62,67,68,74,76,78,82,84,98),]
+write.csv2(fepp, "HCS_Selected_ASV_Environment_NMDS.csv")
+
+pfepp <- ggplot(fepp, aes(x = NMDS1, y = NMDS2)) + 
+  geom_segment(mapping = aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2), 
+               arrow = arrow(length = unit(0.015, "npc"), type = "closed"), 
+               color = "darkgray", 
+               size = 0.8) + 
+  geom_text(mapping = aes(label = Taxa, x = NMDS1 * 1.1, y = NMDS2 * 1.1)) + 
+  geom_abline(intercept = 0, slope = 0, linetype = "dashed", size = 0.6, color = "darkgray") + 
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.6, color = "darkgray") + 
+  labs(x = "NMDS 1", y = "NMDS 2") + 
+  scale_x_continuous(limits = c(-1.5,1), breaks = seq(-1.5,1,by = 0.25)) + 
+  scale_y_continuous(limits = c(-0.5,0.5), breaks = seq(-0.5,0.5, by = 0.25)) + 
+  theme_ipsum(axis_title_size = 14, axis_col = "000000") + 
+  theme(legend.position = "right")
+ggsave(plot = pfepp, filename = "Figura_48_NMDS_ASV_Metal.png", path = "~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 13, height = 7, dpi = 600, bg = "white")
+```
+
+```{r}
+factoextra::fviz_dist(dbc.hell, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+cluster <- kmeans(x = hell, centers = 6, iter.max = 100, nstart = 25)
+str(cluster)
+print(cluster)
+factoextra::fviz_cluster(cluster, data = dbc.hell)
+```
+
+```{r}
+vare.cca <- cca(hell, Metal[,c(5:10)])
+plot(vare.cca)
+```
+
