@@ -22,16 +22,16 @@ library(hrbrthemes)
 
 #Import Datasets
 ```{r datasets, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
-HCS <- read.csv("Camilo/Analisis/Filtered_CORE_ASV_Abundance.csv", 
-                header = TRUE, 
-                sep = ";", 
-                dec = ".", 
+HCS <- read.csv("Camilo/Analisis/Filtered_CORE_ASV_Abundance.csv",
+                header = TRUE,
+                sep = ";",
+                dec = ".",
                 skip = 0,
                 row.names = 1)
-TAXA <- read.csv("Camilo/Analisis/Filtered_CORE_TAXA.csv", 
-                 header = TRUE, 
-                 sep = ";", 
-                 skip = 0, 
+TAXA <- read.csv("Camilo/Analisis/Filtered_CORE_TAXA.csv",
+                 header = TRUE,
+                 sep = ";",
+                 skip = 0,
                  row.names = 1)
 
 print(all(colnames(HCS)%in%rownames(TAXA)))
@@ -99,13 +99,13 @@ write.csv2(as.data.frame(t(ppe.asv)), "HCS_PPE_ASV_Abundance.csv")
 #Data joint
 ```{r ppe joint, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 ppe.un <- as.data.frame(t(ppe.asv)) %>% dplyr::mutate(Seq = all_of(ppe.taxa$Seq), .before = "C1A17")
-ppe.un <- dplyr::mutate(ppe.un, 
-                        Chanaral = rowSums(ppe.un[c(2:13)]), 
-                        Flamenco = rowSums(ppe.un[c(14:25)]), 
-                        Huasco = rowSums(ppe.un[c(26:37)]), 
-                        Pta.Choros = rowSums(ppe.un[c(38:42)]), 
-                        Quintero = rowSums(ppe.un[c(43:52)]), 
-                        LasCruces = rowSums(ppe.un[c(53:64)]), 
+ppe.un <- dplyr::mutate(ppe.un,
+                        Chanaral = rowSums(ppe.un[c(2:13)]),
+                        Flamenco = rowSums(ppe.un[c(14:25)]),
+                        Huasco = rowSums(ppe.un[c(26:37)]),
+                        Pta.Choros = rowSums(ppe.un[c(38:42)]),
+                        Quintero = rowSums(ppe.un[c(43:52)]),
+                        LasCruces = rowSums(ppe.un[c(53:64)]),
                         Total = rowSums(ppe.un[c(2:64)])
                         )
 ppe.un <- dplyr::inner_join(ppe.un, ppe.taxa, by = "Seq") %>% dplyr::relocate(ASV, .after = Seq)
@@ -122,8 +122,8 @@ rownames(vedited) <- verdes
 write.csv2(vedited, "HCS_PPE_edited_taxonomic_and_abundance.csv")
 #Dataframe de presencia-ausencia de ASV de PPE
 ppe.apats <- vedited[,-1]
-ppe.apats <- vegan::decostand(ppe.apats, method = "pa") %>% 
-  add_column(Seq = dplyr::all_of(vedited$Seq), 
+ppe.apats <- vegan::decostand(ppe.apats, method = "pa") %>%
+  add_column(Seq = dplyr::all_of(vedited$Seq),
              .before = "C1A17")
 write.csv2(ppe.apats, "HCS_PPE_Absence_Presence.csv")
 ```
@@ -134,76 +134,76 @@ write.csv2(ppe.apats, "HCS_PPE_Absence_Presence.csv")
 aps.ppe <- read.csv("HCS_PPE_Absence_Presence.csv", header = TRUE, sep = ";", dec = ".", skip = 0)
 
 png("~/Documents/GitHub/CORE/Camilo/Analisis/Figuras/Figura_21_PPE_UpSet.png", width = 30, height = 17, units = "in", res = 600)
-upset(aps.ppe, 
-      nsets = 6, 
-      nintersects = NA, 
-      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"), 
-      intersections = list("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral", 
-                           list("Chanaral", "Flamenco"), 
-                           list("Huasco", "Pta.Choros"), 
-                           list("Quintero", "LasCruces"), 
-                           list("Chanaral", "Huasco"), 
-                           list("Chanaral", "Quintero"), 
-                           list("Huasco", "Quintero"), 
-                           list("Flamenco", "Pta.Choros"), 
-                           list("Flamenco", "LasCruces"), 
-                           list("Pta.Choros", "LasCruces"), 
-                           list("Quintero", "LasCruces"), 
-                           list("Chanaral", "Huasco", "Quintero"), 
-                           list("Flamenco", "Pta.Choros", "LasCruces"), 
-                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"), 
-                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero"), 
-                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "LasCruces"), 
+upset(aps.ppe,
+      nsets = 6,
+      nintersects = NA,
+      sets = c("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral"),
+      intersections = list("LasCruces", "Quintero", "Pta.Choros", "Huasco", "Flamenco", "Chanaral",
+                           list("Chanaral", "Flamenco"),
+                           list("Huasco", "Pta.Choros"),
+                           list("Quintero", "LasCruces"),
+                           list("Chanaral", "Huasco"),
+                           list("Chanaral", "Quintero"),
+                           list("Huasco", "Quintero"),
+                           list("Flamenco", "Pta.Choros"),
+                           list("Flamenco", "LasCruces"),
+                           list("Pta.Choros", "LasCruces"),
+                           list("Quintero", "LasCruces"),
+                           list("Chanaral", "Huasco", "Quintero"),
+                           list("Flamenco", "Pta.Choros", "LasCruces"),
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros"),
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero"),
+                           list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "LasCruces"),
                            list("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "LasCruces")
-                           ), 
-      empty.intersections = "on", 
-      keep.order = TRUE, 
-      query.legend = "top", 
-      queries = list(list(query = intersects, 
-                          params = "Chanaral", 
-                          color = "#FF8811", 
-                          active = TRUE, 
-                          query.name = "Unique Chañaral ASV"), 
-                     list(query = intersects, 
-                          params = "Flamenco", 
-                          color = "#F4D06F", 
-                          active = TRUE, 
-                          query.name = "Unique Flamenco ASV"), 
-                     list(query = intersects, 
-                          params = "Huasco", 
-                          color = "#392F5A", 
-                          active = TRUE, 
-                          query.name = "Unique Huasco ASV"), 
-                     list(query = intersects, 
-                          params = "Pta.Choros", 
-                          color = "#403286", 
-                          active = TRUE, 
-                          query.name = "Unique Punta Choros ASV"), 
-                     list(query = intersects, 
-                          params = "Quintero", 
-                          color = "#18E0BD", 
-                          active = T, 
-                          query.name = "Unique Quintero ASV"), 
-                     list(query = intersects, 
-                          params = "LasCruces", 
-                          color = "#80EB9F", 
-                          active = TRUE, 
-                          query.name = "Unique Las Cruces ASV"), 
-                     list(query = intersects, 
-                          params = list("Chanaral", 
-                                        "Flamenco", 
-                                        "Huasco", 
-                                        "Pta.Choros", 
-                                        "Quintero", 
-                                        "LasCruces"), 
-                          color="#EF233C", 
-                          active = TRUE, 
+                           ),
+      empty.intersections = "on",
+      keep.order = TRUE,
+      query.legend = "top",
+      queries = list(list(query = intersects,
+                          params = "Chanaral",
+                          color = "#FF8811",
+                          active = TRUE,
+                          query.name = "Unique Chañaral ASV"),
+                     list(query = intersects,
+                          params = "Flamenco",
+                          color = "#F4D06F",
+                          active = TRUE,
+                          query.name = "Unique Flamenco ASV"),
+                     list(query = intersects,
+                          params = "Huasco",
+                          color = "#392F5A",
+                          active = TRUE,
+                          query.name = "Unique Huasco ASV"),
+                     list(query = intersects,
+                          params = "Pta.Choros",
+                          color = "#403286",
+                          active = TRUE,
+                          query.name = "Unique Punta Choros ASV"),
+                     list(query = intersects,
+                          params = "Quintero",
+                          color = "#18E0BD",
+                          active = T,
+                          query.name = "Unique Quintero ASV"),
+                     list(query = intersects,
+                          params = "LasCruces",
+                          color = "#80EB9F",
+                          active = TRUE,
+                          query.name = "Unique Las Cruces ASV"),
+                     list(query = intersects,
+                          params = list("Chanaral",
+                                        "Flamenco",
+                                        "Huasco",
+                                        "Pta.Choros",
+                                        "Quintero",
+                                        "LasCruces"),
+                          color="#EF233C",
+                          active = TRUE,
                           query.name = "Shared PPE ASV")
-                     ), 
-      point.size = 3.5, 
-      line.size = 1.5, 
-      text.scale = 3, 
-      mainbar.y.label = "Sites intersections", 
+                     ),
+      point.size = 3.5,
+      line.size = 1.5,
+      text.scale = 3,
+      mainbar.y.label = "Sites intersections",
       sets.x.label = "PPE ASV per sampling site")
 dev.off()
 ```
@@ -215,6 +215,9 @@ dev.off()
 chappe <- aps.ppe %>% dplyr::filter(Chanaral == 1)
 chappe.asv <- dplyr::select(ppe.asv, all_of(chappe$Seq))
 write.csv2(chappe.asv, "HCS_Chanaral_PPE_ASV_Abundance.csv")
+net.cha <- chappe.asv
+colnames(net.cha) <- chappe$X
+write.csv2(net.cha, "D:/Documents/GitHub/CORE/Camilo/NetCoA/t1.csv")
 ```
 
 ###Flamenco
@@ -222,6 +225,9 @@ write.csv2(chappe.asv, "HCS_Chanaral_PPE_ASV_Abundance.csv")
 flappe <- aps.ppe %>% dplyr::filter(Flamenco == 1)
 flappe.asv <- dplyr::select(ppe.asv, all_of(flappe$Seq))
 write.csv2(flappe.asv, "HCS_Flamenco_PPE_ASV_Abundance.csv")
+net.fla <- flappe.asv
+colnames(net.fla) <- flappe$X
+write.csv2(net.fla, "D:/Documents/GitHub/CORE/Camilo/NetCoA/t2.csv")
 ```
 
 ###Huasco
@@ -229,6 +235,9 @@ write.csv2(flappe.asv, "HCS_Flamenco_PPE_ASV_Abundance.csv")
 huppe <- aps.ppe %>% dplyr::filter(Huasco == 1)
 huppe.asv <- dplyr::select(ppe.asv, all_of(huppe$Seq))
 write.csv2(huppe.asv, "HCS_Huasco_PPE_ASV_Abundance.csv")
+net.hua <- huppe.asv
+colnames(net.hua) <- huppe$X
+write.csv2(net.hua, "D:/Documents/GitHub/CORE/Camilo/NetCoA/t3.csv")
 ```
 
 ###Punta de Choros
@@ -236,6 +245,9 @@ write.csv2(huppe.asv, "HCS_Huasco_PPE_ASV_Abundance.csv")
 pchppe <- aps.ppe %>% dplyr::filter(Pta.Choros == 1)
 pchppe.asv <- dplyr::select(ppe.asv, all_of(pchppe$Seq))
 write.csv2(pchppe.asv, "HCS_Pta_Choros_PPE_ASV_Abundance.csv")
+net.pch <- pchppe.asv
+colnames(net.pch) <- pchppe$X
+write.csv2(net.pch, "D:/Documents/GitHub/CORE/Camilo/NetCoA/t4.csv")
 ```
 
 ###Quintero
@@ -243,6 +255,9 @@ write.csv2(pchppe.asv, "HCS_Pta_Choros_PPE_ASV_Abundance.csv")
 qinppe <- aps.ppe %>% dplyr::filter(Quintero == 1)
 qinppe.asv <- dplyr::select(ppe.asv, all_of(qinppe$Seq))
 write.csv2(qinppe.asv, "HCS_Quintero_PPE_ASV_Abundance.csv")
+net.qin <- qinppe.asv
+colnames(net.qin) <- qinppe$X
+write.csv2(net.qin, "D:/Documents/GitHub/CORE/Camilo/NetCoA/t5.csv")
 ```
 
 ###Las Cruces
@@ -250,6 +265,9 @@ write.csv2(qinppe.asv, "HCS_Quintero_PPE_ASV_Abundance.csv")
 lcppe <- aps.ppe %>% dplyr::filter(LasCruces == 1)
 lcppe.asv <- dplyr::select(ppe.asv, all_of(lcppe$Seq))
 write.csv2(lcppe.asv, "HCS_Las_Cruces_PPE_ASV_Abundance.csv")
+net.lcs <- lcppe.asv
+colnames(net.lcs) <- lcppe$X
+write.csv2(net.lcs, "D:/Documents/GitHub/CORE/Camilo/NetCoA/t6.csv")
 ```
 
 ##Shared
@@ -325,13 +343,13 @@ write.csv2(lulc[c(52:63),], "HCS_Unique_Las_Cruces_PPE_ASV_Abundance_Network_Ana
 
 ##Other "intersections"
 ```{r other ppe, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
-others <- dplyr::select(ppe.asv, -all_of(u.chappe$Seq)) %>% 
-  dplyr::select(-all_of(u.flappe$Seq)) %>% 
-  dplyr::select(-all_of(u.huppe$Seq)) %>% 
-  dplyr::select(-all_of(u.pchppe$Seq)) %>% 
-  dplyr::select(-all_of(u.qinppe$Seq)) %>% 
-  dplyr::select(-all_of(u.lcppe$Seq)) %>% 
-  dplyr::select(-all_of(shappe$Seq)) %>% 
+others <- dplyr::select(ppe.asv, -all_of(u.chappe$Seq)) %>%
+  dplyr::select(-all_of(u.flappe$Seq)) %>%
+  dplyr::select(-all_of(u.huppe$Seq)) %>%
+  dplyr::select(-all_of(u.pchppe$Seq)) %>%
+  dplyr::select(-all_of(u.qinppe$Seq)) %>%
+  dplyr::select(-all_of(u.lcppe$Seq)) %>%
+  dplyr::select(-all_of(shappe$Seq)) %>%
   t() %>% as.data.frame()
 others <- dplyr::mutate(others, Total = rowSums(others[c(1:63)]))
 colSums(others)
@@ -358,12 +376,12 @@ Las Cruces shared PPE ASV abundance = *225829*
 ###Total PPE ASV Abundances
 ```{r total ppe, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
 total <- as.data.frame(t(ppe.asv))
-total <- dplyr::mutate(total, 
-                       cha = rowSums(total[c(1:12)]), 
-                       fla = rowSums(total[c(13:24)]), 
-                       hu = rowSums(total[c(25:36)]), 
-                       pc = rowSums(total[c(37:41)]), 
-                       qin = rowSums(total[c(42:51)]), 
+total <- dplyr::mutate(total,
+                       cha = rowSums(total[c(1:12)]),
+                       fla = rowSums(total[c(13:24)]),
+                       hu = rowSums(total[c(25:36)]),
+                       pc = rowSums(total[c(37:41)]),
+                       qin = rowSums(total[c(42:51)]),
                        lc = rowSums(total[c(52:63)])
                        )
 full <- total[,c(64:69)] %>% t() %>% as.data.frame()
@@ -374,24 +392,24 @@ full
 
 ###Detailed PPE ASV
 ```{r detailed ppe, echo=FALSE,message=FALSE,warning=FALSE,echo=FALSE}
-detailed <- read.csv("Detailed_HCS_PPE_ASV_Abundance.csv", 
-                     header = TRUE, 
-                     sep = ";", 
-                     skip = 0, 
+detailed <- read.csv("Detailed_HCS_PPE_ASV_Abundance.csv",
+                     header = TRUE,
+                     sep = ";",
+                     skip = 0,
                      row.names = 1)
 detailed <- add_column(detailed, Site = rownames(detailed), .before = "Unique", .name_repair = "minimal")
-detailed$Site <- factor(detailed$Site, levels = detailed$Site)
+detailed$Site <- factor(detailed$Site, levels = detailed$Site) #When no duplicates
 long <- reshape2::melt(detailed, id.vars = "Site", variable.name = "Type")
 long <- long[-c(19:24),]
 ```
 
 ####Relative abundance for PPE ASV types
 ```{r rel abun type, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-det <- ggplot(long, aes(x = Site, y = value, fill = Type)) + 
-  geom_bar(position = "fill", stat = "identity") + 
-  labs(x = "Sites", y = "Relative reads abundance", title = "Relative reads contribution of each PPE ASV type") + 
-  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) + 
-  theme_ipsum(base_size = 22, axis_title_size = 25, plot_title_size = 25) + 
+det <- ggplot(long, aes(x = Site, y = value, fill = Type)) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "Sites", y = "Relative reads abundance", title = "Relative reads contribution of each PPE ASV type") +
+  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) +
+  theme_ipsum(base_size = 22, axis_title_size = 25, plot_title_size = 25) +
   theme(legend.position = "bottom", legend.direction = "horizontal")
 det.legend <- cowplot::get_legend(det)
 det <- det + theme(legend.position = "none")
@@ -406,14 +424,14 @@ phyl <- Tax.sum(ppe.asv, ppe.taxa, 5) %>% as.data.frame()
 colnames(phyl)[c(3,5)] <- c("A", "B")
 phyl <- dplyr::mutate(phyl, Cryptophyta = rowSums(phyl[c(3,5)]))
 phyl <- phyl[,-c(3,5)] %>% t() %>% as.data.frame()
-phyl <- dplyr::mutate(phyl, 
-                      Chanaral = rowSums(phyl[c(1:12)]), 
-                      Flamenco = rowSums(phyl[c(13:24)]), 
-                      Huasco = rowSums(phyl[c(25:36)]), 
-                      Pta.Choros = rowSums(phyl[c(37:41)]), 
-                      Quintero = rowSums(phyl[c(42:51)]), 
-                      Las.Cruces = rowSums(phyl[c(52:63)]), 
-                      Total = rowSums(phyl[c(1:63)]), 
+phyl <- dplyr::mutate(phyl,
+                      Chanaral = rowSums(phyl[c(1:12)]),
+                      Flamenco = rowSums(phyl[c(13:24)]),
+                      Huasco = rowSums(phyl[c(25:36)]),
+                      Pta.Choros = rowSums(phyl[c(37:41)]),
+                      Quintero = rowSums(phyl[c(42:51)]),
+                      Las.Cruces = rowSums(phyl[c(52:63)]),
+                      Total = rowSums(phyl[c(1:63)]),
                       .after ="L4A18")
 phyl <- phyl[order(phyl$Total, decreasing = TRUE),]
 write.csv2(phyl, "HCS_PPE_ASV_Phylum_Abundance.csv")
@@ -421,7 +439,7 @@ write.csv2(phyl, "HCS_PPE_ASV_Phylum_Abundance.csv")
 
 ###Adding colours
 ```{r add color, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-Col <- phyl %>% dplyr::mutate(Color = c("#63CB5F", "#471164", "#34618D", "#3F4889", "#21908C"), 
+Col <- phyl %>% dplyr::mutate(Color = c("#63CB5F", "#471164", "#34618D", "#3F4889", "#21908C"),
                               .after = "Total")
 write.csv2(Col, "HCS_Colored_PPE_ASV_Phylum_Abundance.csv")
 ```
@@ -500,11 +518,11 @@ long.lcsppe <- reshape2::melt(rltv.ppe[c(52:63),], id.vars = "Sample", variable.
 ###Plotting
 ####All sites
 ```{r all ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-div.ppe <- ggplot(long.ppe, aes(x = Sample, y = value, fill = Phylum)) + 
-  geom_bar(position = "fill", stat = "identity") + 
-  labs(x = "HCS Sites", y = "Relative reads abundance", title = "Relative reads abundance at phylum level for total filtered ASV") + 
-  scale_fill_manual(values = Col$Color) + 
-  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 40, plot_title_size = 40) + 
+div.ppe <- ggplot(long.ppe, aes(x = Sample, y = value, fill = Phylum)) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "Relative reads abundance at phylum level for total filtered ASV") +
+  scale_fill_manual(values = Col$Color) +
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 40, plot_title_size = 40) +
   theme(legend.position = "right", legend.direction = "vertical")
 ppe.leg <- cowplot::get_legend(div.ppe)
 div.ppe <- div.ppe + theme(legend.position = "none")
@@ -514,11 +532,11 @@ ggsave(ggpubr::as_ggplot(ppe.leg), filename = "Figura_30_legend.png", path = "/U
 
 ####Chanaral
 ```{r cha ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-div.chappe <- ggplot(long.chappe, aes(x = Sample, y = value, fill = Phylum)) + 
-  geom_bar(position = "fill", stat = "identity") + 
-  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Chañaral") + 
-  scale_fill_manual(values = Col$Color) + 
-  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+div.chappe <- ggplot(long.chappe, aes(x = Sample, y = value, fill = Phylum)) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Chañaral") +
+  scale_fill_manual(values = Col$Color) +
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) +
   theme(legend.position = "right", legend.direction = "vertical")
 chappe.leg <- cowplot::get_legend(div.chappe)
 div.chappe <- div.chappe + theme(legend.position = "none")
@@ -528,11 +546,11 @@ ggsave(ggpubr::as_ggplot(chappe.leg), filename = "Figura_31_Legend.png", path = 
 
 ####Flamenco
 ```{r fla ppe rel abun, echo=FALSE, message=FALSE,warning=FALSE,include=FALSE}
-div.flappe <- ggplot(long.flappe, aes(x = Sample, y = value, fill = Phylum)) + 
-  geom_bar(position = "fill", stat = "identity") + 
-  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Flamenco") + 
-  scale_fill_manual(values = Col$Color) + 
-  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+div.flappe <- ggplot(long.flappe, aes(x = Sample, y = value, fill = Phylum)) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Flamenco") +
+  scale_fill_manual(values = Col$Color) +
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) +
   theme(legend.position = "right", legend.direction = "vertical")
 flappe.leg <- cowplot::get_legend(div.flappe)
 div.flappe <- div.flappe + theme(legend.position = "none")
@@ -541,11 +559,11 @@ ggsave(plot = div.flappe, filename = "Figura_32_Flamenco_PPE_ASV_Phylum_Relative
 
 ####Huasco
 ```{r hua ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-div.huappe <- ggplot(long.huappe, aes(x = Sample, y = value, fill = Phylum)) + 
-  geom_bar(position = "fill", stat = "identity") + 
-  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Huasco") + 
-  scale_fill_manual(values = Col$Color) + 
-  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+div.huappe <- ggplot(long.huappe, aes(x = Sample, y = value, fill = Phylum)) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Huasco") +
+  scale_fill_manual(values = Col$Color) +
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) +
   theme(legend.position = "right", legend.direction = "vertical")
 huappe.leg <- cowplot::get_legend(div.huappe)
 div.huappe <- div.huappe + theme(legend.position = "none")
@@ -554,11 +572,11 @@ ggsave(plot = div.huappe, filename = "Figura_33_Huasco_PPE_ASV_Phylum_Relative_A
 
 ####Punta de Choros
 ```{r pch ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-div.pchppe <- ggplot(long.pchppe, aes(x = Sample, y = value, fill = Phylum)) + 
-  geom_bar(position = "fill", stat = "identity") + 
-  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Punta de Choros") + 
-  scale_fill_manual(values = Col$Color) + 
-  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 26) + 
+div.pchppe <- ggplot(long.pchppe, aes(x = Sample, y = value, fill = Phylum)) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Punta de Choros") +
+  scale_fill_manual(values = Col$Color) +
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 26) +
   theme(legend.position = "right", legend.direction = "vertical")
 pchppe.leg <- cowplot::get_legend(div.pchppe)
 div.pchppe <- div.pchppe + theme(legend.position = "none")
@@ -567,11 +585,11 @@ ggsave(plot = div.pchppe, filename = "Figura_34_Punta_Choros_PPE_ASV_Phylum_Rela
 
 ####Quintero
 ```{r qin ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-div.qinppe <- ggplot(long.qinppe, aes(x = Sample, y = value, fill = Phylum)) + 
-  geom_bar(position = "fill", stat = "identity") + 
-  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Quintero") + 
-  scale_fill_manual(values = Col$Color) + 
-  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+div.qinppe <- ggplot(long.qinppe, aes(x = Sample, y = value, fill = Phylum)) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Quintero") +
+  scale_fill_manual(values = Col$Color) +
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) +
   theme(legend.position = "right", legend.direction = "vertical")
 qinppe.leg <- cowplot::get_legend(div.qinppe)
 div.qinppe <- div.qinppe + theme(legend.position = "none")
@@ -580,11 +598,11 @@ ggsave(plot = div.qinppe, filename = "Figura_35_Quintero_PPE_ASV_Phylum_Relative
 
 ####Las Cruces
 ```{r lcs ppe rel abun, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-div.lcsppe <- ggplot(long.lcsppe, aes(x = Sample, y = value, fill = Phylum)) + 
-  geom_bar(position = "fill", stat = "identity") + 
-  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Las Cruces") + 
-  scale_fill_manual(values = Col$Color) + 
-  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) + 
+div.lcsppe <- ggplot(long.lcsppe, aes(x = Sample, y = value, fill = Phylum)) +
+  geom_bar(position = "fill", stat = "identity") +
+  labs(x = "HCS Sites", y = "Relative reads abundance", title = "PPE ASV relative abundance at phylum level for Las Cruces") +
+  scale_fill_manual(values = Col$Color) +
+  theme_ipsum(base_size = 22, axis_col = "#000000", axis_title_size = 30, plot_title_size = 30) +
   theme(legend.position = "right", legend.direction = "vertical")
 lcsppe.leg <- cowplot::get_legend(div.lcsppe)
 div.lcsppe <- div.lcsppe + theme(legend.position = "none")
@@ -592,4 +610,3 @@ ggsave(plot = div.lcsppe, filename = "Figura_36_Las_Cruces_PPE_ASV_Phylum_Relati
 ```
 
 Valdrá la pena evaluar la abundancia relativa a nivel de clase u otro nivel menor?
-
