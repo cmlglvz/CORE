@@ -399,6 +399,7 @@ detailed <- read.csv("Detailed_HCS_PPE_ASV_Abundance.csv",
                      row.names = 1)
 detailed <- add_column(detailed, Site = rownames(detailed), .before = "Unique", .name_repair = "minimal")
 detailed$Site <- factor(detailed$Site, levels = detailed$Site) #When no duplicates
+colnames(detailed)[4] <- "Other"
 long <- reshape2::melt(detailed, id.vars = "Site", variable.name = "Type")
 long <- long[-c(19:24),]
 ```
@@ -413,8 +414,8 @@ det <- ggplot(long, aes(x = Site, y = value, fill = Type)) +
   theme(legend.position = "bottom", legend.direction = "horizontal")
 det.legend <- cowplot::get_legend(det)
 det <- det + theme(legend.position = "none")
-ggsave(plot = det, filename = "Figura_22_relative_contribution_PPE_ASV_type.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 12, height = 15, dpi = 600)
-ggsave(ggpubr::as_ggplot(det.legend), filename = "Figura_22_legend.png", path = "/Users/Artemis/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", dpi = 600)
+ggsave(plot = det, filename = "Figura_22_relative_contribution_PPE_ASV_type.png", path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", width = 12, height = 15, dpi = 600)
+ggsave(ggpubr::as_ggplot(det.legend), filename = "Figura_22_legend.png", path = "/Documents/GitHub/CORE/Camilo/Analisis/Figuras/", dpi = 600)
 ```
 
 #Abundance
