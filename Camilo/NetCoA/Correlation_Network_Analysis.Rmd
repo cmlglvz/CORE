@@ -31,7 +31,7 @@ rel.abun <- function(data){
 Para facilitar el trabajo del código llamaremos a las tablas de abundancia *"t"* y les daremos un número correlativo correspondiente: Chañaral, Flamenco, Huasco, Punta de Choros, Quintero, Las Cruces.
 En caso de tener problemas: 1) Inica R como administrador; 2) Crea las carpetas antes de correr el scritp; o 3) Indica minuciosamente el recorrido del directorio correspondiente
 ```{r struc, echo=TRUE, message=FALSE, warning=FALSE, include=FALSE}
-setwd("D:/Documents/GitHub/CORE/Camilo/NetCoA/")
+setwd("~/Documents/GitHub/CORE/Camilo/NetCoA/")
 node_t <- list()
 for (y in 1:6) {
   #Llamamos a los datos, con str_glue logramos que llame a las 6 distintas
@@ -41,9 +41,9 @@ for (y in 1:6) {
   #Análisis de correlación de Spearman ajustando el valor de p con false discovery rate
   tcor <- psych::corr.test(t, method = "spearman", adjust = "fdr", alpha = .05, ci = FALSE)
   #Guardamos el resultado con valores de r (una tabla)
-  write.table(tcor$r, str_glue("D:/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{y}/tr{y}.csv"), sep = "\t", dec = ".")
+  write.table(tcor$r, str_glue("~/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{y}/tr{y}.csv"), sep = "\t", dec = ".")
   #Guardamos el resultado con valores de p (una tabla)
-  write.table(tcor$p, str_glue("D:/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{y}/tr{y}.csv"), sep = "\t", dec = ".")
+  write.table(tcor$p, str_glue("~/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{y}/tr{y}.csv"), sep = "\t", dec = ".")
   #Preparamos unos objetos para el loop
   names <- NULL
   datar <- NULL
@@ -66,8 +66,8 @@ for (y in 1:6) {
   #Creamos un objeto en el que vamos a ir guardando las características de cada nodo, partiendo por su abundancia relativa.
   #Solo nos quedaremos con aquellos nodos que hayan representado al menos una interacción importante (que haya pasado el filtro)
   node_t[[y]] <- abundance %>% dplyr::filter(From %in% c(tcytos$From, tcytos$to)) %>% rename("Node" = "From")
-  write.table(node_t[[y]],str_glue("D:/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{y}/node_mat_t{y}.csv",sep = "\t",dec = ".",row.names = FALSE))
-  write.table(tcytos,str_glue("D:/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{y}/adj_mat_t{y}.csv"),sep = "\t",dec = ".",row.names = FALSE)
+  write.table(node_t[[y]],str_glue("~/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{y}/node_mat_t{y}.csv",sep = "\t",dec = ".",row.names = FALSE))
+  write.table(tcytos,str_glue("~/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{y}/adj_mat_t{y}.csv"),sep = "\t",dec = ".",row.names = FALSE)
 }
 
 #view(tcytos)
@@ -85,7 +85,7 @@ for (i in 1:dim(path_u)[1]) {
   ulist[[i]] <- read.table(paste0(path_u[i,1], path_u[i,2], path_u[i,3]), sep = ";", h = FALSE)
   node_t_class[[i]] <- node_t[[i]] %>% 
     dplyr::mutate("Node_Category" = case_when(Node %in%  t(ulist[[i]])[,1]~"Unique", Node %in% t(shared[1,-1])~"Shared", TRUE~"Other"))
-  write.table(node_t_class[[i]],str_glue("D:/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{i}/node_mat_t{i}.csv"), sep = "\t", dec = ".")
+  write.table(node_t_class[[i]],str_glue("~/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{i}/node_mat_t{i}.csv"), sep = "\t", dec = ".")
 }
 
 par(mfrow = c(2,3))
@@ -95,7 +95,7 @@ for (i in 1:6) {
   ASVs[i,] <- table(node_t_class[[i]]$Node_Category)
 }
 ASVs2 <- ASVs %>% dplyr::mutate(Site = path_u[,2])
-write.table(ASVs2, "D:/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/other_results/ASVs_class.csv", row.names = FALSE)
+write.table(ASVs2, "~/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/other_results/ASVs_class.csv", row.names = FALSE)
 ```
 
 #Igraph object
@@ -105,8 +105,8 @@ edgelist <- list()
 nodelist <- list()
 graphlist <- list()
 for (x in 1:6) {
-  nodelist[[x]] <- read.table(str_glue("D:/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{x}/node_mat_t{x}.csv"), sep = "\t", dec = ".", header = TRUE) %>% relocate(Node)
-  data <- read.table(str_glue("D:/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{x}/adj_mat_t{x}.csv"), sep = "\t", dec = ".", header = TRUE)
+  nodelist[[x]] <- read.table(str_glue("~/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{x}/node_mat_t{x}.csv"), sep = "\t", dec = ".", header = TRUE) %>% relocate(Node)
+  data <- read.table(str_glue("~/Documents/GitHub/CORE/Camilo/NetCoA/net_creation/t{x}/adj_mat_t{x}.csv"), sep = "\t", dec = ".", header = TRUE)
   #nodelist[[x]] <- node_t_class[[x]]
   edgelist[[x]] <- data %>% select(From, to)
   #nodelist[[x]] <- data %>% pivot_longer(c(From, to)) %>% distinct(value, .keep_all = TRUE) %>% select(value, colMeans..t..,From_type, To_type)
@@ -172,7 +172,7 @@ barplot(nets_stats$Modularity~nets_stats$Net)
 #Net plots
 ```{r nplots, echo=TRUE, message=FALSE, warning=FALSE, include=TRUE}
 sites <- c("Chañaral", "Flamenco", "Huasco", "Punta Choros", "Quintero", "Las Cruces")
-pal <- c("#9CAFB7", "#2B2D42", "#EF233C")
+pal <- c("#DCE2E5", "#2B2D42", "#EF233C")
 par(mfrow = c(2,3))
 for (x in 1:6) {
   set.seed(1000)
@@ -210,25 +210,25 @@ degs <- deg
 degs[[4]] <- NULL
 degs <- degs %>% bind_rows()
 deg2 <- deg %>% bind_rows()
-ggplot(deg, aes(y = Total, x = Net, fill = factor(Var1, levels = c("Other", "Unique", "Shared")))) + 
+ggplot(degs, aes(y = Total, x = Net, fill = factor(Var1, levels = c("Other", "Unique", "Shared")))) + 
   geom_col() + 
-  scale_fill_manual(name = "ASV Category", values = c("#9CAFB7", "#2B2D42", "#EF233C"))
+  scale_fill_manual(name = "ASV Category", values = c("#2B2D42", "#DCE2E5", "#EF233C"))
 ggplot(deg2, aes(y = Total, x = Net, fill = factor(Var1, levels = c("Other", "Unique", "Shared")))) + 
   geom_col() + 
-  scale_fill_manual(name = "ASV Category", values = c("#9CAFB7", "#2B2D42", "#EF233C"))
+  scale_fill_manual(name = "ASV Category", values = c("#2B2D42", "#DCE2E5", "#EF233C"))
 nods <- nod
 nods[[4]] <- NULL
 nods <- nod %>% bind_rows()
 nod2 <- nod %>% bind_rows()
 ggplot(nods, aes(y = Total, x = Net, fill = factor(Var1, levels = c("Other", "Unique", "Shared")))) + 
   geom_col() + 
-  scale_fill_manual(name = "ASV Category", values = c("#9CAFB7", "#2B2D42", "#EF233C"))
+  scale_fill_manual(name = "ASV Category", values = c("#2B2D42", "#DCE2E5", "#EF233C"))
 ggplot(nod2, aes(y = Total, x = Net, fill = factor(Var1, levels = c("Other", "Unique", "Shared")))) + 
   geom_col() + 
-  scale_fill_manual(name = "ASV Category", values = c("#9CAFB7", "#2B2D42", "#EF233C"))
+  scale_fill_manual(name = "ASV Category", values = c("#2B2D42", "#DCE2E5", "#EF233C"))
 
-ggplot(nods, aes(y = Freq, x = Net, fill = Freq)) + geom_col()
-ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]])
+ggplot(nod2, aes(y = Freq, x = Net, fill = Freq)) + geom_col()
+#ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]], plots[[6]])
 ```
 
 #Clustering
