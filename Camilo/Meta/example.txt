@@ -1,0 +1,512 @@
+node_size = Chanaral,
+node_color = Chanaral,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Chañaral")
+set.seed(420)
+axat %>% filter_taxa(Chanaral >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Chanaral,
+node_color = Chanaral,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Chañaral")
+axat %>% filter_taxa(Flamenco >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Flamenco,
+node_color = Flamenco,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Flamenco")
+set.seed(420)
+axat %>% filter_taxa(Flamenco >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Flamenco,
+node_color = Flamenco,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Flamenco")
+set.seed(420)
+axat %>% filter_taxa(Huasco >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Huasco,
+node_color = Huasco,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Huasco")
+set.seed(420)
+axat %>% filter_taxa(Huasco >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Huasco,
+node_color = Huasco,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Huasco")
+set.seed(420)
+axat %>% filter_taxa(Huasco >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Huasco,
+node_color = Huasco,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Huasco")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = 16:9,
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = 70:100,
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = 100:70,
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = 3000:5000,
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(3000,5000),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = 3000,
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(10000,8000),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(9:16),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1:2),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1:1.1),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.1:1),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.5:1),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.3:1),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.4:1),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Pta.Choros >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Pta.Choros,
+node_color = Pta.Choros,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.45:1),
+title = "Taxa in Pta.Choros")
+set.seed(420)
+axat %>% filter_taxa(Quintero >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Quintero,
+node_color = Quintero,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Quintero")
+dev.off()
+set.seed(420)
+axat %>% filter_taxa(Quintero >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Quintero,
+node_color = Quintero,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Quintero")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Las Cruces")
+dev.off()
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.2:0.9),
+title = "Taxa in Las Cruces")
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.45:0.9),
+title = "Taxa in Las Cruces")
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.45:1),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.45:1),
+title = "Taxa in Las Cruces")
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.5:1),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.5:1),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.5:0.9),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.1:0.9),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.8:0.9),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1.8:1.1),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(0.9:1),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(1:1),
+title = "Taxa in Las Cruces")
+set.seed(420)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(0.95:1.1),
+title = "Taxa in Las Cruces")
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(0.95:1.1),
+title = "Taxa in Las Cruces")
+set.seed(1000)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(0.95:1.1),
+title = "Taxa in Las Cruces")
+set.seed(1)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(0.95:1.1),
+title = "Taxa in Las Cruces")
+set.seed(2)
+axat %>% filter_taxa(Las.Cruces >= 1) %>%
+heat_tree(node_label = taxon_names,
+node_size = Las.Cruces,
+node_color = Las.Cruces,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+aspect_ratio = c(0.95:1.1),
+title = "Taxa in Las Cruces")
+axat %>%
+heat_tree(node_label = taxon_names,
+layout = "kamada-kawai",
+initial_layout = "fruchterman-reingold",
+title = "Taxa in HCS")
+View(axat)
+set.seed(2)
+axat %>%
+heat_tree(node_label = taxon_names,
+layout = "kamada-kawai",
+node_color = c("Chanaral", "Flamenco", "Huasco", "Pta.Choros", "Quintero", "Las.Cruces"),
+initial_layout = "fruchterman-reingold",
+title = "Taxa in HCS")
+axat
+set.seed(2)
+axat %>%
+heat_tree(node_label = taxon_names,
+layout = "kamada-kawai",
+node_color = taxon_id,
+initial_layout = "fruchterman-reingold",
+title = "Taxa in HCS")
+set.seed(2)
+axat %>%
+heat_tree(node_label = taxon_names,
+layout = "kamada-kawai",
+node_color = Chanaral,
+initial_layout = "fruchterman-reingold",
+title = "Taxa in HCS")
+set.seed(2)
+axat %>%
+heat_tree(node_label = taxon_names,
+layout = "kamada-kawai",
+node_color = type_abund,
+initial_layout = "fruchterman-reingold",
+title = "Taxa in HCS")
+set.seed(2)
+axat %>%
+heat_tree(node_label = taxon_names,
+layout = "kamada-kawai",
+node_color = axat$type_abund,
+initial_layout = "fruchterman-reingold",
+title = "Taxa in HCS")
+set.seed(2)
+axat %>%
+heat_tree(node_label = taxon_names,
+layout = "kamada-kawai",
+node_color = sum(axat$type_abund),
+initial_layout = "fruchterman-reingold",
+title = "Taxa in HCS")
+View(axat)
+edit <- axat$data$type_abund
+edit
+edit <- add_column(edit, Total = rowSums(edit[c(2:7)]))
+edit
+axat$data$type_abund <- edit
+axat$data$type_abund
+set.seed(2)
+axat %>%
+heat_tree(node_label = taxon_names,
+node_size = Total,
+layout = "kamada-kawai",
+node_color = Total,
+initial_layout = "fruchterman-reingold",
+title = "Taxa in HCS")
+save.image("D:/Documents/GitHub/CORE/Camilo/Otros/LOCURILLA/locurilla.RData")
+#Libraries
+library(tidyverse)
+#Data
+data <- read.csv("./Camilo/Meta/Data/HCS_PPE_Taxonomic_And_Abundance_V2.csv",
+header = TRUE,
+sep = ";",
+skip = 0,
+row.names = 1)
+View(data)
+abund <- data[,c(3:65)]
+View(abund)
+abund <- as.data.frame(t(data[,c(3:65)]))
+View(abund)
+taxa <- data[,c(1:2,73:80)]
+View(taxa)
+unique(taxa$Kingdom)
+#FASTA
+nms <- paste(data$ASV, data$Species, sep = "_")
+fasta <- data.frame(names = nms, sequences = all_of(data$Seq))
+fasta <- function() {
+all_of(data.frame(
+names = nms,
+sequences = data$Seq
+))
+}
+data$Seq
+fasta <- data.frame(names = nms, sequences = data$Seq)
+View(fasta)
+devtools::install_github("helixcn/seqRFLP")
+seqRFLP::dataframe2fas(fasta, "./Camilo/Meta/Data/hcs_ppe_asv.fasta")
+library(DECIPHER)
+#ALIGNMENT & DENDROGRAM
+multialign <- "./Camilo/Meta/Data/hcs_ppe_multialign.afa"
+dbConn <-dbConnect(SQLite(), ":memory:")
+Seqs2DB(multialign, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendrogram <- TreeLine(myDistMatrix = distance.matrix,
+method = "ML",
+showPlot = TRUE,
+type = "dendrogram",
+myXStringSet = consensus,
+processors = NULL,
+verbose = TRUE)
+#Transition rates = 3.921
+#Transversion rates = 1
+#Alpha = 0.360
+#Time difference of 88481.48 secs
+dbDisconnect(dbConn)
+history()
+savehistory("./Camilo/Meta/example.txt")
