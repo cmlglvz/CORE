@@ -119,3 +119,33 @@ dendro <- TreeLine(myDistMatrix = distance.matrix,
 #Time difference of 1144.36 secs
 dbDisconnect(dbConn)
 
+#Dendrogram edition
+bandana <- as.dendrogram(as.hclust(dendro)) %>% dendextend::set("branches_lwd", 0.3) %>% dendextend::ladderize(right = TRUE) 
+plot(bandana)
+
+#Heatmapping
+incel <- sha.abund
+colnames(incel) <- nombres
+ihell <- decostand(incel,method = "hellinger", MARGIN = 1)
+#labdsv::hellinger(simp) alternative
+ibray <- vegdist(ihell, method = "bray", diag = TRUE)
+igned <-readDNAMultipleAlignment(malign, format = "fasta")
+ismatrix <- as.matrix(igned) %>% rownames() %>% as.vector()
+print(all(colnames(ihell)%in%gtools::mixedsort(ismatrix, decreasing = FALSE)))
+mapacalor <- heatmaply(normalize(ihell), 
+                       Colv = iclust, 
+                       Rowv = FALSE, 
+                       main = "HCS shared PPE ASVs with sequences clustered by maximum likelihood", 
+                       color = viridis(n = 256, 
+                                       alpha = 1, 
+                                       begin = 0, 
+                                       end = 1, 
+                                       option = "rocket")
+                       )
+saveWidget(mapacalor, "./Camilo/Meta/Products/shared_ppe_heatmap.html")
+
+
+
+
+
+vegan::adonis()
