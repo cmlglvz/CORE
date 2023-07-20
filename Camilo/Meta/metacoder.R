@@ -71,3 +71,51 @@ heatmap <- heatmaply(normalize(hell),
 saveWidget(heatmap, "./Camilo/Meta/Products/heatmap.html")
 #Hasta acá la wea queda malísima, veamos que sucede cuando identifico o lo hago sólo con las compartidas.
 
+#Shared sequences across all sites
+prePA <- as.data.frame(t(abund))
+prePA <- dplyr::mutate(prePA,
+                       CHA = rowSums(prePA[c(1:12)]),
+                       FLA = rowSums(prePA[c(13:24)]),
+                       HUA = rowSums(prePA[c(25:36)]),
+                       PCH = rowSums(prePA[c(37:41)]),
+                       QUI = rowSums(prePA[c(42:51)]),
+                       LCS = rowSums(prePA[c(52:63)]),
+                       Total = rowSums(prePA[c(1:63)]),
+                       .after = "L4A18")
+PreAbs <- decostand(prePA, method = "pa")
+shared <- dplyr::filter(PreAbs, CHA == 1 & FLA == 1 & HUA == 1 & PCH == 1 & QUI == 1 & LCS == 1)
+sha.abund <- dplyr::select(abund, rownames(shared))
+sha.taxa <- taxa[taxa$Seq%in%rownames(shared),]
+
+#FASTA SHARED PPE
+nombres <- paste(sha.taxa$ASV, sha.taxa$Species, sep = "_")
+sha.fasta <- data.frame(names = nombres, sequences = sha.taxa$Seq)
+seqRFLP::dataframe2fas(sha.fasta, "./Camilo/Meta/Data/hcs_shared_ppe_asv.fasta")
+
+malign <- "./Camilo/Meta/Data/hcs_shared_ppe_multialign.fasta"
+dbConn <-dbConnect(SQLite(), ":memory:")
+Seqs2DB(malign, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendro <- TreeLine(myDistMatrix = distance.matrix, 
+                   method = "ML", 
+                   showPlot = TRUE, 
+                   type = "dendrogram", 
+                   myXStringSet = consensus, 
+                   processors = NULL, 
+                   verbose = TRUE)
+#attributes(dendro)
+#Selected model = "HKY85+G4"
+#Model parameters:
+    #Frequency(A) = 0.180
+    #Frequency(C) = 0.210
+    #Frequency(G) = 0.290
+    #Frequency(T) = 0.320
+    #Transition rates = 3.336
+    #Transversion rates = 1
+    #Alpha = 0.342
+#Time difference of 1144.36 secs
+dbDisconnect(dbConn)
+
