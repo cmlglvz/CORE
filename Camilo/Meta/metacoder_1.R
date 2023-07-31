@@ -1,13 +1,16 @@
 #Libraries
 library(tidyverse)
+library(data.table)
+library(Biostrings)
 library(DECIPHER)
-library(dendextend)
 library(vegan)
-library(gtools)
+library(UpSetR)
+library(leaflet)
+library(dendextend)
+library(treemap)
 library(heatmaply)
 library(htmlwidgets)
-library(taxa)
-library(metacoder)
+library(hrbrthemes)
 
 #Data
 data <- read.csv("./Camilo/Meta/Data/HCS_PPE_Taxonomic_And_Abundance_V2.csv", 
@@ -15,7 +18,12 @@ data <- read.csv("./Camilo/Meta/Data/HCS_PPE_Taxonomic_And_Abundance_V2.csv",
                  sep = ";",  
                  skip = 0, 
                  row.names = 1)
-
+pr2v5 <- read.csv("./Camilo/Meta/Data/HCS_PPE_taxa_assign_pr2v5.csv", 
+                  header = TRUE, 
+                  sep = ";", 
+                  skip = 0, 
+                  row.names = 1)
+print(all(rownames(data)%in%rownames(pr2v5)))
 abund <- as.data.frame(t(data[,c(3:65)]))
 taxa <- data[,c(1:2,73:80)]
 

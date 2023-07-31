@@ -1,0 +1,165 @@
+---
+title: "metacoder"
+author: "Camilo Gálvez A."
+date: "2023-07-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = TRUE, include = FALSE, warning = FALSE)
+```
+
+## Libraries
+```{r}
+library(tidyverse)
+library(data.table)
+library(Biostrings)
+library(DECIPHER)
+library(vegan)
+library(UpSetR)
+library(leaflet)
+library(dendextend)
+library(treemap)
+library(heatmaply)
+library(htmlwidgets)
+library(hrbrthemes)
+library(metacoder)
+```
+
+## Data
+```{r}
+data <- read.csv("./Data/HCS_PPE_Taxonomic_And_Abundance_V2.csv", 
+                 header = TRUE, 
+                 sep = ";",  
+                 skip = 0, 
+                 row.names = 1)
+
+pr2v5 <- read.csv("./Data/HCS_PPE_taxa_assign_pr2v5.csv", 
+                  header = TRUE, 
+                  sep = ";", 
+                  skip = 0, 
+                  row.names = 1) %>% 
+  add_column(Seq = data$Seq, .before = "Kingdom", .name_repair = "minimal") %>% 
+  add_column(ASV = data$ASV, .before = "Kingdom", .name_repair = "minimal")
+write.csv2(pr2v5, "./Data/ppe_asv_taxa_updated.csv")
+
+env <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/HCS_Metal_Environment_NMDS.csv", 
+                header = TRUE, 
+                sep = ";", 
+                dec = ",", 
+                row.names = 1)
+env$Date <- factor(env$Date, levels = unique(env$Date))
+env$Label <- factor(env$Label, levels = unique(env$Label))
+env$Site <- factor(env$Site, levels = unique(env$Site))
+env$Cu.lvl <- factor(env$Cu.lvl, levels = unique(env$Cu.lvl))
+env$Samples <- factor(env$Samples, levels = unique(env$Samples))
+
+abund <- as.data.frame(t(data[,c(3:65)]))
+taxa <- data[,c(1:2,73:80)]
+#print(all(rownames(taxa)%in%rownames(pr2v5)))
+```
+
+## Shared ASV
+```{r}
+print(all(colnames(abund%in%rownames(pr2v5))))
+prePA <- as.data.frame(t(abund))
+prePA <- dplyr::mutate(prePA,
+                       CHA = rowSums(prePA[c(1:12)]),
+                       FLA = rowSums(prePA[c(13:24)]),
+                       HUA = rowSums(prePA[c(25:36)]),
+                       PCH = rowSums(prePA[c(37:41)]),
+                       QUI = rowSums(prePA[c(42:51)]),
+                       LCS = rowSums(prePA[c(52:63)]),
+                       Total = rowSums(prePA[c(1:63)]),
+                       .after = "L4A18")
+PreAbs <- decostand(prePA, method = "pa")
+shared <- dplyr::filter(PreAbs, CHA == 1 & FLA == 1 & HUA == 1 & PCH == 1 & QUI == 1 & LCS == 1)
+sha.abund <- dplyr::select(abund, rownames(shared))
+write.csv2(sha.abund, "./Data/shared_ppe_abundance.csv")
+sha.taxa <- pr2v5[pr2v5$Seq%in%rownames(shared),]
+write.csv2(sha.taxa, "./Data/shared_ppe_taxa.csv")
+#Externally edit
+sha.taxad <- read.csv("./Data/shared_ppe_taxa_edited.csv", 
+                      header = TRUE,
+                      sep = ";", 
+                      skip = 0, 
+                      row.names = 1)
+```
+
+## FASTA shared ASV
+```{r}
+nombres <- paste(sha.taxad$ASV, sha.taxad$Species, sep = "_")
+sha.fasta <- data.frame(names = nombres, sequences = sha.taxad$Seq)
+seqRFLP::dataframe2fas(sha.fasta, "./Data/shared_asv.fasta")
+```
+
+## Dendrogram with maximum likelihood
+```{r}
+malign <- "./Data/shared_malign.fasta"
+dbConn <-dbConnect(SQLite(), ":memory:")
+Seqs2DB(malign, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendro <- TreeLine(myDistMatrix = distance.matrix, 
+                   method = "ML", 
+                   showPlot = TRUE, 
+                   type = "dendrogram", 
+                   myXStringSet = consensus, 
+                   processors = NULL, 
+                   verbose = TRUE)
+dbDisconnect(dbConn)
+attributes(dendro)
+```
+
+## Dendrogram edition
+```{r}
+iclust <- as.dendrogram(as.hclust(dendro)) %>% dendextend::set("branches_lwd", 0.3) %>% dendextend::ladderize(right = TRUE) 
+plot(iclust)
+```
+
+## Heatmap
+```{r}
+incel <- sha.abund
+colnames(incel) <- nombres
+taligned <-readDNAMultipleAlignment(malign, format = "fasta")
+tmatrix <- as.matrix(taligned) %>% rownames() %>% as.vector()
+print(all(colnames(incel)%in%gtools::mixedsort(tmatrix, decreasing = FALSE)))
+sortincel <- incel[, rownames(as.matrix(taligned))]
+ihell <- decostand(sortincel,method = "hellinger")
+brayc <- vegdist(ihell, method = "bray", diag = TRUE)
+
+calor <- heatmaply(normalize(ihell), 
+                   Colv = iclust, 
+                   Rowv = FALSE, 
+                   colors = viridis(n = 256, 
+                                    alpha = 1, 
+                                    begin = 0, 
+                                    end = 1, 
+                                    direction = -1, 
+                                    option = "rocket"), 
+                   main = "Shared PPE ASVs clustered by maximum likelihood")
+
+saveWidget(calor, "./Products/heatmap_shared_ppe_asv.html")
+```
+
+## Metacoder
+```{r}
+taxas <- read.csv("./Data/ppe_asv_taxa_updated.csv", header = TRUE, sep = ";", row.names = 1, skip = 0)
+unique(taxas$Kingdom)
+taxas[is.na(taxas)] <- "Unclassified"
+rownames(taxas) <- pr2v5$ASV
+taxas <- as.matrix(taxas)
+
+abunds <- t(abund)
+rownames(abunds) <- pr2v5$ASV
+abunds <- as.matrix(abunds)
+
+axats <- metacoder::parse_tax_data(tax_data = as_tibble(taxas), 
+                                   datasets = list(Abundance = as_tibble(abunds, rownames = "ASV")),
+                                   mappings = c("ASV" = "ASV"), 
+                                   class_cols = 3:11)
+print(axat)
+```
+
