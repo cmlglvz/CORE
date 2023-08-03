@@ -1,0 +1,352 @@
+---
+title: "metacoder"
+author: "Camilo Gálvez A."
+date: "2023-07-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = TRUE, include = FALSE, warning = FALSE)
+```
+
+## Libraries
+```{r}
+library(tidyverse)
+library(data.table)
+library(Biostrings)
+library(DECIPHER)
+library(vegan)
+library(UpSetR)
+library(leaflet)
+library(dendextend)
+library(treemap)
+library(heatmaply)
+library(htmlwidgets)
+library(hrbrthemes)
+library(metacoder)
+```
+
+## Data
+```{r}
+data <- read.csv("./Data/HCS_PPE_Taxonomic_And_Abundance_V2.csv", 
+                 header = TRUE, 
+                 sep = ";",  
+                 skip = 0, 
+                 row.names = 1)
+
+pr2v5 <- read.csv("./Data/HCS_PPE_taxa_assign_pr2v5.csv", 
+                  header = TRUE, 
+                  sep = ";", 
+                  skip = 0, 
+                  row.names = 1) %>% 
+  add_column(Seq = data$Seq, .before = "Kingdom", .name_repair = "minimal") %>% 
+  add_column(ASV = data$ASV, .before = "Kingdom", .name_repair = "minimal")
+write.csv2(pr2v5, "./Data/ppe_asv_taxa_updated.csv")
+
+env <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/HCS_Metal_Environment_NMDS.csv", 
+                header = TRUE, 
+                sep = ";", 
+                dec = ",", 
+                row.names = 1)
+env$Date <- factor(env$Date, levels = unique(env$Date))
+env$Label <- factor(env$Label, levels = unique(env$Label))
+env$Site <- factor(env$Site, levels = unique(env$Site))
+env$Cu.lvl <- factor(env$Cu.lvl, levels = unique(env$Cu.lvl))
+
+abund <- as.data.frame(t(data[,c(3:65)]))
+abunds <- abund
+colnames(abunds) <- pr2v5$ASV
+abunds <- as.data.frame(t(abunds))
+write.csv2(abunds, "./Data/ppe_asv_abundance_updated.csv")
+taxa <- data[,c(1:2,73:80)]
+#print(all(rownames(taxa)%in%rownames(pr2v5)))
+```
+
+## Shared ASV
+```{r}
+print(all(colnames(abund%in%rownames(pr2v5))))
+prePA <- as.data.frame(t(abund))
+prePA <- dplyr::mutate(prePA,
+                       CHA = rowSums(prePA[c(1:12)]),
+                       FLA = rowSums(prePA[c(13:24)]),
+                       HUA = rowSums(prePA[c(25:36)]),
+                       PCH = rowSums(prePA[c(37:41)]),
+                       QUI = rowSums(prePA[c(42:51)]),
+                       LCS = rowSums(prePA[c(52:63)]),
+                       Total = rowSums(prePA[c(1:63)]),
+                       .after = "L4A18")
+PreAbs <- decostand(prePA, method = "pa")
+shared <- dplyr::filter(PreAbs, CHA == 1 & FLA == 1 & HUA == 1 & PCH == 1 & QUI == 1 & LCS == 1)
+sha.abund <- dplyr::select(abund, rownames(shared))
+write.csv2(sha.abund, "./Data/shared_ppe_abundance.csv")
+sha.taxa <- pr2v5[pr2v5$Seq%in%rownames(shared),]
+write.csv2(sha.taxa, "./Data/shared_ppe_taxa.csv")
+#Externally edit
+sha.taxad <- read.csv("./Data/shared_ppe_taxa_edited.csv", 
+                      header = TRUE,
+                      sep = ";", 
+                      skip = 0, 
+                      row.names = 1)
+```
+
+## FASTA shared ASV
+```{r}
+nombres <- paste(sha.taxad$ASV, sha.taxad$Species, sep = "_")
+sha.fasta <- data.frame(names = nombres, sequences = sha.taxad$Seq)
+seqRFLP::dataframe2fas(sha.fasta, "./Data/shared_asv.fasta")
+```
+
+## Dendrogram with maximum likelihood
+```{r}
+malign <- "./Data/shared_malign.fasta"
+dbConn <-dbConnect(SQLite(), ":memory:")
+Seqs2DB(malign, type = "FASTA", dbFile = dbConn, "")
+x <- dbGetQuery(dbConn, "select description from Seqs")$description
+Add2DB(myData = data.frame(identifier = x, stringsAsFactors = FALSE), dbConn)
+consensus <- IdConsensus(dbConn, threshold = 0.3, minInformation = 0.1)
+distance.matrix <- DistanceMatrix(consensus, correction = "Jukes-Cantor", processors = NULL, verbose = TRUE)
+dendro <- TreeLine(myDistMatrix = distance.matrix, 
+                   method = "ML", 
+                   showPlot = TRUE, 
+                   type = "dendrogram", 
+                   myXStringSet = consensus, 
+                   processors = NULL, 
+                   verbose = TRUE)
+dbDisconnect(dbConn)
+attributes(dendro)
+```
+
+## Dendrogram edition
+```{r}
+iclust <- as.dendrogram(as.hclust(dendro)) %>% dendextend::set("branches_lwd", 0.3) %>% dendextend::ladderize(right = TRUE) 
+plot(iclust)
+```
+
+## Heatmap
+```{r}
+incel <- sha.abund
+colnames(incel) <- nombres
+taligned <-readDNAMultipleAlignment(malign, format = "fasta")
+tmatrix <- as.matrix(taligned) %>% rownames() %>% as.vector()
+print(all(colnames(incel)%in%gtools::mixedsort(tmatrix, decreasing = FALSE)))
+sortincel <- incel[, rownames(as.matrix(taligned))]
+ihell <- decostand(sortincel,method = "hellinger")
+brayc <- vegdist(ihell, method = "bray", diag = TRUE)
+
+calor <- heatmaply(normalize(ihell), 
+                   Colv = iclust, 
+                   Rowv = FALSE, 
+                   colors = viridis(n = 256, 
+                                    alpha = 1, 
+                                    begin = 0, 
+                                    end = 1, 
+                                    direction = -1, 
+                                    option = "rocket"), 
+                   main = "Shared PPE ASVs clustered by maximum likelihood")
+
+saveWidget(calor, "./Products/heatmap_shared_ppe_asv.html")
+```
+
+```{r}
+# specify the path to the FASTA file (in quotes)
+fas <- "./Data/shared_asv.fasta"
+
+# load the sequences from the file
+seqs <- readDNAStringSet(fas)
+
+# remove any gaps (if needed)
+seqs <- RemoveGaps(seqs)
+
+# for help, see the IdTaxa help page (optional)
+?IdTaxa
+
+# load a training set object (trainingSet)
+# see http://DECIPHER.codes/Downloads.html
+decipher.trained <- readRDS("X:/Documents/Proyectos_R/IDTAXA/data/pr2_version_5.0.0_SSU.decipher.trained.rds")
+
+# classify the sequences
+ids <- IdTaxa(seqs, 
+              decipher.trained, 
+              strand = "both", 
+              threshold = 60, 
+              processors = NULL, 
+              verbose = TRUE)
+
+# look at the results
+print(ids)
+plot(ids)
+```
+
+
+## Metacoder
+```{r}
+abundance <- read.csv("~/CORE/Camilo/Meta/Win/Data/ppe_asv_abundance_updated.csv", header = T, sep = ";", skip = 0, row.names = 1)
+abundance <- abundance[-682,]
+
+taxas <- read.csv("C:/Users/Administrador/Dropbox/Proyecto/Meta/Data/ppe_asv_taxa_updated.csv", header = TRUE, sep = ";", skip = 0)
+
+env <- read.csv("~/CORE/Camilo/Analisis/PPE/Shared/HCS_Metal_Environment_NMDS.csv", 
+                header = TRUE, 
+                sep = ";", 
+                dec = ",", 
+                row.names = 1)
+env$Date <- factor(env$Date, levels = unique(env$Date))
+env$Label <- factor(env$Label, levels = unique(env$Label))
+env$Site <- factor(env$Site, levels = unique(env$Site))
+env$Cu.lvl <- factor(env$Cu.lvl, levels = unique(env$Cu.lvl))
+
+axatas <- metacoder::parse_tax_data(tax_data = taxas, 
+                                    datasets = list(abund_data = as_tibble(abundance, rownames = "ASV")), 
+                                    mappings = c("ASV" = "ASV"), 
+                                    class_cols = "Lineage", 
+                                    class_sep = ";", 
+                                    class_regex = "^(.+)__(.+)$", 
+                                    class_key = c(tax_rank = "info",
+                                                  taxon_name = "taxon_name"))
+axatas$data$site_abund <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples, groups = env$Site)
+axatas$data$sample_abund <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples)
+no_reads <- rowSums(axatas$data$counts[, env$Samples]) == 0
+
+set.seed(420)
+axatas %>% 
+  filter_taxa(Chanaral >= 0) %>% 
+  heat_tree(node_label = taxon_names, 
+            node_size = Chanaral, 
+            node_color = Chanaral, 
+            layout = "kamada-kawai", 
+            initial_layout = "fruchterman-reingold", 
+            title = "Taxa in Chañaral")
+
+set.seed(420) 
+axatas %>% 
+  filter_taxa(Flamenco >= 0) %>% 
+  heat_tree(node_label = taxon_names, 
+            node_size = Flamenco, 
+            node_color = Flamenco, 
+            layout = "kamada-kawai", 
+            initial_layout = "fruchterman-reingold", 
+            title = "Taxa in Flamenco")
+```
+
+## Plotting
+```{r}
+set.seed(420) # This makes the plot appear the same each time it is run 
+heat_tree(axatas, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Chanaral, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "kamada-kawai", # The primary layout algorithm
+          initial_layout = "fruchterman-reingold",
+          title = "Algo en Chañaral") # The layout algorithm that initializes node locations
+
+set.seed(420)
+heat_tree(axatas, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Flamenco, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "kamada-kawai", 
+          initial_layout = "fruchterman-reingold",
+          title = "Algo en Flamenco")
+
+set.seed(420)
+heat_tree(axatas, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Huasco, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "kamada-kawai", 
+          initial_layout = "fruchterman-reingold",
+          title = "Algo en Huasco")
+
+set.seed(420)
+heat_tree(axatas, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Pta.Choros, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "kamada-kawai", 
+          initial_layout = "fruchterman-reingold",
+          title = "Algo en Punta de Choros")
+
+set.seed(420)
+heat_tree(axatas, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Quintero, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "kamada-kawai", 
+          initial_layout = "fruchterman-reingold",
+          title = "Algo en Quintero")
+
+set.seed(420)
+heat_tree(axatas, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Las.Cruces, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "kamada-kawai", 
+          initial_layout = "fruchterman-reingold",
+          title = "Algo en Las Cruces")
+```
+
+## Comparing groups
+Usually we are interested in how groups of samples compare. For example, we might want to know which taxa differ between the nose and throat, or between men and women. The function compare_groups facilitates these comparisons:
+```{r}
+axatas$data$abund_data <- calc_obs_props(axatas, "abund_data")
+axatas$data$rel_abund <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples)
+axatas$data$diff_table <- compare_groups(axatas,
+                                         dataset = "rel_abund", 
+                                         cols = env$Samples, 
+                                         groups = env$Site)
+
+set.seed(420)
+heat_tree(axatas, 
+          node_label = taxon_names,
+          node_size = n_obs, 
+          node_color_interval = c(-2,2),
+          )
+heat_tree(obj, 
+          node_label = taxon_names,
+          node_size = n_obs, # n_obs is a function that calculates, in this case, the number of OTUs per taxon
+          node_color = log2_median_ratio, # A column from `obj$data$diff_table`
+          node_color_interval = c(-2, 2), # The range of `log2_median_ratio` to display
+          node_color_range = c("cyan", "gray", "tan"), # The color palette used
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Log 2 ratio of median proportions",
+          layout = "davidson-harel", # The primary layout algorithm
+          initial_layout = "reingold-tilford") # The layout algorithm that initializes node locations
+```
+
+
+## fastacoder
+```{r}
+fas <- data.frame(names = taxas$ASV, sequences = taxas$Seq)
+seqRFLP::dataframe2fas(fas, "./Data/complete_seqs.fasta")
+# specify the path to the FASTA file (in quotes)
+strngs <- "./Data/complete_seqs.fasta"
+# load the sequences from the file
+seqs <- readDNAStringSet(strngs)
+# remove any gaps (if needed)
+seqs <- RemoveGaps(seqs)
+trained <- readRDS("X:/Documents/Proyectos_R/IDTAXA/data/pr2_version_5.0.0_SSU.decipher.trained.rds")
+# classify the sequences
+ids <- IdTaxa(seqs, 
+              trained, 
+              strand = "both", 
+              threshold = 60, 
+              fullLength = 300,
+              processors = NULL, 
+              verbose = TRUE)
+# look at the results
+print(ids)
+plot(ids)
+```
+
