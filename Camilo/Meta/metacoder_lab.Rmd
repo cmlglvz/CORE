@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, message = TRUE, include = FALSE, warning = FA
 ```
 
 ## Libraries
-```{r}
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
 library(tidyverse)
 library(data.table)
 library(Biostrings)
@@ -27,7 +27,7 @@ library(metacoder)
 ```
 
 ## Data
-```{r}
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
 data <- read.csv("./Data/HCS_PPE_Taxonomic_And_Abundance_V2.csv", 
                  header = TRUE, 
                  sep = ";",  
@@ -89,6 +89,75 @@ sha.taxad <- read.csv("./Data/shared_ppe_taxa_edited.csv",
                       row.names = 1)
 ```
 
+## ASV presents in Chanaral
+```{r}
+abs <- PreAbs
+rownames(abs) <- data$ASV
+chanaral <- abs %>% dplyr::filter(CHA == 1) %>% as_tibble(rownames = "ASV")
+uni.cha <- abs %>% dplyr::filter(CHA == 1 & FLA == 0 & HUA == 0 & PCH == 0 & QUI == 0 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.cha <- chanaral[!chanaral$ASV%in%sha.taxa$ASV,]
+oth.cha <- oth.cha[!oth.cha$ASV%in%uni.cha$ASV,]
+```
+
+## ASV in Flamenco
+```{r}
+flamenco <- abs %>% dplyr::filter(FLA == 1) %>% as_tibble(rownames = "ASV")
+uni.fla <- abs %>% dplyr::filter(CHA == 0 & FLA == 1 & HUA == 0 & PCH == 0 & QUI == 0 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.fla <- flamenco[!flamenco$ASV%in%sha.taxa$ASV,]
+oth.fla <- oth.fla[!oth.fla$ASV%in%uni.fla$ASV,]
+```
+
+## Huasco's ASV
+```{r}
+huasco <- abs %>% dplyr::filter(HUA == 1) %>% as_tibble(rownames = "ASV")
+uni.hua <- abs %>% dplyr::filter(CHA == 0 & FLA == 0 & HUA == 1 & PCH == 0 & QUI == 0 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.hua <- huasco[!huasco$ASV%in%sha.taxa$ASV,]
+oth.hua <- oth.hua[!oth.hua$ASV%in%uni.hua$ASV,]
+```
+
+## Punta de Choros' ASV
+```{r}
+ptachoros <- abs %>% dplyr::filter(PCH == 1) %>% as_tibble(rownames = "ASV")
+uni.pch <- abs %>% dplyr::filter(CHA == 0 & FLA == 0 & HUA == 0 & PCH == 1 & QUI == 0 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.pch <- ptachoros[!ptachoros$ASV%in%sha.taxa$ASV,]
+oth.pch <- oth.pch[!oth.pch$ASV%in%uni.pch$ASV,]
+```
+
+## Quintero's ASV
+```{r}
+quintero <- abs %>% dplyr::filter(QUI == 1) %>% as_tibble(rownames = "ASV")
+uni.qui <- abs %>% dplyr::filter(CHA == 0 & FLA == 0 & HUA == 0 & PCH == 0 & QUI == 1 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.qui <- quintero[!quintero$ASV%in%sha.taxa$ASV,]
+oth.qui <- oth.qui[!oth.qui$ASV%in%uni.qui$ASV,]
+```
+
+## Las Cruces' ASV
+```{r}
+lascruces <- abs %>% dplyr::filter(LCS == 1) %>% as_tibble(rownames = "ASV")
+uni.lcs <- abs %>% dplyr::filter(CHA == 0 & FLA == 0 & HUA == 0 & PCH == 0 & QUI == 0 & LCS == 1) %>% as_tibble(rownames = "ASV")
+oth.lcs <- lascruces[!lascruces$ASV%in%sha.taxa$ASV,]
+oth.lcs <- oth.lcs[!oth.lcs$ASV%in%uni.lcs$ASV,]
+```
+
+## Type dataframe
+```{r}
+uniques <- list(uni.cha,uni.fla,uni.hua,uni.pch,uni.qui,uni.lcs)
+uniques <- uniques %>% purrr::reduce(full_join, by = "ASV")
+uniques <- uniques %>% mutate(Type = rep("Unique", 570), .after = "ASV")
+uniques <- uniques[,c(1,2)]
+compartides <- sha.taxa %>% mutate(Type = rep("Shared", 106), .after = "ASV")
+compartides <- compartides[,c(2,3)]
+others <- pr2v5
+others <- others[!others$ASV%in%uniques$ASV,]
+others <- others[!others$ASV%in%compartides$ASV,]
+others <- others %>% mutate(Type = rep("Other", 646), .after = "ASV")
+others <- others[,c(2,3)]
+Type <- list(uniques,compartides,others)
+Type <- Type %>% purrr::reduce(full_join, by = "ASV")
+Type <- Type[order(Type$ASV, decreasing = FALSE),]
+write.csv2(Type, "./Data/asv_type.csv")
+```
+
 ## FASTA shared ASV
 ```{r}
 nombres <- paste(sha.taxad$ASV, sha.taxad$Species, sep = "_")
@@ -144,7 +213,44 @@ calor <- heatmaply(normalize(ihell),
                                     option = "rocket"), 
                    main = "Shared PPE ASVs clustered by maximum likelihood")
 
+vegde <- heatmaply(normalize(ihell), 
+                   Colv = iclust,
+                   Rowv = FALSE, 
+                   scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(low = "#F3FEE3", 
+                                                                           mid = "#70E000", 
+                                                                           high = "#004B23", 
+                                                                           midpoint = 0.5, 
+                                                                           limits = c(0,1))
+                   )
+blues <- c("#F3FEE3", "#70E000", "#007F5F","#002C3D")
+hielo <- c("#FFFFFF", "#FAFCA0", "#AFFC41", "#143C52")
+
+agzul <- heatmaply(normalize(ihell), 
+                   Colv = iclust,
+                   Rowv = FALSE,
+                   scale_fill_gradient_fun = ggplot2::scale_fill_gradientn(colors = blues,
+                                                                           limits = c(0,1)
+                                                                           )
+                   )
+hielo <- heatmaply(normalize(ihell), 
+                   Colv = iclust,
+                   Rowv = FALSE, 
+                   scale_fill_gradient_fun = ggplot2::scale_fill_gradient2(low = "#F3FEE3", 
+                                                                           mid = "#70E000", 
+                                                                           high = "#086375", 
+                                                                           midpoint = 0.5, 
+                                                                           limits = c(0,1)
+                                                                           )
+                   )
+
 saveWidget(calor, "./Products/heatmap_shared_ppe_asv.html")
+saveWidget(vegde, "./Products/green_shared_ppe_asv.html")
+saveWidget(agzul, "./Products/agzul_shared_heatmap.html")
+saveWidget(hielo, "./Products/hielo_heatmap.html")
+
+#Aprender como usar:
+#reticulate::use_miniconda('r-reticulate')
+#save_image(vegde, "./Products/vegde.png")
 ```
 
 ```{r}
@@ -180,12 +286,12 @@ plot(ids)
 
 ## Metacoder
 ```{r}
-abundance <- read.csv("~/CORE/Camilo/Meta/Win/Data/ppe_asv_abundance_updated.csv", header = T, sep = ";", skip = 0, row.names = 1)
+abundance <- read.csv("./Data/ppe_asv_abundance_updated.csv", header = T, sep = ";", skip = 0, row.names = 1)
 abundance <- abundance[-682,]
+write.csv2(abundance, "./Data/Shared/complete_ppe_abundance.csv")
 
-taxas <- read.csv("C:/Users/Administrador/Dropbox/Proyecto/Meta/Data/ppe_asv_taxa_updated.csv", header = TRUE, sep = ";", skip = 0)
-
-env <- read.csv("~/CORE/Camilo/Analisis/PPE/Shared/HCS_Metal_Environment_NMDS.csv", 
+taxas <- read.csv("./Data/ppe_asv_taxa_updated.csv", header = TRUE, sep = ";", skip = 0)
+env <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/HCS_Metal_Environment_NMDS.csv", 
                 header = TRUE, 
                 sep = ";", 
                 dec = ",", 
@@ -195,6 +301,16 @@ env$Label <- factor(env$Label, levels = unique(env$Label))
 env$Site <- factor(env$Site, levels = unique(env$Site))
 env$Cu.lvl <- factor(env$Cu.lvl, levels = unique(env$Cu.lvl))
 
+tipo <- read.csv("./Data/asv_type.csv", header = TRUE, sep = ";")
+tipo <- tipo[,-1]
+tipo <- tipo[order(tipo$ASV, decreasing = FALSE),]
+tipo <- tipo[-682,]
+tipo$Type <- factor(tipo$Type, levels = unique(tipo$Type))
+#abundance <- add_column(abundance, Type = tipo$Type, .before = "C1A17", .name_repair = "minimal")
+taxas <- add_column(taxas, Type = tipo$Type, .before = "Lineage", .name_repair = "minimal")
+write.csv2(taxas, "./Data/Shared/complete_ppe_taxa.csv")
+write.csv2(env, "./Data/Shared/complete_ppe_metadata.csv")
+
 axatas <- metacoder::parse_tax_data(tax_data = taxas, 
                                     datasets = list(abund_data = as_tibble(abundance, rownames = "ASV")), 
                                     mappings = c("ASV" = "ASV"), 
@@ -203,9 +319,11 @@ axatas <- metacoder::parse_tax_data(tax_data = taxas,
                                     class_regex = "^(.+)__(.+)$", 
                                     class_key = c(tax_rank = "info",
                                                   taxon_name = "taxon_name"))
-axatas$data$site_abund <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples, groups = env$Site)
-axatas$data$sample_abund <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples)
-no_reads <- rowSums(axatas$data$counts[, env$Samples]) == 0
+axatas$data$taxon_site <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples, groups = env$Site)
+axatas$data$taxon_sample <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples)
+axatas$data$taxon_occ <- calc_n_samples(axatas, "abund_data", groups = env$Site, cols = env$Samples)
+#axatas$data$type_abund <- calc_taxon_abund(axatas, "abund_data", cols = )
+#no_reads <- rowSums(axatas$data$counts[, env$Samples]) == 0
 
 set.seed(420)
 axatas %>% 
@@ -300,29 +418,59 @@ heat_tree(axatas,
 ## Comparing groups
 Usually we are interested in how groups of samples compare. For example, we might want to know which taxa differ between the nose and throat, or between men and women. The function compare_groups facilitates these comparisons:
 ```{r}
-axatas$data$abund_data <- calc_obs_props(axatas, "abund_data")
-axatas$data$rel_abund <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples)
 axatas$data$diff_table <- compare_groups(axatas,
-                                         dataset = "rel_abund", 
+                                         dataset = "abund_data", 
                                          cols = env$Samples, 
                                          groups = env$Site)
 
+#axatas$data$diff_table$wilcox_p_value <- p.adjust(axatas$data$diff_table$wilcox_p_value, method = "fdr")
+
+#Diferential heat tree
 set.seed(420)
-heat_tree(axatas, 
-          node_label = taxon_names,
-          node_size = n_obs, 
-          node_color_interval = c(-2,2),
-          )
-heat_tree(obj, 
-          node_label = taxon_names,
-          node_size = n_obs, # n_obs is a function that calculates, in this case, the number of OTUs per taxon
-          node_color = log2_median_ratio, # A column from `obj$data$diff_table`
-          node_color_interval = c(-2, 2), # The range of `log2_median_ratio` to display
-          node_color_range = c("cyan", "gray", "tan"), # The color palette used
-          node_size_axis_label = "OTU count",
-          node_color_axis_label = "Log 2 ratio of median proportions",
-          layout = "davidson-harel", # The primary layout algorithm
-          initial_layout = "reingold-tilford") # The layout algorithm that initializes node locations
+heat_tree_matrix(axatas,
+                 data = "diff_table",
+                 node_size = n_obs, # n_obs is a function that calculates, in this case, the number of OTUs per taxon
+                 node_label = taxon_names,
+                 node_color = log2_median_ratio, # A column from `obj$data$diff_table`
+                 node_color_range = diverging_palette(), # The built-in palette for diverging data
+                 node_color_trans = "linear", # The default is scaled by circle area
+                 node_color_interval = c(-3, 3), # The range of `log2_median_ratio` to display
+                 edge_color_interval = c(-3, 3), # The range of `log2_median_ratio` to display
+                 node_size_axis_label = "Number of OTUs",
+                 node_color_axis_label = "Log2 ratio median proportions",
+                 layout = "kamada-kawai", # The primary layout algorithm
+                 initial_layout = "fruchterman-reingold", # The layout algorithm that initializes node locations
+                 output_file = "./Products/differential_heat_tree.pdf") # Saves the plot as a pdf file
+```
+Error: All pairs being compared should have one value per taxon (592). The following do not:
+   Chanaral vs. Flamenco (1321), Chanaral vs. Huasco (1321) ... Pta.Choros vs. Las.Cruces (1321), Quintero vs. Las.Cruces (1321)
+
+## metashared
+```{r}
+comp.abun <- as_tibble(abundance, rownames = "ASV")
+comp.abun <- comp.abun[comp.abun$ASV%in%sha.taxa$ASV,]
+comp.hell <- comp.abun[,-c(2)] %>% t() %>%  as.data.frame()
+
+comp.taxa <- taxas[taxas$ASV%in%comp.abun$ASV,]
+comp.taxa$Species <- sub("_"," ",comp.taxa$Species)
+comp.taxa$Species <- sub("_"," ",comp.taxa$Species)
+comp.taxa$Species <- sub("_"," ",comp.taxa$Species)
+comp.taxa[is.na(comp.taxa)] <- "Unclassified"
+
+
+
+derahs <- metacoder::parse_
+axatas <- metacoder::parse_tax_data(tax_data = taxas, 
+                                    datasets = list(abund_data = as_tibble(abundance, rownames = "ASV")), 
+                                    mappings = c("ASV" = "ASV"), 
+                                    class_cols = "Lineage", 
+                                    class_sep = ";", 
+                                    class_regex = "^(.+)__(.+)$", 
+                                    class_key = c(tax_rank = "info",
+                                                  taxon_name = "taxon_name"))
+axatas$data$taxon_site <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples, groups = env$Site)
+axatas$data$taxon_sample <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples)
+axatas$data$taxon_occ <- calc_n_samples(axatas, "abund_data", groups = env$Site, cols = env$Samples)
 ```
 
 

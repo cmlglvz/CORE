@@ -1,0 +1,215 @@
+---
+title: "metashared"
+author: "Camilo Gálvez A."
+date: "2023-08-04"
+output: html_document
+---
+
+## Libraries
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+library(tidyverse)
+library(data.table)
+library(Biostrings)
+library(DECIPHER)
+library(vegan)
+library(UpSetR)
+library(leaflet)
+library(dendextend)
+library(treemap)
+library(heatmaply)
+library(htmlwidgets)
+library(hrbrthemes)
+library(metacoder)
+```
+
+## data
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+data <- read.csv("D:/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_metadata.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
+data$Date <- factor(data$Date, levels = unique(data$Date))
+data$Label <- factor(data$Label, levels = unique(data$Label))
+data$Site <- factor(data$Site, levels = unique(data$Site))
+data$Cu.lvl <- factor(data$Cu.lvl, levels = unique(data$Cu.lvl))
+
+abundance <- read.csv("D:/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_abundance.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
+abundance <- abundance %>% filter(Type == "Shared")
+shared <- rownames(abundance)
+abundance <- abundance[,-1]
+
+hell <- decostand(as.data.frame(t(abundance)), method = "hellinger")
+hell <- as.data.frame(t(hell))
+
+rltv <- decostand(as.data.frame(t(abundance)), method = "total")
+rltv <- as.data.frame(t(rltv))
+
+taxa <- read.csv("D:/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_taxa.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
+rownames(taxa) <- taxa$ASV
+taxa <- taxa[taxa$ASV%in%shared,]
+taxa$Species <- sub("_"," ",taxa$Species)
+taxa[is.na(taxa)] <- "Unclassified"
+```
+
+## taxmap creation
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+derahs <- metacoder::parse_tax_data(tax_data = taxa, 
+                                    datasets = list(abund_data = as_tibble(abundance, rownames = "ASV"), 
+                                                    helli_data = as_tibble(hell, rownames = "ASV"), 
+                                                    rltv_data = as_tibble(rltv, rownames = "ASV")), 
+                                    mappings = c(c("ASV" = "ASV"), c("ASV" = "ASV"), c("ASV" = "ASV")), 
+                                    class_cols = "Lineage", 
+                                    class_sep = ";", 
+                                    class_regex = "(.+)__(.+)$", 
+                                    class_key = c(taxon_rank = "info", 
+                                                  taxon_name = "taxon_name")
+                                    )
+derahs$data$taxon_site <- calc_taxon_abund(derahs, "abund_data", cols = data$Samples, groups = data$Site)
+derahs$data$taxon_sample <- calc_taxon_abund(derahs, "abund_data", cols = data$Samples)
+derahs$data$taxon_occ <- calc_n_samples(derahs, "abund_data", groups = data$Site, cols = data$Samples)
+derahs$data$diff_table <- compare_groups(derahs, data = "abund_data", cols = data$Samples, groups = data$Site)
+```
+
+#plotting
+Aqui salta el mismo error que con lo anterior.
+No se trata de tener las mismas ASV para cada sitio, sino que las mismas ASV estén presentes en cada uno de estos sitios y al mismo tiempo. 
+Conversarlo
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+set.seed(420)
+heat_tree_matrix(derahs,
+                 data = "diff_table",
+                 node_size = n_obs, # n_obs is a function that calculates, in this case, the number of OTUs per taxon
+                 node_label = taxon_names,
+                 node_color = log2_median_ratio, # A column from `obj$data$diff_table`
+                 node_color_range = diverging_palette(), # The built-in palette for diverging data
+                 node_color_trans = "linear", # The default is scaled by circle area
+                 node_color_interval = c(-3, 3), # The range of `log2_median_ratio` to display
+                 edge_color_interval = c(-3, 3), # The range of `log2_median_ratio` to display
+                 node_size_axis_label = "Number of OTUs",
+                 node_color_axis_label = "Log2 ratio median proportions",
+                 layout = "kamada-kawai", # The primary layout algorithm
+                 initial_layout = "fruchterman-reingold", # The layout algorithm that initializes node locations
+                 output_file = "./Products/differential_heat_tree.pdf") # Saves the plot as a pdf file
+```
+
+## general plotting
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+set.seed(420) # This makes the plot appear the same each time it is run 
+heat_tree(derahs, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Chanaral, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "automatic", # The primary layout algorithm
+          initial_layout = "fruchterman-reingold") # The layout algorithm that initializes node locations
+
+set.seed(420)
+heat_tree(derahs, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Flamenco, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "automatic", 
+          initial_layout = "fruchterman-reingold")
+
+set.seed(420)
+heat_tree(derahs, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Huasco, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "automatic", 
+          initial_layout = "fruchterman-reingold"
+          )
+
+set.seed(420)
+heat_tree(derahs, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Pta.Choros, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "automatic", 
+          initial_layout = "fruchterman-reingold")
+
+set.seed(420)
+heat_tree(derahs, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Quintero, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "automatic", 
+          initial_layout = "fruchterman-reingold"
+          )
+
+set.seed(420)
+heat_tree(derahs, 
+          node_label = taxon_names,
+          node_size = n_obs,
+          node_color = Las.Cruces, 
+          node_size_axis_label = "OTU count",
+          node_color_axis_label = "Samples with reads",
+          layout = "automatic", 
+          initial_layout = "fruchterman-reingold")
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+```
