@@ -24,13 +24,13 @@ library(metacoder)
 
 ## data
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
-data <- read.csv("D:/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_metadata.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
+data <- read.csv("~/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_metadata.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
 data$Date <- factor(data$Date, levels = unique(data$Date))
 data$Label <- factor(data$Label, levels = unique(data$Label))
 data$Site <- factor(data$Site, levels = unique(data$Site))
 data$Cu.lvl <- factor(data$Cu.lvl, levels = unique(data$Cu.lvl))
 
-abundance <- read.csv("D:/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_abundance.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
+abundance <- read.csv("~/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_abundance.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
 abundance <- abundance %>% filter(Type == "Shared")
 shared <- rownames(abundance)
 abundance <- abundance[,-1]
@@ -41,16 +41,49 @@ hell <- as.data.frame(t(hell))
 rltv <- decostand(as.data.frame(t(abundance)), method = "total")
 rltv <- as.data.frame(t(rltv))
 
-taxa <- read.csv("D:/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_taxa.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
-rownames(taxa) <- taxa$ASV
-taxa <- taxa[taxa$ASV%in%shared,]
-taxa$Species <- sub("_"," ",taxa$Species)
+taxa <- read.csv("~/Documents/GitHub/CORE/Camilo/Meta/Data/Shared/complete_ppe_taxa.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
 taxa[is.na(taxa)] <- "Unclassified"
+taxa$Subdivision <- sub("_", " ",taxa$Subdivision)
+taxa$Class <- sub("_", " ",taxa$Class)
+taxa$Order <- sub("_"," ",taxa$Order)
+taxa$Family <- sub("_"," ",taxa$Family)
+taxa$Genus <- sub("_"," ",taxa$Genus)
+taxa$Species <- sub("_"," ",taxa$Species)
+taxa$Species <- sub("_"," ",taxa$Species)
+taxa$Species <- sub("_"," ",taxa$Species)
+taxa$Species <- sub("_"," ",taxa$Species)
+
+lineage <- taxa[,-c(3,4)]
+lineage$Kingdom <- sub("^","k__",lineage$Kingdom)
+lineage$Supergroup <- sub("^","q__",lineage$Supergroup)
+lineage$Division <- sub("^","d__",lineage$Division)
+lineage$Subdivision <- sub("^","w__",lineage$Subdivision)
+lineage$Class <- sub("^","c__",lineage$Class)
+lineage$Order <- sub("^","o__",lineage$Order)
+lineage$Family <- sub("^","f__",lineage$Family)
+lineage$Genus <- sub("^","g__",lineage$Genus)
+lineage$Species <- sub("^","s__",lineage$Species)
+
+taxa <- taxa[,-4]
+taxa <- mutate(taxa, 
+               Lineage = paste(lineage$Kingdom,
+                               lineage$Supergroup,
+                               lineage$Division,
+                               lineage$Subdivision,
+                               lineage$Class,
+                               lineage$Order,
+                               lineage$Family,
+                               lineage$Genus,
+                               lineage$Species,
+                               sep = ";"), 
+               .after = "Type")
+rownames(taxa) <- taxa$ASV
+staxa <- taxa[taxa$ASV%in%shared,]
 ```
 
 ## taxmap creation
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
-derahs <- metacoder::parse_tax_data(tax_data = taxa, 
+derahs <- metacoder::parse_tax_data(tax_data = staxa, 
                                     datasets = list(abund_data = as_tibble(abundance, rownames = "ASV"), 
                                                     helli_data = as_tibble(hell, rownames = "ASV"), 
                                                     rltv_data = as_tibble(rltv, rownames = "ASV")), 
@@ -66,6 +99,22 @@ derahs$data$taxon_sample <- calc_taxon_abund(derahs, "abund_data", cols = data$S
 derahs$data$taxon_occ <- calc_n_samples(derahs, "abund_data", groups = data$Site, cols = data$Samples)
 derahs$data$diff_table <- compare_groups(derahs, data = "abund_data", cols = data$Samples, groups = data$Site)
 ```
+
+```{r}
+raro <- metacoder::parse_tax_data(tax_data = staxa, 
+                                  datasets = list(abund_data = as_tibble(rltv, rownames = "ASV")),
+                                  mappings = c("ASV" = "ASV"), 
+                                  class_cols = "Lineage",
+                                  class_sep = ";",
+                                  class_regex = "(.+)__(.+)$",
+                                  class_key = c(taxon_rank = "info", 
+                                                taxon_name = "taxon_name")
+                                  )
+raro$data$taxon_site <- calc_taxon_abund(raro, "abund_data", cols = data$Samples, groups = data$Site)
+raro$data$taxon_sample <- calc_taxon_abund(raro, "abund_data", cols = data$Samples)
+raro$data$taxon_occ <- calc_n_samples(raro, "abund_data", groups = data$Site, cols = data$Samples)
+```
+
 
 #plotting
 Aqui salta el mismo error que con lo anterior.
@@ -92,12 +141,12 @@ heat_tree_matrix(derahs,
 ## general plotting
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
 set.seed(420) # This makes the plot appear the same each time it is run 
-heat_tree(derahs, 
+heat_tree(derahs,
           node_label = taxon_names,
           node_size = n_obs,
           node_color = Chanaral, 
-          node_size_axis_label = "OTU count",
-          node_color_axis_label = "Samples with reads",
+          node_size_axis_label = "ASV counts",
+          node_color_axis_label = "Reads per taxon",
           layout = "automatic", # The primary layout algorithm
           initial_layout = "fruchterman-reingold") # The layout algorithm that initializes node locations
 
