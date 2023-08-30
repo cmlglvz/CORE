@@ -28,13 +28,22 @@ HCS <- read.csv("Camilo/Analisis/Filtered_CORE_ASV_Abundance.csv",
                 dec = ".",
                 skip = 0,
                 row.names = 1)
+dhcs <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/na_filtered_asv_abundance_default.csv",header = TRUE,sep = ";",dec = ".",skip = 0,row.names = 1)
+chcs <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/na_filtered_asv_abundance_cautious.csv",header = TRUE,sep = ";",dec = ".",skip = 0,row.names = 1)
+shcs <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/na_filtered_asv_abundance_stringent.csv",header = TRUE,sep = ";",dec = ".",skip = 0,row.names = 1)
 TAXA <- read.csv("Camilo/Analisis/Filtered_CORE_TAXA.csv",
                  header = TRUE,
                  sep = ";",
                  skip = 0,
                  row.names = 1)
-
+default <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/na_filtered_taxa_default.csv", header = TRUE, skip = 0, sep = ";", row.names = 1)
+cautious <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/na_filtered_taxa_cautious.csv", header = TRUE, skip = 0, sep = ";", row.names = 1)
+stringent <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/na_filtered_taxa_stringent.csv", header = TRUE, skip = 0, sep = ";", row.names = 1)
 print(all(colnames(HCS)%in%rownames(TAXA)))
+print(all(colnames(dhcs)%in%rownames(default)))
+print(all(colnames(chcs)%in%rownames(cautious)))
+print(all(colnames(shcs)%in%rownames(stringent)))
+
 ```
 
 #Taxonomy function

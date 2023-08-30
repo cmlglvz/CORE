@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, message = TRUE, include = FALSE, warning = FA
 ```
 
 ## Libraries
-```{r}
+```{r, echo=FALSE,message=FALSE,warning=FALSE}
 library(tidyverse)
 library(data.table)
 library(Biostrings)
@@ -52,9 +52,12 @@ env$Date <- factor(env$Date, levels = unique(env$Date))
 env$Label <- factor(env$Label, levels = unique(env$Label))
 env$Site <- factor(env$Site, levels = unique(env$Site))
 env$Cu.lvl <- factor(env$Cu.lvl, levels = unique(env$Cu.lvl))
-env$Samples <- factor(env$Samples, levels = unique(env$Samples))
 
 abund <- as.data.frame(t(data[,c(3:65)]))
+abunds <- abund
+colnames(abunds) <- pr2v5$ASV
+abunds <- as.data.frame(t(abunds))
+write.csv2(abunds, "./Data/ppe_asv_abundance_updated.csv")
 taxa <- data[,c(1:2,73:80)]
 #print(all(rownames(taxa)%in%rownames(pr2v5)))
 ```
@@ -84,6 +87,75 @@ sha.taxad <- read.csv("./Data/shared_ppe_taxa_edited.csv",
                       sep = ";", 
                       skip = 0, 
                       row.names = 1)
+```
+
+## ASV presents in Chanaral
+```{r}
+abs <- PreAbs
+rownames(abs) <- data$ASV
+chanaral <- abs %>% dplyr::filter(CHA == 1) %>% as_tibble(rownames = "ASV")
+uni.cha <- abs %>% dplyr::filter(CHA == 1 & FLA == 0 & HUA == 0 & PCH == 0 & QUI == 0 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.cha <- chanaral[!chanaral$ASV%in%sha.taxa$ASV,]
+oth.cha <- oth.cha[!oth.cha$ASV%in%uni.cha$ASV,]
+```
+
+## ASV in Flamenco
+```{r}
+flamenco <- abs %>% dplyr::filter(FLA == 1) %>% as_tibble(rownames = "ASV")
+uni.fla <- abs %>% dplyr::filter(CHA == 0 & FLA == 1 & HUA == 0 & PCH == 0 & QUI == 0 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.fla <- flamenco[!flamenco$ASV%in%sha.taxa$ASV,]
+oth.fla <- oth.fla[!oth.fla$ASV%in%uni.fla$ASV,]
+```
+
+## Huasco's ASV
+```{r}
+huasco <- abs %>% dplyr::filter(HUA == 1) %>% as_tibble(rownames = "ASV")
+uni.hua <- abs %>% dplyr::filter(CHA == 0 & FLA == 0 & HUA == 1 & PCH == 0 & QUI == 0 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.hua <- huasco[!huasco$ASV%in%sha.taxa$ASV,]
+oth.hua <- oth.hua[!oth.hua$ASV%in%uni.hua$ASV,]
+```
+
+## Punta de Choros' ASV
+```{r}
+ptachoros <- abs %>% dplyr::filter(PCH == 1) %>% as_tibble(rownames = "ASV")
+uni.pch <- abs %>% dplyr::filter(CHA == 0 & FLA == 0 & HUA == 0 & PCH == 1 & QUI == 0 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.pch <- ptachoros[!ptachoros$ASV%in%sha.taxa$ASV,]
+oth.pch <- oth.pch[!oth.pch$ASV%in%uni.pch$ASV,]
+```
+
+## Quintero's ASV
+```{r}
+quintero <- abs %>% dplyr::filter(QUI == 1) %>% as_tibble(rownames = "ASV")
+uni.qui <- abs %>% dplyr::filter(CHA == 0 & FLA == 0 & HUA == 0 & PCH == 0 & QUI == 1 & LCS == 0) %>% as_tibble(rownames = "ASV")
+oth.qui <- quintero[!quintero$ASV%in%sha.taxa$ASV,]
+oth.qui <- oth.qui[!oth.qui$ASV%in%uni.qui$ASV,]
+```
+
+## Las Cruces' ASV
+```{r}
+lascruces <- abs %>% dplyr::filter(LCS == 1) %>% as_tibble(rownames = "ASV")
+uni.lcs <- abs %>% dplyr::filter(CHA == 0 & FLA == 0 & HUA == 0 & PCH == 0 & QUI == 0 & LCS == 1) %>% as_tibble(rownames = "ASV")
+oth.lcs <- lascruces[!lascruces$ASV%in%sha.taxa$ASV,]
+oth.lcs <- oth.lcs[!oth.lcs$ASV%in%uni.lcs$ASV,]
+```
+
+## Type dataframe
+```{r}
+uniques <- list(uni.cha,uni.fla,uni.hua,uni.pch,uni.qui,uni.lcs)
+uniques <- uniques %>% purrr::reduce(full_join, by = "ASV")
+uniques <- uniques %>% mutate(Type = rep("Unique", 570), .after = "ASV")
+uniques <- uniques[,c(1,2)]
+compartides <- sha.taxa %>% mutate(Type = rep("Shared", 106), .after = "ASV")
+compartides <- compartides[,c(2,3)]
+others <- pr2v5
+others <- others[!others$ASV%in%uniques$ASV,]
+others <- others[!others$ASV%in%compartides$ASV,]
+others <- others %>% mutate(Type = rep("Other", 646), .after = "ASV")
+others <- others[,c(2,3)]
+Type <- list(uniques,compartides,others)
+Type <- Type %>% purrr::reduce(full_join, by = "ASV")
+Type <- Type[order(Type$ASV, decreasing = FALSE),]
+write.csv2(Type, "./Data/asv_type.csv")
 ```
 
 ## FASTA shared ASV
@@ -144,22 +216,135 @@ calor <- heatmaply(normalize(ihell),
 saveWidget(calor, "./Products/heatmap_shared_ppe_asv.html")
 ```
 
+```{r}
+# specify the path to the FASTA file (in quotes)
+fas <- "./Data/shared_asv.fasta"
+
+# load the sequences from the file
+seqs <- readDNAStringSet(fas)
+
+# remove any gaps (if needed)
+seqs <- RemoveGaps(seqs)
+
+# for help, see the IdTaxa help page (optional)
+?IdTaxa
+
+# load a training set object (trainingSet)
+# see http://DECIPHER.codes/Downloads.html
+decipher.trained <- readRDS("X:/Documents/Proyectos_R/IDTAXA/data/pr2_version_5.0.0_SSU.decipher.trained.rds")
+
+# classify the sequences
+ids <- IdTaxa(seqs, 
+              decipher.trained, 
+              strand = "both", 
+              threshold = 60, 
+              processors = NULL, 
+              verbose = TRUE)
+
+# look at the results
+print(ids)
+plot(ids)
+```
+
+
 ## Metacoder
 ```{r}
-taxas <- read.csv("./Data/ppe_asv_taxa_updated.csv", header = TRUE, sep = ";", row.names = 1, skip = 0)
-unique(taxas$Kingdom)
+abundance <- read.csv("./Data/ppe_asv_abundance_updated.csv", header = T, sep = ";", skip = 0, row.names = 1)
+abundance <- abundance[-682,]
+
+taxas <- read.csv("./Data/ppe_asv_taxa_updated.csv", header = TRUE, sep = ";", skip = 0)
 taxas[is.na(taxas)] <- "Unclassified"
-rownames(taxas) <- pr2v5$ASV
+taxas <- add_column(taxas,
+                    taxon = paste("Root",
+                                  taxas$Kingdom,
+                                  taxas$Supergroup,
+                                  taxas$Division,
+                                  taxas$Subdivision,
+                                  taxas$Class,
+                                  taxas$Order,
+                                  taxas$Family,
+                                  taxas$Genus, 
+                                  taxas$Species, 
+                                  sep = ";"),
+                    .after = "Seq", 
+                    .name_repair = "minimal")
+
+env <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/PPE/Shared/HCS_Metal_Environment_NMDS.csv", 
+                header = TRUE, 
+                sep = ";", 
+                dec = ",", 
+                row.names = 1)
+env$Date <- factor(env$Date, levels = unique(env$Date))
+env$Label <- factor(env$Label, levels = unique(env$Label))
+env$Site <- factor(env$Site, levels = unique(env$Site))
+env$Cu.lvl <- factor(env$Cu.lvl, levels = unique(env$Cu.lvl))
+
+tipo <- read.csv("./Data/asv_type.csv", header = TRUE, sep = ";")
+tipo <- tipo[,-1]
+tipo <- tipo[order(tipo$ASV, decreasing = FALSE),]
+tipo <- tipo[-682,]
+abundance <- add_column(abundance, Type = tipo$Type, .before = "C1A17", .name_repair = "minimal")
+join <- left_join(abundance, taxas, by = c("ASV" = "ASV"))
+
+abunds <- as.matrix(abunds)
 taxas <- as.matrix(taxas)
 
-abunds <- t(abund)
-rownames(abunds) <- pr2v5$ASV
-abunds <- as.matrix(abunds)
-
-axats <- metacoder::parse_tax_data(tax_data = as_tibble(taxas), 
-                                   datasets = list(Abundance = as_tibble(abunds, rownames = "ASV")),
-                                   mappings = c("ASV" = "ASV"), 
-                                   class_cols = 3:11)
+axat <- metacoder::parse_tax_data(tax_data = join, 
+                                  class_cols = "taxon", 
+                                  class_sep = ";")
 print(axat)
+axatas <- metacoder::parse_tax_data(tax_data = taxas, 
+                                    datasets = list(abund_data = as_tibble(abundance, rownames = "ASV")), 
+                                    mappings = c("ASV" = "ASV"), 
+                                    class_cols = "taxon", 
+                                    class_sep = ";", 
+                                    class_regex = "^(.*)$")
+axatas$data$site_data <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples, groups = env$Site)
+axatas$data$sample_data <- calc_taxon_abund(axatas, "abund_data", cols = env$Samples)
+no_reads <- rowSums(axatas$data$counts[, env$Samples]) == 0
+
+set.seed(420)
+axatas %>% 
+  filter_taxa(Chanaral >= 0) %>% 
+  heat_tree(node_label = taxon_names, 
+            node_size = Chanaral, 
+            node_color = Chanaral, 
+            layout = "kamada-kawai", 
+            initial_layout = "fruchterman-reingold", 
+            title = "Taxa in Chañaral")
+
+set.seed(420) 
+axatas %>% 
+  filter_taxa(Flamenco >= 0) %>% 
+  heat_tree(node_label = taxon_names, 
+            node_size = Flamenco, 
+            node_color = Flamenco, 
+            layout = "kamada-kawai", 
+            initial_layout = "fruchterman-reingold", 
+            title = "Taxa in Flamenco")
+```
+
+## fastacoder
+```{r}
+fas <- data.frame(names = taxas$ASV, sequences = taxas$Seq)
+seqRFLP::dataframe2fas(fas, "./Data/complete_seqs.fasta")
+# specify the path to the FASTA file (in quotes)
+strngs <- "./Data/complete_seqs.fasta"
+# load the sequences from the file
+seqs <- readDNAStringSet(strngs)
+# remove any gaps (if needed)
+seqs <- RemoveGaps(seqs)
+trained <- readRDS("X:/Documents/Proyectos_R/IDTAXA/data/pr2_version_5.0.0_SSU.decipher.trained.rds")
+# classify the sequences
+ids <- IdTaxa(seqs, 
+              trained, 
+              strand = "both", 
+              threshold = 60, 
+              fullLength = 300,
+              processors = NULL, 
+              verbose = TRUE)
+# look at the results
+print(ids)
+plot(ids)
 ```
 
