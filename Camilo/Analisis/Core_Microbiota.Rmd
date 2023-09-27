@@ -719,7 +719,7 @@ write.csv2(phsynth, "./stringent_photosynthetic_asc_taxa.csv")
 
 #Treemaps
 ```{r complete}
-png("./Figuras/fig_f_treemap_all_sites.png", width = 17, height = 15, units = "in", res = 400)
+png("./Figuras/fig_f_treemap_all_sites.png", width = 17, height = 15, units = "in", res = 300)
 treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
                           header = TRUE, 
                           sep = ";", 
@@ -739,7 +739,7 @@ dev.off()
 
 
 ```{r chanaral}
-png("./Figuras/fig_f_1_treemap_chanaral.png", width = 17, height = 15, units = "in", res = 400)
+png("./Figuras/fig_f_1_treemap_chanaral.png", width = 17, height = 15, units = "in", res = 300)
 treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
                           header = TRUE, 
                           sep = ";", 
@@ -759,7 +759,7 @@ dev.off()
 
 
 ```{r flamenco}
-png("./Figuras/fig_f_2_treemap_flamenco.png", width = 17, height = 15, units = "in", res = 400)
+png("./Figuras/fig_f_2_treemap_flamenco.png", width = 17, height = 15, units = "in", res = 300)
 treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
                           header = TRUE, 
                           sep = ";", 
@@ -779,7 +779,7 @@ dev.off()
 
 
 ```{r huasco}
-png("./Figuras/fig_f_3_treemap_huasco.png", width = 17, height = 15, units = "in", res = 400)
+png("./Figuras/fig_f_3_treemap_huasco.png", width = 17, height = 15, units = "in", res = 300)
 treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
                           header = TRUE, 
                           sep = ";", 
@@ -799,7 +799,7 @@ dev.off()
 
 
 ```{r pta.choros}
-png("./Figuras/fig_f_4_treemap_punta_choros.png", width = 17, height = 15, units = "in", res = 400)
+png("./Figuras/fig_f_4_treemap_punta_choros.png", width = 17, height = 15, units = "in", res = 300)
 treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
                           header = TRUE, 
                           sep = ";", 
@@ -819,7 +819,7 @@ dev.off()
 
 
 ```{r quintero}
-png("./Figuras/fig_f_5_treemap_quintero.png", width = 17, height = 15, units = "in", res = 400)
+png("./Figuras/fig_f_5_treemap_quintero.png", width = 17, height = 15, units = "in", res = 300)
 treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
                           header = TRUE, 
                           sep = ";", 
@@ -839,7 +839,7 @@ dev.off()
 
 
 ```{r las cruces}
-png("./Figuras/fig_f_6_treemap_las_cruces.png", width = 17, height = 15, units = "in", res = 400)
+png("./Figuras/fig_f_6_treemap_las_cruces.png", width = 17, height = 15, units = "in", res = 300)
 treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
                           header = TRUE, 
                           sep = ";", 
