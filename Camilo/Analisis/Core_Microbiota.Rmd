@@ -858,6 +858,46 @@ dev.off()
 ```
 
 
+#Abundancia relativa a nivel de clase
+```{r}
+class.chloro <- dplyr::filter(phsynth, Division == "Chlorophyta")
+cssch <- dplyr::select(phsynth.abund, all_of(class.chloro$Seq))
+chl.class <- Tax.sum(cssch, class.chloro, 7) %>% as.data.frame()
+chl.class <- chl.class[,-7]
+write.csv2(chl.class, "./stringent_autotrophic_asv_class_level_abundance.csv")
+
+class.ochro <- dplyr::filter(phsynth, Division == "Stramenopiles")
+cssoch <- dplyr::select(phsynth.abund, all_of(class.ochro$Seq))
+och.class <- Tax.sum(cssoch, class.ochro, 7) %>% as.data.frame()
+
+class.phsynth <- Tax.sum(phsynth.abund, phsynth, 7) %>% as.data.frame() 
+phy.ppe <- tax.sum(sort.ppe, ppe, 5) %>% as.data.frame()
+phy.ppe <- add_column(phy.ppe, Sample = rownames(phy.ppe), .before = "Chlorophyta", .name_repair = "minimal")
+phy.ppe$Sample <- factor(phy.ppe$Sample, levels = phy.ppe$Sample)
+lphy.pee <- gather(phy.ppe, "Division", "Abundance", 2:7)
+lphy.pee$Division <- factor(lphy.pee$Division, levels = unique(lphy.pee$Division))
+sortie <- factor(lphy.pee$Division, levels = c("Cryptophyta","Stramenopiles","Rhodophyta","Kathablepharidacea","Haptophyta","Chlorophyta"))
+phyplot <- ggplot(lphy.pee, aes(x = Sample, 
+                                y = Abundance, 
+                                fill = sortie)) + 
+  geom_bar(position = "fill", stat = "identity", width = 1, color = "grey") + 
+  scale_fill_manual(values = c("#835DC3",
+                               "#DF690B",
+                               "#89716C",
+                               "#2EC4B6",
+                               "#A61215",
+                               "#166200")) +  
+  theme_ipsum_rc() + 
+  theme()
+ggsave(plot = phyplot, 
+       filename = "Fig_7_selected_relative_abundance_eukaryotes_phylum_level_estexp.png", 
+       path = "./Figures/", 
+       width = 33, 
+       height = 11, 
+       dpi = 600)
+```
+
+
 
 
 
