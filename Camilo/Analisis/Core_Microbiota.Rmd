@@ -18,6 +18,7 @@ library(viridis)
 library(heatmaply)
 library(htmlwidgets)
 library(hrbrthemes)
+library(metacoder)
 ```
 
 #Interactive map
@@ -287,7 +288,7 @@ aus.pres <- read.csv("D:/Documents/GitHub/CORE/Camilo/Analisis/absence_presence_
                      dec = ".", 
                      skip = 0)
 
-png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/figura_a_complete_UpSet_stringent.png", width = 50, height = 23, units = "in", res = 600)
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/figura_a_complete_UpSet_stringent_2.png", width = 50, height = 23, units = "in", res = 300)
 upset(aus.pres, 
       nsets = 6, 
       nintersects = NA, 
@@ -305,7 +306,7 @@ dev.off()
 
 ##Shorter UpSet
 ```{r shorter, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
-png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/fig_b_shorter_UpSet_stringent.png", width = 40, height = 21, units = "in", res = 600)
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/fig_b_shorter_UpSet_stringent_2.png", width = 40, height = 21, units = "in", res = 300)
 upset(aus.pres, 
       nsets = 6,
       nintersects = NA, 
@@ -342,7 +343,7 @@ dev.off()
 ##Selected UpSet
 ```{r selected, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 #Modify this according to selected intersections from previous UpSet
-png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/figura_c_shorter_UpSet_color_coded_stringent.png", width = 40, height = 17, units = "in", res = 600)
+png("/Documents/GitHub/CORE/Camilo/Analisis/Figuras/figura_c_shorter_UpSet_color_coded_stringent_2.png", width = 40, height = 17, units = "in", res = 200)
 upset(aus.pres, 
       nsets = 6,
       nintersects = NA, 
@@ -412,6 +413,10 @@ write.csv2(u.pre.cha.asv, "Original_Unfiltered_Chanaral_Unique_HCS_ASV_Abundance
 chanaral <- aus.pres %>% dplyr::filter(Chanaral == 1 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
 cha.asv <- dplyr::select(stringent.abund, all_of(chanaral$Seq))
 write.csv2(cha.asv, "stringent_chanaral_unique_asv_abundance.csv")
+ahc <- as.data.frame(t(cha.asv))
+col <- colSums(ahc)
+col
+sum(col)
 ```
 
 ###Flamenco
@@ -429,6 +434,10 @@ write.csv2(u.pre.fla.asv, "Original_Unfiltered_Flamenco_HCS_Unique_ASV_Abundance
 flamenco <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 1 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
 fla.asv <- dplyr::select(stringent.abund, all_of(flamenco$Seq))
 write.csv2(fla.asv, "stringent_flamenco_unique_asv_abundance.csv")
+ahc <- as.data.frame(t(fla.asv))
+col <- colSums(ahc)
+col
+sum(col)
 ```
 
 ###Huasco
@@ -446,6 +455,10 @@ write.csv2(u.pre.hu.asv, "Original_Unfiltered_Huasco_Unique_HCS_ASV_Abundance.cs
 huasco <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 1 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 0)
 hu.asv <- dplyr::select(stringent.abund, all_of(huasco$Seq))
 write.csv2(hu.asv, "stringent_huasco_unique_asv_abundance.csv")
+ahc <- as.data.frame(t(hu.asv))
+col <- colSums(ahc)
+col
+sum(col)
 ```
 
 ###Punta de Choros
@@ -463,6 +476,10 @@ write.csv2(u.pre.pch.asv, "Original_Unfiltered_Punta_Choros_HCS_Unique_ASV_Abund
 choros <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 1 & Quintero == 0 & LasCruces == 0)
 pch.asv <- dplyr::select(stringent.abund, all_of(choros$Seq))
 write.csv2(pch.asv, "stringent_punta_choros_unique_asv_abundance.csv")
+ahc <- as.data.frame(t(pch.asv))
+col <- colSums(ahc)
+col
+sum(col)
 ```
 
 ###Quintero
@@ -480,6 +497,10 @@ write.csv2(u.pre.qin.asv, "Original_Unfiltered_Quintero_HCS_Unique_ASV_Abundance
 quintero <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 1 & LasCruces == 0)
 qin.asv <- dplyr::select(stringent.abund, all_of(quintero$Seq))
 write.csv2(qin.asv, "stringent_quintero_unique_asv_abundance.csv")
+ahc <- as.data.frame(t(qin.asv))
+col <- colSums(ahc)
+col
+sum(col)
 ```
 
 ###Las Cruces
@@ -497,6 +518,10 @@ write.csv2(u.pre.lc.asv, "Original_Unfiltered_Las_Cruces_HCS_Unique_ASV_Abundanc
 cruces <- aus.pres %>% dplyr::filter(Chanaral == 0 & Flamenco == 0 & Huasco == 0 & Pta.Choros == 0 & Quintero == 0 & LasCruces == 1)
 lc.asv <- dplyr::select(stringent.abund, all_of(cruces$Seq))
 write.csv2(lc.asv, "stringent_las_cruces_unique_asv_abundance.csv")
+ahc <- as.data.frame(t(lc.asv))
+col <- colSums(ahc)
+col
+sum(col)
 ```
 
 ##Others
@@ -590,6 +615,13 @@ detailed <- read.csv("detailed_total_ASV_abundance.csv",
 detailed <- add_column(detailed, Site = rownames(detailed), .before = "Unique", .name_repair = "minimal")
 detailed$Site <- factor(detailed$Site, levels = detailed$Site)
 long <- reshape2::melt(detailed, id.vars = "Site", variable.name = "Type")
+
+det.string <- read.csv("stringent_detailed_total_asv_abundance.csv", header = TRUE, sep = ";", dec = ".", skip = 0, row.names = 1)
+det.string <- add_column(det.string, Site = rownames(det.string), .before = "Unique", .name_repair = "minimal")
+det.string <- det.string[,-5]
+det.string$Site <- factor(det.string$Site, levels = det.string$Site)
+dslong <- reshape2::melt(det.string, id.vars = "Site", variable.name = "Type")
+dslong <- gather(det.string, "Type", "Abundance", 2:4)
 ```
 
 #Relative Abundance for ASV types
@@ -623,6 +655,24 @@ ggsave(ggpubr::as_ggplot(det.legend),
        height = 3, 
        dpi = 600)
 ```
+
+
+```{r, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+detsng <- ggplot(dslong, aes(x = Site, y = Abundance, fill = Type)) + 
+  geom_bar(position = "fill", stat = "identity") + 
+  labs(x = "Sites", y = "Relative Abundance", title = "Relative contribution of each ASV type per site") + 
+  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) + 
+  theme_ipsum_rc(base_size = 22, axis_title_size = 25, plot_title_size = 25) + 
+  theme(legend.position = "bottom", legend.direction = "horizontal")
+
+ggsave(plot = detsng, 
+       filename = "fig_d_stringent_relative_contribution_asv_type.png", 
+       path = "./Figuras/", 
+       width = 12, 
+       height = 15, 
+       dpi = 400)
+```
+
 
 #Static map
 ```{r static, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
