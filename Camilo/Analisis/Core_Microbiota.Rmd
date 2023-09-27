@@ -676,6 +676,194 @@ ggsave(plot = detsng,
 ```
 
 
+#Taxonomy function
+```{r tax.sum, echo=FALSE,message=FALSE,warning=FALSE,include=FALSE}
+Tax.sum <- function(OTU.Table, Tax.Table, Tax.lvl ){
+  z <- NULL
+  y <- NULL
+  for (i in 1:length(unique(Tax.Table[colnames(OTU.Table),Tax.lvl]))) {
+    if (length(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])!=length(rownames(OTU.Table))) {
+      z <- which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])
+      y <- cbind(y, apply(OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])], 1, function(x) sum(x)))
+    } else {
+      y <- cbind(y, OTU.Table[,which(Tax.Table[colnames(OTU.Table),Tax.lvl]==unique(Tax.Table[colnames(OTU.Table),Tax.lvl])[i])])
+    }
+  }
+  colnames(y) <- unique(Tax.Table[colnames(OTU.Table),Tax.lvl])
+  invisible((y))
+}
+```
+
+
+```{r}
+phsynth <- estringent #5948
+#Ochrophyta = Stramenopiles
+phsynth <- dplyr::filter(phsynth, Division == "Chlorophyta" | Division == "Stramenopiles" | Division == "Cryptophyta" | Division == "Cryptophyta:nucl" | Division == "Haptophyta" | Division == "Kathablepharidacea" | Division == "Rhodophyta")
+#Me quedo con 2416 ASV
+phsynth.abund <- dplyr::select(stringent.abund, all_of(phsynth$Seq))
+div.phsynth <- Tax.sum(phsynth.abund, phsynth, 5) %>% (t) %>% as.data.frame() %>% add_column(Color = c("#90ED90", "#CDAE94", "#6CA6CD", "#7EFFD3", "#C577F9", "#F9A555", "#5888A8"))
+div.phsynth <- dplyr::mutate(div.phsynth, 
+                             CHA = rowSums(div.phsynth[c(1:12)]), 
+                             FLA = rowSums(div.phsynth[c(13:24)]), 
+                             HUA = rowSums(div.phsynth[c(25:36)]), 
+                             PCH = rowSums(div.phsynth[c(37:41)]), 
+                             QUI = rowSums(div.phsynth[c(42:51)]), 
+                             LCS = rowSums(div.phsynth[c(52:63)]), 
+                             Total = rowSums(div.phsynth[c(1:63)]), 
+                             .after = "L4A18")
+write.csv2(div.phsynth, "./stringent_phylum_photosynthetic_asv_abundance_and_color.csv")
+write.csv2(phsynth.abund, "./stringent_phosynthetic_asv_abundance.csv")
+write.csv2(phsynth, "./stringent_photosynthetic_asc_taxa.csv")
+```
+
+
+#Treemaps
+```{r complete}
+png("./Figuras/fig_f_treemap_all_sites.png", width = 17, height = 15, units = "in", res = 400)
+treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "Total", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 55, 
+                 title = "Photosynthetic ASV distribution (counts) for complete dataset", 
+                 fontsize.title = 42,
+                 title.legend = NA, 
+                 border.col = NA)
+dev.off()
+```
+
+
+```{r chanaral}
+png("./Figuras/fig_f_1_treemap_chanaral.png", width = 17, height = 15, units = "in", res = 400)
+treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "CHA", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 55, 
+                 title = "Photosynthetic ASV distribution (counts) for Chañaral", 
+                 fontsize.title = 42,
+                 title.legend = NA, 
+                 border.col = NA)
+dev.off()
+```
+
+
+```{r flamenco}
+png("./Figuras/fig_f_2_treemap_flamenco.png", width = 17, height = 15, units = "in", res = 400)
+treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "FLA", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 55, 
+                 title = "Photosynthetic ASV distribution (counts) for Flamenco", 
+                 fontsize.title = 42,
+                 title.legend = NA, 
+                 border.col = NA)
+dev.off()
+```
+
+
+```{r huasco}
+png("./Figuras/fig_f_3_treemap_huasco.png", width = 17, height = 15, units = "in", res = 400)
+treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "HUA", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 55, 
+                 title = "Photosynthetic ASV distribution (counts) for Huasco", 
+                 fontsize.title = 42,
+                 title.legend = NA, 
+                 border.col = NA)
+dev.off()
+```
+
+
+```{r pta.choros}
+png("./Figuras/fig_f_4_treemap_punta_choros.png", width = 17, height = 15, units = "in", res = 400)
+treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "PCH", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 55, 
+                 title = "Photosynthetic ASV distribution (counts) for Punta de Choros", 
+                 fontsize.title = 42,
+                 title.legend = NA, 
+                 border.col = NA)
+dev.off()
+```
+
+
+```{r quintero}
+png("./Figuras/fig_f_5_treemap_quintero.png", width = 17, height = 15, units = "in", res = 400)
+treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "QUI", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 55, 
+                 title = "Photosynthetic ASV distribution (counts) for Quintero", 
+                 fontsize.title = 42,
+                 title.legend = NA, 
+                 border.col = NA)
+dev.off()
+```
+
+
+```{r las cruces}
+png("./Figuras/fig_f_6_treemap_las_cruces.png", width = 17, height = 15, units = "in", res = 400)
+treemap::treemap(read.csv("./stringent_phylum_photosynthetic_asv_abundance_and_color.csv", 
+                          header = TRUE, 
+                          sep = ";", 
+                          skip = 0), 
+                 index = "X", 
+                 vSize = "LCS", 
+                 type = "color", 
+                 vColor = "Color", 
+                 position.legend = "none", 
+                 fontsize.labels = 55, 
+                 title = "Photosynthetic ASV distribution (counts) for Las Cruces", 
+                 fontsize.title = 42,
+                 title.legend = NA, 
+                 border.col = NA)
+dev.off()
+```
+
+
+
+
+
+
+
+
 #Static map
 ```{r static, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 mapping <- read.csv("Mapping_Data.csv", 
