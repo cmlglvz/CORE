@@ -617,11 +617,13 @@ detailed$Site <- factor(detailed$Site, levels = detailed$Site)
 long <- reshape2::melt(detailed, id.vars = "Site", variable.name = "Type")
 
 det.string <- read.csv("stringent_detailed_total_asv_abundance.csv", header = TRUE, sep = ";", dec = ".", skip = 0, row.names = 1)
-det.string <- add_column(det.string, Site = rownames(det.string), .before = "Unique", .name_repair = "minimal")
-det.string <- det.string[,-5]
+det.string <- add_column(det.string, Site = rownames(det.string), .before = "Core", .name_repair = "minimal")
+det.string <- det.string[,-6]
 det.string$Site <- factor(det.string$Site, levels = det.string$Site)
-dslong <- reshape2::melt(det.string, id.vars = "Site", variable.name = "Type")
-dslong <- gather(det.string, "Type", "Abundance", 2:4)
+det.string <- dplyr::rename(.data = det.string, "Non-Core" = "Shared")
+#dslong <- reshape2::melt(det.string, id.vars = "Site", variable.name = "Type")
+dslong <- gather(det.string, "Type", "Abundance", 2:5)
+dslong$Type <- factor(dslong$Type, levels = c("Unique", "Rest", "Non-Core", "Core"))
 ```
 
 #Relative Abundance for ASV types
@@ -634,7 +636,7 @@ det <- ggplot(long,
   labs(x = "Sites", 
        y = "Relative Abundance", 
        title = "Relative contribution of each ASV type") + 
-  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) + 
+  scale_fill_manual(values = c("#2B2D42", "#EF233C", "#9CAFB7")) + 
   theme_ipsum(base_size = 22, 
               axis_title_size = 25, 
               plot_title_size = 25) + 
@@ -661,12 +663,12 @@ ggsave(ggpubr::as_ggplot(det.legend),
 detsng <- ggplot(dslong, aes(x = Site, y = Abundance, fill = Type)) + 
   geom_bar(position = "fill", stat = "identity") + 
   labs(x = "Sites", y = "Relative Abundance", title = "Relative contribution of each ASV type per site") + 
-  scale_fill_manual(values = c("#9CAFB7", "#EF233C", "#2B2D42")) + 
+  scale_fill_manual(values = c("#9CAFB7", "#2B2D42", "#9E1728", "#EF233C")) + 
   theme_ipsum_rc(base_size = 22, axis_title_size = 25, plot_title_size = 25) + 
   theme(legend.position = "bottom", legend.direction = "horizontal")
 
 ggsave(plot = detsng, 
-       filename = "fig_d_stringent_relative_contribution_asv_type.png", 
+       filename = "fig_e_stringent_relative_contribution_asv_type.png", 
        path = "./Figuras/", 
        width = 12, 
        height = 15, 
