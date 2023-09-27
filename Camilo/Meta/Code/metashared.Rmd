@@ -205,7 +205,10 @@ heat_tree(derahs,
 
 
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
-
+corcito <- read.csv("/Documents/GitHub/CORE/Camilo/NetCoA/netco2/shared.csv", header = TRUE, sep = ";", skip = 0, row.names = 1)
+core <- corcito[,!colnames(corcito) %in% all_of(rownames(abundance))]
+write.csv2(core, "D:/Documents/GitHub/CORE/Camilo/NetCoA/netco2/shared.csv")
+write.csv2(as.data.frame(t(abundance)), "D:/Documents/GitHub/CORE/Camilo/NetCoA/netco2/core.csv")
 ```
 
 
