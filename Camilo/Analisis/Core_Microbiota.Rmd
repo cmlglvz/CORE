@@ -860,43 +860,85 @@ dev.off()
 
 #Abundancia relativa a nivel de clase
 ```{r}
+phsynth[is.na(phsynth)] <- "Unassigned"
+
 class.chloro <- dplyr::filter(phsynth, Division == "Chlorophyta")
 cssch <- dplyr::select(phsynth.abund, all_of(class.chloro$Seq))
-chl.class <- Tax.sum(cssch, class.chloro, 7) %>% as.data.frame()
-chl.class <- chl.class[,-7]
-write.csv2(chl.class, "./stringent_autotrophic_asv_class_level_abundance.csv")
+chl.class <- Tax.sum(as.matrix(cssch), class.chloro, 7) %>% as.data.frame()
+chl.class <- dplyr::rename(chl.class, "Chlorophyta_NA" = "Unassigned")
+write.csv2(chl.class, "./stringent_autotrophic_asv_class_level_chlorophyta_abundance.csv")
 
 class.ochro <- dplyr::filter(phsynth, Division == "Stramenopiles")
 cssoch <- dplyr::select(phsynth.abund, all_of(class.ochro$Seq))
-och.class <- Tax.sum(cssoch, class.ochro, 7) %>% as.data.frame()
+och.class <- Tax.sum(as.matrix(cssoch), class.ochro, 7) %>% as.data.frame()
+och.class <- dplyr::rename(och.class, "Stramenopiles_NA" = "Unassigned")
+write.csv2(och.class, "./stringent_autotrophic_asv_class_level_stramenopiles_abundance.csv")
 
-class.phsynth <- Tax.sum(phsynth.abund, phsynth, 7) %>% as.data.frame() 
-phy.ppe <- tax.sum(sort.ppe, ppe, 5) %>% as.data.frame()
-phy.ppe <- add_column(phy.ppe, Sample = rownames(phy.ppe), .before = "Chlorophyta", .name_repair = "minimal")
-phy.ppe$Sample <- factor(phy.ppe$Sample, levels = phy.ppe$Sample)
-lphy.pee <- gather(phy.ppe, "Division", "Abundance", 2:7)
-lphy.pee$Division <- factor(lphy.pee$Division, levels = unique(lphy.pee$Division))
-sortie <- factor(lphy.pee$Division, levels = c("Cryptophyta","Stramenopiles","Rhodophyta","Kathablepharidacea","Haptophyta","Chlorophyta"))
-phyplot <- ggplot(lphy.pee, aes(x = Sample, 
-                                y = Abundance, 
-                                fill = sortie)) + 
-  geom_bar(position = "fill", stat = "identity", width = 1, color = "grey") + 
-  scale_fill_manual(values = c("#835DC3",
-                               "#DF690B",
-                               "#89716C",
-                               "#2EC4B6",
-                               "#A61215",
-                               "#166200")) +  
-  theme_ipsum_rc() + 
-  theme()
-ggsave(plot = phyplot, 
-       filename = "Fig_7_selected_relative_abundance_eukaryotes_phylum_level_estexp.png", 
-       path = "./Figures/", 
-       width = 33, 
-       height = 11, 
-       dpi = 600)
+class.cryopt <- dplyr::filter(phsynth, Division == "Cryptophyta" | Division == "Cryptophyta:nucl")
+csscry <- dplyr::select(phsynth.abund, all_of(class.cryopt$Seq))
+cryp.class <- Tax.sum(as.matrix(csscry), class.cryopt, 7) %>% as.data.frame()
+write.csv2(cryp.class, "./stringent_autotrophic_asv_class_level_cryptophyta_abundance.csv")
+
+class.hapto <- dplyr::filter(phsynth, Division == "Haptophyta")
+csshap <- dplyr::select(phsynth.abund, all_of(class.hapto$Seq))
+hap.class <- Tax.sum(as.matrix(csshap), class.hapto, 7) %>% as.data.frame()
+write.csv2(hap.class, "./stringent_autotrophic_asv_class_level_haptophyta_abundance.csv")
+
+class.katable <- dplyr::filter(phsynth, Division == "Kathablepharidacea")
+csskat <- dplyr::select(phsynth.abund, all_of(class.katable$Seq))
+kat.class <- Tax.sum(as.matrix(csskat), class.katable, 7) %>% as.data.frame()
+write.csv2(kat.class, "./stringent_autotrophic_asv_class_level_kathablepharidacea_abundance.csv")
+
+class.rhodo <- dplyr::filter(phsynth, Division == "Rhodophyta")
+cssrho <- dplyr::select(phsynth.abund, all_of(class.rhodo$Seq))
+rho.class <- Tax.sum(as.matrix(cssrho), class.rhodo, 7) %>% as.data.frame()
+write.csv2(rho.class, "./stringent_autotrophic_asv_class_level_rhodophyta_abundance.csv")
+
+#Uni las tablas por fuera y aproveché de revisarlas
 ```
 
+
+
+```{r}
+auto.class <- read.csv("./stringent_autotrophic_asv_class_level_abundance.csv", header = TRUE, sep = ";", skip = 0, row.names = 1) 
+auto.class <- add_column(auto.class, Sample = rownames(auto.class), .before = "Mamiellophyceae", .name_repair = "minimal")
+auto.class$Sample <- factor(auto.class$Sample, levels = unique(auto.class$Sample))
+long.auto <- tidyr::gather(auto.class, "Class", "Abundance", 2:45)
+long.auto$Class <- factor(long.auto$Class, levels = unique(long.auto$Class))
+sorty <- factor(long.auto$Class, levels = rev(as.character(unique(long.auto$Class))))
+cssauto <- ggplot(long.auto, 
+                  aes(x = Sample, 
+                      y = Abundance, 
+                      fill = sorty)) + 
+  geom_bar(position = "fill", stat = "identity", width = 1, color = "grey") + 
+  scale_fill_manual(values = c("#F9A555", "#FAB574", "#C577F9", "#5888A8", "#6CA6CD", "#570D16", "#6D101B", "#981626", "#C41D31", "#1B1614", "#312924", "#413730", "#4E433A", "#564A40", "#5F5146", "#69594D", "#736255", "#7F6C5D", "#8C7766", "#9A8370", "#A9907B", "#BA9E87", "#CDAE94", "#D2B59E", "#D6BDA7", "#DBC4B1", "#DFCBBB", "#E4D3C5", "#E8DACE", "#EDE2D8", "#F1E9E2", "#F6F1ED", "#FBF9F7", "#274127", "#345634", "#416C41", "#4F814F", "#5C975C", "#69AC69", "#76C276", "#83D783", "#90ED90", "#A3F0A3", "#BFF5BF")) + 
+  theme_ipsum() + 
+  theme()
+cssauto
+
+ggsave(plot = cssauto, 
+       filename = "fig_g_autotrophic_asv_relative_abundance_at_class_level.png", 
+       path = "./Figuras/", 
+       width = 33, 
+       height = 11, 
+       dpi = 300)
+
+cssauto2 <- ggplot(long.auto, 
+                  aes(x = Sample, 
+                      y = Abundance, 
+                      fill = sorty)) + 
+  geom_bar(position = "fill", stat = "identity", width = 1, color = "#343a40") + 
+  scale_fill_manual(values = c("#F9A555", "#FAB574", "#C577F9", "#5888A8", "#6CA6CD", "#570D16", "#6D101B", "#981626", "#C41D31", "#1B1614", "#312924", "#413730", "#4E433A", "#564A40", "#5F5146", "#69594D", "#736255", "#7F6C5D", "#8C7766", "#9A8370", "#A9907B", "#BA9E87", "#CDAE94", "#D2B59E", "#D6BDA7", "#DBC4B1", "#DFCBBB", "#E4D3C5", "#E8DACE", "#EDE2D8", "#F1E9E2", "#F6F1ED", "#FBF9F7", "#274127", "#345634", "#416C41", "#4F814F", "#5C975C", "#69AC69", "#76C276", "#83D783", "#90ED90", "#A3F0A3", "#BFF5BF")) + 
+  theme_ipsum() + 
+  theme()
+
+ggsave(plot = cssauto2, 
+       filename = "fig_g_ver_2_autotrophic_asv_relative_abundance_at_class_level.png", 
+       path = "./Figuras/", 
+       width = 33, 
+       height = 11, 
+       dpi = 300)
+```
 
 
 
